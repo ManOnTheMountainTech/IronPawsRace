@@ -2,8 +2,8 @@
 
 class MushDB {
 
-    //protected const SERVERNAME = "supermooseapps.com";
-    protected const SERVERNAME = "localhost";
+    protected const SERVERNAME = "supermooseapps.com";
+    //protected const SERVERNAME = "localhost";
     protected const USERNAME = "bryany_mushuser";
     protected const PASSWORD = '9E{y)E;32.Qep7%m';
 
