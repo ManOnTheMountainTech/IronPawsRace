@@ -1,19 +1,20 @@
 <?php
   require_once("wp-defs.php");
   require_once(MY_PLUGIN_DIR_PATH . 'includes/debug.php');
+  require_once(MY_PLUGIN_DIR_PATH . 'wp-defs.php');
   
   function do_shortcode_reg_a_team() {
-    $db = MushDB::connect();
+    //$db = MushDB::connect();
 
-    //$fetch_teams_path = plugins_url('fetch_teams.php', __FILE__);
-    $teams_selections_html = '<form method="get" id="musher" action="fetch-teams">';
-
-    $teams_selections_html .= <<<'GET_MUSHER'
-          <label for="musher_name">Musher name:</label>
-          <input type="text" id="musher_name" name="musher_name"><br>
+    $musher = MUSHER;
+  
+    $teams_selections_html = <<<GET_MUSHER
+          <form method="get" id="musher" action="fetch-teams">'
+          <label for="{$musher}">Musher name:</label>
+          <input type="text" id="{$musher}" name="{$musher}"><br>
           <input type="submit" value="Fetch my teams">
         </form>
-      GET_MUSHER;
+        GET_MUSHER;
 
     return $teams_selections_html;
   }
