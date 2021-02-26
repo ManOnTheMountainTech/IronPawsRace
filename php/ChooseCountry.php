@@ -2,13 +2,15 @@
 
 require_once('setIncPath.php');
 require_once('globals.php');
-require_once(non_web_php . 'mushDB.php');
-require_once(non_web_php . 'io.php');
+require_once(NON_WEB_PHP . 'MushDB.php');
+require_once(NON_WEB_PHP . 'io.php');
+
+require_once(NON_WEB_PHP . 'woocommerce/connect.php');
 
 if(!session_id()) session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $country= test_number($_POST["country"]);
+  $country= test_number($_POST[COUNTRY]);
   if (empty($country)) {
     die ($country . " is not a valid country.");
   }

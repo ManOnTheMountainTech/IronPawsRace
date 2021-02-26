@@ -1,5 +1,5 @@
 <?php
-//const non_web_php = '/home/bryany/php/';
+//const NON_WEB_PHP = '/home/bryany/php/';
 define( "filebase", $_SERVER['DOCUMENT_ROOT'] . "/");
-const non_web_php = '../../php/';
-?>
+const NON_WEB_PHP = '../../php/';
+const EN_HTML = '/non-wp/en/';

@@ -2,7 +2,7 @@
 
 require_once('setIncPath.php');
 require_once('globals.php');
-require_once(non_web_php . 'mushDB.php');
+require_once(NON_WEB_PHP . 'MushDB.php');
 
 $numberError = FALSE;
 
