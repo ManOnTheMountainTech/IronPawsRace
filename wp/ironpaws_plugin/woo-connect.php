@@ -1,7 +1,7 @@
 <?php
-    require_once("wp-defs.php");
-    require_once(MY_PLUGIN_DIR_PATH . 'includes/debug.php');
-    require MY_PLUGIN_DIR_PATH . 'vendor/autoload.php';
+    require_once('includes/wp-defs.php');
+    require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
+    require plugin_dir_path(__FILE__) . 'vendor/autoload.php';
 
     use Automattic\WooCommerce\Client;
     use Automattic\WooCommerce\HttpClient\HttpClientException;
@@ -17,21 +17,43 @@
         error_log( "Status of payment complete for order $order_id", 0 );
     }*/
 
-    $woocommerce;
+    function create_wc() {
+        return new Client(
+            'https://ironpaws.supermooseapps.com', 
+            'ck_cca88420eaa709e2b43553db2ca5b3d50d6479f4', 
+            'cs_c19ee6ea8b25b3ad309e279fd43fbcaafee32cfe',
+            [
+                'version' => 'wc/v3',
+            ]
+        );
+    }
 
-    function init_wc() {
-        global $woocommerce;
+    function getResponseBody($response) {
+        return $woocommerce->http->getResponse()->getBody();
+    }
 
-        if (!isset($woocommerce)) {
-            $woocommerce = new Client(
-                'https://ironpaws.supermooseapps.com', 
-                'ck_cca88420eaa709e2b43553db2ca5b3d50d6479f4', 
-                'cs_c19ee6ea8b25b3ad309e279fd43fbcaafee32cfe',
-                [
-                    'version' => 'wc/v3',
-                ]
-            );
+    // @function processResponse
+    // @param $result - result from a call to the WooCommerce REST API
+    // @returns : null = failure, associative object = success
+    // ----
+    // Internally, Client calls HttpClient, which sets the parameters as CURL
+    // options, and then calls CURL. The result is processed by json_decode.
+    // json_decode can return true, false, or null. However, the body still
+    // may contain valid data. Try a little harder to get it.
+    function processResponse($result) {
+        if ((false == $result) || (null == $result)) {
+            $body = getResponseBody($result);
+            if ((false == $body) || (null == $body)) {
+                return null;
+            } else {
+                $body = json_decode($body);
+                if ((false == $body) || (null == $body)) {return null;}
+                
+                return $body;
+            }
         }
+
+        return $result;
     }
 
     /* Order is done, let's move on */
@@ -40,7 +62,7 @@
 
         try {
             // Array of response results.
-            // $results = $woocommerce->get('customers');
+            // $results = create_wc()->get('customers');
             // Example: ['customers' => [[ 'id' => 8, 'created_at' => '2015-05-06T17:43:51Z', 'email' => ...
 
             wp_remote_post('/reg-a-team', array('wc_order_id' => $order_id));

@@ -2,7 +2,11 @@
     require_once("wp-defs.php");
     require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
 
-    function do_shortcode_fetch_teams() {
+    function do_shortcode_modify_teams() {
+      
+    }
+
+    function do_shortcode_modify_teams_db() {
         
         $_SESSION[TEAM] = sanitize_text_field($_GET[TEAM]);
         if (empty($_SESSION[TEAM])) {
@@ -40,7 +44,7 @@
         }
         catch(PDOException $e) { 
           return ( 'The database returned an error while finding teams for dogs.');
-          write_log(__FUNCTION__ . ': produced exception {$e}');
+          write_log(__FUNCTION__ . ', produced exception {$e}');
         }
         finally {
           $teams_selections_html .= '</select><br><br><input type="submit" value="Go"></form>';
