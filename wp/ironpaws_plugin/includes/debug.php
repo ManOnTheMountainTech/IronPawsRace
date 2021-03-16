@@ -22,6 +22,14 @@
         }
     }
 
+    function statement_log($function, $line, $message, $log = "") {
+        if (is_array($log) || is_object($log)) {
+            $log = print_r($log, true);
+        }
+
+        error_log(sprintf("%s:%s %s:%s", $function, $line, $message, $log));
+    }
+
     function object_to_html($log) {
         if (is_array($log) || is_object($log)) {
             error_log(pp($log));

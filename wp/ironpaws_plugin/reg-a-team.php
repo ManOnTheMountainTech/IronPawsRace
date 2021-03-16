@@ -1,17 +1,33 @@
 <?php
-  require_once("wp-defs.php");
-  require_once(MY_PLUGIN_DIR_PATH . 'includes/debug.php');
-  require_once(MY_PLUGIN_DIR_PATH . 'wp-defs.php');
+  // Load wordpress regardless of where it is located. Remember, it could be
+  // in any subfolder.
+  if(!defined('ABSPATH')){
+  $pagePath = explode('/wp-content/', dirname(__FILE__));
+  include_once(str_replace('wp-content/' , 
+        '', 
+        $pagePath[0] . 
+        '/wp-load.php'));
+  }
+
+  require_once(plugin_dir_path(__FILE__) . 'includes/wp-defs.php');
+  require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
   
   function do_shortcode_reg_a_team() {
     //$db = MushDB::connect();
 
-    $musher = MUSHER;
+    $email = EMAIL;
+    $first_name = FIRST_NAME;
+    $last_name = LAST_NAME;
   
     $teams_selections_html = <<<GET_MUSHER
-          <form method="get" id="musher" action="fetch-teams">'
-          <label for="{$musher}">Musher name:</label>
-          <input type="text" id="{$musher}" name="{$musher}"><br>
+          <form method="get" id="musher" action="fetch-teams">
+          <label for="{$email}">Youre email address:</label>
+          <input type="text" id="{$email}" name="{$email}"><br>
+          Or..<br>
+          <label for="{$first_name}">Musher first name:</label>
+          <input type="text" id="{$first_name}" name="{$first_name}"><br>
+          <label for="{$last_name}">Musher last name:</label>
+          <input type="text" id="{$last_name}" name="{$last_name}"><br>
           <input type="submit" value="Fetch my teams">
         </form>
         GET_MUSHER;
@@ -61,6 +77,7 @@
     finally {
       $dog_team_info .= '</table>';
     }
+
     
     return $dog_team_info;
   }

@@ -1,5 +1,5 @@
 <?php
-    $race_classes = array("Old Dogs Rule",
+    static $race_classes = array("Old Dogs Rule",
         "Off the Couch",
         "Canicross",
         "1 Dog Bikejor",

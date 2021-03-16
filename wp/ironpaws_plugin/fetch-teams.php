@@ -24,9 +24,18 @@
 
       // We're being called after payment for a race. Ask WooCommerce the details.
 
-      $results = $woocommerce->get('orders/' . $order_id);
-      if (NULL == $results) {
-        return "Unable to talk to WooCommerce while fetching the mushers teams";
+      try {
+        $results = $woocommerce->get('orders/' . $order_id);
+        if (NULL == $results) {
+          unset_get_vars();
+          return "Unable to talk to WooCommerce while fetching the mushers teams";
+        }
+      }
+      catch (HttpClientException $e) {
+        write_log(__FUNCTION__ . __LINE__ . "Caught. Message:", $e->getMessage() ); // Error message.
+        write_log(" Request:", $e->getRequest() ); // Last request data.
+        write_log(" Response:", $e->getResponse() ); // Last response data.
+        return "Failed to get the information about the order";
       }
 
       // TODO: May need to change to get the customer Id, then first and last
@@ -53,15 +62,27 @@
           'last_name' => $last_name, 
             'role' => 'all');
         } else {
+          unset_get_vars();
           return "Neither an email, nor a first or last name could be processed. Please try again.";
         }
 
         $musher = $first_name . ' ' . $last_name;
       }
 
-      $results = $woocommerce->get(CUSTOMERS, $params);
-      if (null == $results) {
-        return "A musher has to be registered to use Iron Paws. Please register." . print_r($params, true);
+      write_log(__FUNCTION__ . "params:", $params);
+      try {
+        $results = $woocommerce->get(CUSTOMERS, $params);
+        if (null == $results) {
+          unset_get_vars();
+          return "A musher has to be registered to use Iron Paws. Please register.";
+        }
+      }
+      catch (HttpClientException $e) {
+        write_log(__FUNCTION__ . __LINE__ . "Caught. Message:", $e->getMessage() ); // Error message.
+        write_log(" Request:", $e->getRequest() ); // Last request data.
+        write_log(" Response:", $e->getResponse() ); // Last response data.
+        unset_get_vars();
+        return "Unable to get any information about this person.";
       }
 
       foreach($results as $personal_info) {
@@ -78,16 +99,32 @@
       }
     } // end: get info from WooCommerce
 
-    return get_mushers_team(MushDB::connect(), $musher);
+    unset_get_vars();
+
+    try {
+      return get_mushers_team(new MushDB(), $musher);
+    }
+    catch(PDOException $e) {
+      statement_log(__FUNCTION__, __LINE__, "Unable to create db object", $e);
+      return "Unable to connect to the database. Please try again later.";
+    }
   }
 
-  function get_mushers_team(PDO $db, $person) { 
+  // Remember that unset checks for null also. So unset everything for when
+  // we call ourselves again.
+  function unset_get_vars() {
+    unset($_GET[EMAIL]);
+    unset($_GET[FIRST_NAME]);
+    unset($_GET[LAST_NAME]);  
+  }
+
+  function get_mushers_team(MushDB $db, string $person) { 
     //$teams_path = plugins_url('modify_teams.php', __FILE__);
 
     // TODO: Change to 
     $teams_path = plugins_url('add-a-team', __FILE__);
-    $teams_selections_html = '<form method="get" id="' . TEAM . '" action="' 
-    . $teams_path . '">';
+    $teams_selections_html = '<form method="get" id="' . TEAM_NAME . '" action="' 
+      . $teams_path . '">';
 
     // TODO: Handle both add a team and modify a team.
     $teams_selections_html .= <<<'GET_TEAMS'
@@ -95,26 +132,39 @@
           <select name="teams" id="teams">
       GET_TEAMS;
 
-    $execSql = "CALL sp_getMushersTeams (:person)";
+    $execSql = "CALL sp_getMushersTeams (?)";
     //$person .= '"' + $person + '"';
+
+    error_log("Customer Id = " . $_SESSION[WC_CUSTOMER_ID]);
     
     try { 
-      $stmt = $db->prepare($execSql);
-      $stmt->execute([ 'person' => $person ]);
-
-      while ($row = $stmt->fetch(PDO::FETCH_NUM, PDO::FETCH_ORI_NEXT)) {
-        $teams_selections_html .= '<option value="' . $row[0] . '">' . $row[0] . '</option>';
+      $stmt = $db->query($execSql, [$_SESSION[WC_CUSTOMER_ID]]);
+      if (isnull($stmt)) {
+        return "The attempt to find the teams for this musher failed.";
       }
 
+      $foundATeam = false;
+
+      while ($row = $stmt->fetch(PDO::FETCH_NUM, PDO::FETCH_ORI_NEXT)) {
+
+        // remember: $TEAMS for add-a-team must be an index.
+        $teams_selections_html .= '<option value="' . $row[0] . '">' . $row[1] . '</option>';
+        $foundATeam = true;
+      }
+
+      $stmt->closeCursor();
       $stmt = null; 
+      
+      if (!$foundATeam) {
+        return "<p>No teams were found for musher {$person}.</p>";
+      }
     }
     catch(PDOException $e) { 
-      return ( 'The database returned an error while finding teams for dogs.');
-      write_log(__FUNCTION__ . ': produced exception {$e}');
+      statement_log(__FUNCTION__ , __LINE__ , ': produced exception', $e);
+      return 'The database returned an error while finding teams for dogs.';
     }
-    finally {
-      $teams_selections_html .= '</select><br><br><input type="submit" value="Go"></form>';
-    }
+    
+    $teams_selections_html .= '</select><br><br><input type="submit" value="Go"></form>';
     
     return $teams_selections_html;
   }

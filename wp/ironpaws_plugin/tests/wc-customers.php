@@ -9,6 +9,8 @@
         '/wp-load.php'));
   }
 
+  // also refer to <wordpress>_wpip_wc_customer_lookup
+
   require_once(plugin_dir_path(__FILE__) . '../includes/wp-defs.php');
   require_once(plugin_dir_path(__FILE__) . '../includes/debug.php');
   require_once(plugin_dir_path(__FILE__) . '../woo-connect.php');
@@ -27,16 +29,27 @@
     global $woocommerce;
     $params = array('email' => 'admin@ironpaws.supermooseapps.com', 'role' => 'all');
 
-    $result = $woocommerce->get(CUSTOMERS . '/', $params);
+    $result = $woocommerce->get(CUSTOMERS , $params);
 
+    error_log("log_by_roll");
+    write_log("Test", "123");
+    write_log("test");
+    write_log("params", $params);
     $body = $lastResponse = $woocommerce->http->getResponse()->getBody();
     //$body = json_decode($body, null, 512, JSON_THROW_ON_ERROR);
     return print_r($result);
   }
 
+  function log_by_name() {
+    global $woocommerce;
+    $params = array('first_name' => 'John', 'last_name' => 'Doe', 'role' => 'all');
+    write_log("by customer name", $woocommerce->get(CUSTOMERS, $params)); 
+    $result = $woocommerce->get(CUSTOMERS , $params);
+  }
+
   function log_customer_by_id($id) {
     global $woocommerce;
-    write_log("by customer id {$id}", $woocommerce->get(CUSTOMERS . '/' . $id)); 
+    write_log("by customer id {$id}", $woocommerce->get(CUSTOMERS, $id)); 
     dump_last_request();
   }
 
@@ -85,7 +98,9 @@
     $woocommerce = create_wc();
 
   try {
-    return log_by_roll();
+    //log_by_name();
+    log_by_roll();
+    //log_customer_by_id(4);
   } catch (HttpClientException $e) {
     write_log("Caught. Message:", $e->getMessage() ); // Error message.
     write_log(" Request:", $e->getRequest() ); // Last request data.
