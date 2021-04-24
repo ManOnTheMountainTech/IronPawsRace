@@ -1,4 +1,5 @@
 <?php
+    defined( 'ABSPATH' ) || exit;
     // Load wordpress regardless of where it is located. Remember, it could be
     // in any subfolder.
     /*if(!defined('ABSPATH')){
@@ -12,9 +13,10 @@
     require_once(plugin_dir_path(__FILE__) . 'includes/wp-defs.php');
     require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
     require_once(plugin_dir_path(__FILE__) . "includes/race_classes.php");
+    require_once(plugin_dir_path(__FILE__) . "includes/util.php");
 
      function do_shortcode_add_a_team() {
-        if (isset($_GET[TEAM_NAME]) || isset($_GET[RACE_CLASS])) {
+        if (array_key_exists(TEAM_NAME, $_GET) || array_key_exists(RACE_CLASS, $_GET)) {
             return;
         }
 
@@ -22,7 +24,7 @@
         $race_class = RACE_CLASS;
 
         $add_team_html = <<<ADD_TEAM_PRE
-        <form method="get" id="new_team_form" action="add-a-team">
+        <form method="get" id="new_team_form" action="register-a-new-team">
             <label for="{$team_name}">Team name:</label>
             <input type="text" id="{$team_name}" name="{$team_name}"><br>
             <label for="{$race_class}">Race class:</label><br>
@@ -45,9 +47,7 @@
      }
 
      function do_shortcode_write_team_to_db() {
-        if (isset($_GET[TEAM_NAME]) && isset($_GET[RACE_CLASS])) {
-            session_start();
-
+        if (array_key_exists(TEAM_NAME, $_GET) && array_key_exists(RACE_CLASS, $_GET)) {
             $teamName_id= 0;
             $team_id = 0;
             $person_id = 0;
@@ -73,11 +73,9 @@
                 }
             }
 
-            error_log("WC_CUSTOMER_ID = " . $_SESSION[WC_CUSTOMER_ID]);
-
             $language = isset($_SESSION[LANGUAGE]) ?: 0x646e; // "en" in ASCII
 
-            if (isset($_SESSION[SALUTATION])) {
+            if (array_key_exists(SALUTATION, $_SESSION)) {
                 $salutation = $_SESSION[SALUTATION]; 
             }
             else {
@@ -97,7 +95,7 @@
 
                 $person_id = $db->queryAndGetInsertId("CALL sp_newPersonUsingWCOrderID (:salutation, :wc_customerId, :language)",
                     ['salutation' => $salutation, 
-                    'wc_customerId' => $_SESSION[WC_CUSTOMER_ID], 
+                    'wc_customerId' => val_or_zero_array(WC_CUSTOMER_ID, $_SESSION), 
                     'language' => $language],
                     "musher");
 
@@ -111,10 +109,11 @@
                 return ( 'The database returned an error while creating the registering for the race.');
             } catch(MushDBException $e) { 
                 write_log(__FUNCTION__ . " produced exception ", $e);
-                return ( $e.message );
+                return ( 'An error occured while saving the team information.' );
             }
      
-            return "Team $teamName added to the database.";
+            $strippedTeamName = stripslashes($teamName);
+            return "Team $strippedTeamName added to the database.";
         }
      }
 ?>

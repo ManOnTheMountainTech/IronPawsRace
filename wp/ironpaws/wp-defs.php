@@ -1,4 +1,6 @@
 <?php
+     defined( 'ABSPATH' ) || exit;
+
      const non_web_php = '/home/bryany/php/';
      const FIRST_NAME = 'first_name';
      const LAST_NAME = 'last_name';

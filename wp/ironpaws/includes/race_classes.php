@@ -1,4 +1,6 @@
 <?php
+    defined( 'ABSPATH' ) || exit;
+
     static $race_classes = array("Old Dogs Rule",
         "Off the Couch",
         "Canicross",

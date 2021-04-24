@@ -30,6 +30,7 @@
     $params = array('email' => 'admin@ironpaws.supermooseapps.com', 'role' => 'all');
 
     $result = $woocommerce->get(CUSTOMERS , $params);
+    error_log(print_r($params, true));
 
     error_log("log_by_roll");
     write_log("Test", "123");

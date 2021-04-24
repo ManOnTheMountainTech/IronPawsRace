@@ -6,10 +6,6 @@
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
  * Version: 0.1.2
- * 
- * Woo: 12345:342928dfsfhsf8429842374wdf4234sfd
- * WC requires at least: 2.2
- * WC tested up to: 2.3
  */
 
 /* Place custom code below this line. */
@@ -20,30 +16,6 @@ require_once('add-a-team.php');
 require_once(plugin_dir_path(__FILE__) . 'tests/wc-customers.php');
 
 defined( 'ABSPATH' ) || exit;
-
-function rd_user_id_column( $columns ) {
-	$columns['user_id'] = 'ID';
-	return $columns;
-}
-add_filter('manage_users_columns', 'rd_user_id_column');
- 
-/*
- * Column content
- */
-function rd_user_id_column_content($value, $column_name, $user_id) {
-	if ( 'user_id' == $column_name )
-		return $user_id;
-	return $value;
-}
-add_action('manage_users_custom_column',  'rd_user_id_column_content', 10, 3);
- 
-/*
- * Column style (you can skip this if you want)
- */
-function rd_user_id_column_style(){
-	echo '<style>.column-user_id{width: 5%}</style>';
-}
-add_action('admin_head-users.php',  'rd_user_id_column_style');
 
 register_shortcodes();
 

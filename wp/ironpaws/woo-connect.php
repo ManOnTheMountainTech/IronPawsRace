@@ -1,4 +1,6 @@
 <?php
+    defined( 'ABSPATH' ) || exit;
+
     require_once('includes/wp-defs.php');
     require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
     require plugin_dir_path(__FILE__) . 'vendor/autoload.php';
@@ -19,11 +21,12 @@
 
     function create_wc() {
         return new Client(
-            'https://ironpaws.supermooseapps.com', 
-            'ck_cca88420eaa709e2b43553db2ca5b3d50d6479f4', 
-            'cs_c19ee6ea8b25b3ad309e279fd43fbcaafee32cfe',
+            'http://ironpawsllc.com', 
+            'ck_f79eca540f4d74a63f85845426de32283f80f9d0', 
+            'cs_056dc40407f6219fbd5705594c32460130175aa9',
             [
-                'version' => 'wc/v3',
+                'wp_api' => true,
+                'version' => 'wc/v3'
             ]
         );
     }

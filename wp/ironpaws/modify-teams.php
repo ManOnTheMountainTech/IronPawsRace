@@ -44,7 +44,7 @@
         }
         catch(PDOException $e) { 
           return ( 'The database returned an error while finding teams for dogs.');
-          write_log(__FUNCTION__ . ', produced exception {$e}');
+          write_log(__FUNCTION__ . ': produced exception {$e}');
         }
         finally {
           $teams_selections_html .= '</select><br><br><input type="submit" value="Go"></form>';

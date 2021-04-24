@@ -1,17 +1,6 @@
 <?php
-/*if (!function_exists('write_log')) {
+    defined( 'ABSPATH' ) || exit;
 
-    function write_log($log) {
-        if (true === WP_DEBUG) {
-            if (is_array($log) || is_object($log)) {
-                error_log(print_r($log, true));
-            } else {
-                error_log($log);
-            }
-        }
-    }
-
-}*/
     if (!function_exists('write_log')) {
         function write_log($message, $log = "") {
             if (is_array($log) || is_object($log)) {
@@ -38,6 +27,7 @@
         }
     }
 
+    // Pretty-print
     function pp($arr){
         $retStr = '<ul>';
         if (is_array($arr)){
@@ -68,5 +58,32 @@
         write_log(' code: ', $lastResponse->getCode()); // Response code (int).
         write_log(' headers: ', $lastResponse->getHeaders()); // Response headers (array).
         write_log(' body: ', $lastResponse->getBody()); // Response body (JSON).
+    }
+
+    function print_if_set($var, $name_of_var) {
+        echo $name_of_var . "= ";
+        print_r(isset($var) ? ($var) : "not set");
+    }
+
+    // echo's to the wp log if the array's key index is defined
+    // @param : array: The array containing the key
+    // @param : index: The index of the array to validate
+    // @param : name_of_array: The array's symbolic representation
+    function print_if_key_set(array $array, $index, $name_of_array) {
+        echo $name_of_array . '= ';
+        if (array_key_exists($index, $array)) {
+            print_r($array);
+        } else {
+            echo 'not set';
+        }
+    }
+
+    // log's to the wp log if the array's key index is defined
+    // @param : array: The array containing the key
+    // @param : index: The index of the array to validate
+    // @param : name_of_array: The array's symbolic representation
+    function log_if_key_set(array $array, $index, $name_of_array) {
+        write_log($name_of_array . '= ', (array_key_exists($index, $array))
+             ? print_r($array, true) : 'not set' );
     }
 ?>
