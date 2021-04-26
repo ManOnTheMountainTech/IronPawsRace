@@ -1,8 +1,9 @@
 <?php
   defined( 'ABSPATH' ) || exit;
 
-  require_once(plugin_dir_path(__FILE__) . 'includes/wp-defs.php');
-  require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
+  require_once plugin_dir_path(__FILE__) . 'mush-db.php';
+  require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
+  require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
   
   function do_shortcode_reg_a_team() {
     //$db = MushDB::connect();

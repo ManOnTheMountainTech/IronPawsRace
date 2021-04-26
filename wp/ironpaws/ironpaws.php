@@ -5,17 +5,18 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.1.2
+ * Version: 0.1.3
  */
 
 /* Place custom code below this line. */
+defined( 'ABSPATH' ) || exit;
+
 require_once('reg-a-team.php');
 require_once('fetch-teams.php');
 require_once('woo-connect.php');
 require_once('add-a-team.php');
+require_once('ironpaws-payment-complete.php');
 require_once(plugin_dir_path(__FILE__) . 'tests/wc-customers.php');
-
-defined( 'ABSPATH' ) || exit;
 
 register_shortcodes();
 
@@ -25,6 +26,7 @@ function register_shortcodes() {
     add_shortcode('ironpaws_add_a_team', 'do_shortcode_add_a_team');
     add_shortcode('ironpaws_write_team_to_db', 'do_shortcode_write_team_to_db');
     add_shortcode('ironpaws_run_tests', 'do_shortcode_run_tests');
+    add_shortcode('ironpaws_payment_complete', 'do_shortcode_payment_complete');
 }
 
 /*
@@ -44,8 +46,6 @@ function init($request) {
 
 /* This is the one that is hit when everything is said and done */
 add_action( 'woocommerce_payment_complete', 'ironpaws_woocommerce_payment_complete');
-
-
 
 /* Place custom code above this line. */
 ?>

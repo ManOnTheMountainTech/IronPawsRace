@@ -10,10 +10,11 @@
             '/wp-load.php'));
     }*/
 
-    require_once(plugin_dir_path(__FILE__) . 'includes/wp-defs.php');
-    require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
-    require_once(plugin_dir_path(__FILE__) . "includes/race_classes.php");
-    require_once(plugin_dir_path(__FILE__) . "includes/util.php");
+    require_once plugin_dir_path(__FILE__) . 'mush-db.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
+    require_once plugin_dir_path(__FILE__) . "includes/race_classes.php";
+    require_once plugin_dir_path(__FILE__) . "includes/util.php";
 
      function do_shortcode_add_a_team() {
         if (array_key_exists(TEAM_NAME, $_GET) || array_key_exists(RACE_CLASS, $_GET)) {
@@ -62,12 +63,16 @@
                 if (isset($_GET[WC_ORDER_ID])) {
 
                     $wc_order_id = test_number($_GET[WC_ORDER_ID]);
+
+                    // Validate the order id
                     init_wc();
                     global $woocommerce;
                     $results = $woocommerce->get('orders/' . $wc_order_id);
                     if (NULL == $results) {
                         return "Unable to talk to WooCommerce while getting customer information";
                     }
+
+                    checkRaceEditable($results);
 
                     $_SESSION[WC_CUSTOMER_ID] = $results['customer_id'];
                 }

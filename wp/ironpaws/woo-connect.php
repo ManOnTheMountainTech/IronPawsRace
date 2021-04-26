@@ -1,23 +1,47 @@
 <?php
     defined( 'ABSPATH' ) || exit;
 
-    require_once('includes/wp-defs.php');
-    require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
+    require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
     require plugin_dir_path(__FILE__) . 'vendor/autoload.php';
 
     use Automattic\WooCommerce\Client;
     use Automattic\WooCommerce\HttpClient\HttpClientException;
+    
+    class WCRaceRegistrationException extends Exception {
+        const RACE_CLOSED_MSG = "The race is closed. No changes can be made";
+        const RACE_CLOSED_ERROR = -1;
+        const PAYMENT_NOT_COMPLETED_MSG = "The payment for the race has not been completed. It's current status is %s";
+        const PAYMENT_NOT_COMPLETED_ERROR = -2;
+        const NO_SUCH_PERSON_ERROR = -3;
+        const CANT_GET_MUSHERS_TEAMS_MSG = "Unable to talk to WooCommerce while fetching the mushers teams.";
+        const CANT_GET_MUSHERS_TEAMS_ERROR = -4;
+        const CANT_GET_INFO_FROM_ORDER_MSG = "Can't get information about the musher from the order";
+        const CANT_GET_INFO_FROM_ORDER_ERROR = -5;
 
-    /*
-    function ironpaws_woocommerce_order_status_completed( $order_id ) {
-        echo 'woocommerce_order_status_completed';
-        error_log( "Order complete for order $order_id", 0 );
+        static function throwPaymentNotCompleted($wc_rest_result_orders) {
+            throw new WCRaceRegistrationException(
+                sprintf(PAYMENT_NOT_COMPLETED_MSG, 
+                    $wc_rest_result_orders),
+                PAYMENT_NOT_COMPLETED_ERROR);
+        }
     }
 
-    function ironpaws_woocommerce_payment_complete_order_status( $order_id ) {
-        echo 'woocommerce_payment_complete_order_status';
-        error_log( "Status of payment complete for order $order_id", 0 );
-    }*/
+    // Checks to see if edits to the race are allowed.
+    // @param: $wc_rest_result: the result of a WooCommerce /orders 
+    //  REST api V3 call.
+    // @throws: WCRaceRegistrationException on failure.
+    function checkRaceEditable($wc_rest_result_orders) {
+        switch ($wc_rest_result_orders->status) {
+            case 'processing':
+                return;
+            case 'completed':
+                throw new WCRaceRegistrationException(RACE_CLOSED_MSG, RACE_CLOSED_ERROR);
+            default:
+                return new WCRaceRegistrationException(PAYMENT_NOT_COMPLETED_MSG, 
+                    PAYMENT_NOT_COMPLETED_ERROR);
+        }
+    }
 
     function create_wc() {
         return new Client(
@@ -60,37 +84,5 @@
     }
 
     /* Order is done, let's move on */
-    function ironpaws_woocommerce_payment_complete( $order_id ) {
-        error_log( "payment complete for order $order_id", 0 );
 
-        try {
-            // Array of response results.
-            // $results = create_wc()->get('customers');
-            // Example: ['customers' => [[ 'id' => 8, 'created_at' => '2015-05-06T17:43:51Z', 'email' => ...
-
-            wp_remote_post('/reg-a-team', array('wc_order_id' => $order_id));
-            //return '<pre><code>' . print_r( $results, true ) . '</code><pre>'; // JSON output.
-        
-            /*
-            // Last request data.
-            $lastRequest = $woocommerce->http->getRequest();
-            echo '<pre><code>' . print_r( $lastRequest->getUrl(), true ) . '</code><pre>'; // Requested URL (string).
-            echo '<pre><code>' . print_r( $lastRequest->getMethod(), true ) . '</code><pre>'; // Request method (string).
-            echo '<pre><code>' . print_r( $lastRequest->getParameters(), true ) . '</code><pre>'; // Request parameters (array).
-            echo '<pre><code>' . print_r( $lastRequest->getHeaders(), true ) . '</code><pre>'; // Request headers (array).
-            echo '<pre><code>' . print_r( $lastRequest->getBody(), true ) . '</code><pre>'; // Request body (JSON).
-        
-            // Last response data.
-            $lastResponse = $woocommerce->http->getResponse();
-            echo '<pre><code>' . print_r( $lastResponse->getCode(), true ) . '</code><pre>'; // Response code (int).
-            echo '<pre><code>' . print_r( $lastResponse->getHeaders(), true ) . '</code><pre>'; // Response headers (array).
-            echo '<pre><code>' . print_r( $lastResponse->getBody(), true ) . '</code><pre>'; // Response body (JSON).
-            */
-        
-        } catch (HttpClientException $e) {
-            write_log( '<pre><code>' . $e->getMessage() . '</code><pre>'); // Error message.
-            write_log( '<pre><code>' . $e->getRequest() . '</code><pre>'); // Last request data.
-            write_log( '<pre><code>' . $e->getResponse() . '</code><pre>'); // Last response data.
-        }
-    }
 ?>

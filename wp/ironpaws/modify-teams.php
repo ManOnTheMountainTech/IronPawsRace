@@ -1,6 +1,7 @@
 <?php
-    require_once("wp-defs.php");
-    require_once(plugin_dir_path(__FILE__) . 'includes/debug.php');
+    require_once "wp-defs.php";
+    require_once plugin_dir_path(__FILE__) . 'mush-db.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
 
     function do_shortcode_modify_teams() {
       
