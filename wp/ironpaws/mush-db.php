@@ -46,11 +46,12 @@
             $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         }
 
+        // @param $errorCore The "core" of the error message to display.
         public function queryAndGetInsertId(string $statement, 
             array $params,
             string $errorCore) {
 
-            $stmt = $this->query($statement, $params);
+            $stmt = $this->execSql($statement, $params);
 
             if (is_null($stmt)) {
                 MushDBException::throwErrorCoreException($errorCore, 0);
@@ -76,7 +77,7 @@
         
         // based off of:
         // https://www.tobymackenzie.com/blog/2020/08/18/automatic-reconnect-pdo-connection-time-out/
-        public function query(string $statement, array $params) { // TODO: See if we really need an empty array.
+        public function execSql(string $statement, array $params) { // TODO: See if we really need an empty array.
             $this->reconnectTries = 0;
 
             while($this->reconnectTries < $this->maxReconnectTries) {
@@ -106,7 +107,10 @@
                         
                         } else {
                             statement_log(__FUNCTION__, __LINE__, "Caught exception", $e);
-                            echo print_r($e);
+
+                            if (is_wp_debug()) {
+                                var_dump($e);
+                            }
                             throw new Exception("Encountered a network error that cannot be retried. Out of options."); 
                         }
                     }

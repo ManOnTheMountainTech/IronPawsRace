@@ -13,7 +13,7 @@
 
   require_once(plugin_dir_path(__FILE__) . '../includes/wp-defs.php');
   require_once(plugin_dir_path(__FILE__) . '../includes/debug.php');
-  require_once(plugin_dir_path(__FILE__) . '../woo-connect.php');
+  require_once(plugin_dir_path(__FILE__) . '../wc-rest.php');
 
   function return_wc_endpoints() {
     global $woocommerce;

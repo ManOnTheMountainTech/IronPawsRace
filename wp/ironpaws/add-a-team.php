@@ -1,24 +1,22 @@
 <?php
     defined( 'ABSPATH' ) || exit;
-    // Load wordpress regardless of where it is located. Remember, it could be
-    // in any subfolder.
-    /*if(!defined('ABSPATH')){
-    $pagePath = explode('/wp-content/', dirname(__FILE__));
-    include_once(str_replace('wp-content/' , 
-            '', 
-            $pagePath[0] . 
-            '/wp-load.php'));
-    }*/
 
     require_once plugin_dir_path(__FILE__) . 'mush-db.php';
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
     require_once plugin_dir_path(__FILE__) . "includes/race_classes.php";
     require_once plugin_dir_path(__FILE__) . "includes/util.php";
+    require_once plugin_dir_path(__FILE__) . "logon.php";
+    require_once plugin_dir_path(__FILE__) . "wc-rest.php";
 
-     function do_shortcode_add_a_team() {
+    function do_shortcode_add_a_team() {
         if (array_key_exists(TEAM_NAME, $_GET) || array_key_exists(RACE_CLASS, $_GET)) {
             return;
+        }
+
+        $logon_form = ensure_loggedon();
+        if (!is_null($logon_form)) {
+            return $logon_form;
         }
 
         $team_name = TEAM_NAME;
@@ -48,6 +46,9 @@
      }
 
      function do_shortcode_write_team_to_db() {
+        $user = wp_get_current_user();
+        $wc = new WC_Rest();
+
         if (array_key_exists(TEAM_NAME, $_GET) && array_key_exists(RACE_CLASS, $_GET)) {
             $teamName_id= 0;
             $team_id = 0;
@@ -58,28 +59,8 @@
             global $race_classes;
             $race_class_id = test_number($_GET[RACE_CLASS]);
 
-            // We might be called directly, so don't assume set
-            if (!isset($_SESSION[WC_CUSTOMER_ID])) {
-                if (isset($_GET[WC_ORDER_ID])) {
-
-                    $wc_order_id = test_number($_GET[WC_ORDER_ID]);
-
-                    // Validate the order id
-                    init_wc();
-                    global $woocommerce;
-                    $results = $woocommerce->get('orders/' . $wc_order_id);
-                    if (NULL == $results) {
-                        return "Unable to talk to WooCommerce while getting customer information";
-                    }
-
-                    checkRaceEditable($results);
-
-                    $_SESSION[WC_CUSTOMER_ID] = $results['customer_id'];
-                }
-            }
-
-            $language = isset($_SESSION[LANGUAGE]) ?: 0x646e; // "en" in ASCII
-
+            // Verify that they have at least one order
+ 
             if (array_key_exists(SALUTATION, $_SESSION)) {
                 $salutation = $_SESSION[SALUTATION]; 
             }
@@ -98,11 +79,10 @@
                     [$teamName], 
                     "team name");
 
-                $person_id = $db->queryAndGetInsertId("CALL sp_newPersonUsingWCOrderID (:salutation, :wc_customerId, :language)",
-                    ['salutation' => $salutation, 
-                    'wc_customerId' => val_or_zero_array(WC_CUSTOMER_ID, $_SESSION), 
-                    'language' => $language],
-                    "musher");
+                $person_id = $db->queryAndGetInsertId(
+                    'CALL sp_getPersonIdFromWPUserId (?)',
+                    [$user->ID],
+                    "wc_customer_id");
 
                 $team_id = $db->queryAndGetInsertId("CALL sp_createTeamByIds (:team_tn_id, :person_id, :team_class_id)",
                     array('team_tn_id' => $teamName_id, 'person_id' => $person_id, 'team_class_id' => $race_class_id),

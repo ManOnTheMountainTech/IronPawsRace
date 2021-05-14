@@ -4,23 +4,17 @@
   require_once plugin_dir_path(__FILE__) . 'mush-db.php';
   require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
+  require_once plugin_dir_path(__FILE__) . "logon.php";
   
   function do_shortcode_reg_a_team() {
-    //$db = MushDB::connect();
+    ensure_loggedon();
 
     $email = EMAIL;
     $first_name = FIRST_NAME;
     $last_name = LAST_NAME;
   
     $teams_selections_html = <<<GET_MUSHER
-          <form method="get" id="musher" action="fetch-teams">
-          <label for="{$email}">Youre email address:</label>
-          <input type="text" id="{$email}" name="{$email}"><br>
-          Or..
-          <label for="{$first_name}">Musher first name:</label>
-          <input type="text" id="{$first_name}" name="{$first_name}"><br>
-          <label for="{$last_name}">Musher last name:</label>
-          <input type="text" id="{$last_name}" name="{$last_name}"><br>
+        <form method="get" id="musher-flname" action="fetch-teams">
           <input type="submit" value="Go">
         </form>
         GET_MUSHER;

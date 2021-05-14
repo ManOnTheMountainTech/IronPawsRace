@@ -1,6 +1,10 @@
 <?php
     defined( 'ABSPATH' ) || exit;
 
+    function is_wp_debug() {
+        return (defined('WP_DEBUG') && true === WP_DEBUG);
+    }
+
     if (!function_exists('write_log')) {
         function write_log($message, $log = "") {
             if (is_array($log) || is_object($log)) {

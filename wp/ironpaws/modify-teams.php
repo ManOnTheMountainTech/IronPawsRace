@@ -4,7 +4,10 @@
     require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
 
     function do_shortcode_modify_teams() {
-      
+      $logon_form = ensure_loggedon();
+      if (!is_null($logon_form)) {
+        return $logon_form;
+      }
     }
 
     function do_shortcode_modify_teams_db() {

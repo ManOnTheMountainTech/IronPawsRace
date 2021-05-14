@@ -17,4 +17,7 @@
      const CUSTOMERS = 'customers/';
      const KEY_ARG = 'key';
      const URI_PREFIX = "https://ironpawsllc.com/";
+     const PROCESSING = 'processing'; // payment received, but merchandise not
+                                      // sent out
+     const COMPLETED = 'completed';
 ?>
