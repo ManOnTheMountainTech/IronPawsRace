@@ -1,7 +1,10 @@
 <?php
      defined( 'ABSPATH' ) || exit;
-     require_once(plugin_dir_path(__FILE__) . 'includes/wp-defs.php');
-     require_once(plugin_dir_path(__FILE__) . 'wc-rest.php');
+
+     namespace IronPaws;
+
+     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
+     require_once plugin_dir_path(__FILE__) . 'wc-rest.php';
 
     // Called at the very end of the final order screen, as part of 
     // templates/order/order-detail-customer.php

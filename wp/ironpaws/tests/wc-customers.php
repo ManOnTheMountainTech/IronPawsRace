@@ -1,114 +1,98 @@
 <?php
-  // Load wordpress regardless of where it is located. Remember, it could be
-  // in any subfolder.
-  if(!defined('ABSPATH')) {
-  $pagePath = explode('/wp-content/', dirname(__FILE__));
-  include_once(str_replace('wp-content/' , 
-        '', 
-        $pagePath[0] . 
-        '/wp-load.php'));
-  }
+  defined( 'ABSPATH' ) || exit;
 
   // also refer to <wordpress>_wpip_wc_customer_lookup
 
-  require_once(plugin_dir_path(__FILE__) . '../includes/wp-defs.php');
-  require_once(plugin_dir_path(__FILE__) . '../includes/debug.php');
-  require_once(plugin_dir_path(__FILE__) . '../wc-rest.php');
+  require_once plugin_dir_path(__FILE__) . '../includes/wp-defs.php';
+  require_once plugin_dir_path(__FILE__) . '../includes/debug.php';
+  require_once plugin_dir_path(__FILE__) . '../wc-rest.php';
 
-  function return_wc_endpoints() {
-    global $woocommerce;
-    return print_r($woocommerce->get(''));
-  }
+  class WC_Customers {
 
-  function log_all_customers() {
-    global $woocommerce;
-    write_log($woocommerce->get(CUSTOMERS));
-  }
+    public sprocs_tests $sprocs_tests;
 
-  function log_by_roll() {
-    global $woocommerce;
-    $params = array('email' => 'admin@ironpaws.supermooseapps.com', 'role' => 'all');
+    public $result;
 
-    $result = $woocommerce->get(CUSTOMERS , $params);
-    error_log(print_r($params, true));
+    function makeWCClean() {
+      return WC_Rest::create_wc();
+    }
 
-    error_log("log_by_roll");
-    write_log("Test", "123");
-    write_log("test");
-    write_log("params", $params);
-    $body = $lastResponse = $woocommerce->http->getResponse()->getBody();
-    //$body = json_decode($body, null, 512, JSON_THROW_ON_ERROR);
-    return print_r($result);
-  }
+    function return_wc_endpoints() {
+      $this->result .= (makeWCClean()->get(''));
+    }
 
-  function log_by_name() {
-    global $woocommerce;
-    $params = array('first_name' => 'John', 'last_name' => 'Doe', 'role' => 'all');
-    write_log("by customer name", $woocommerce->get(CUSTOMERS, $params)); 
-    $result = $woocommerce->get(CUSTOMERS , $params);
-  }
+    function log_all_customers() {
+      $this->result .= (makeWCClean()->get(CUSTOMERS));
+    }
 
-  function log_customer_by_id($id) {
-    global $woocommerce;
-    write_log("by customer id {$id}", $woocommerce->get(CUSTOMERS, $id)); 
-    dump_last_request();
-  }
+    function log_by_roll() {
+      $params = array('email' => 'admin@ironpawsllc.com', 'role' => 'all');
 
-  function create_john_doe() {
-    $data = [
-      'email' => 'john.doe@example.com',
-      'first_name' => 'John',
-      'last_name' => 'Doe',
-      'username' => 'john.doe',
-      'billing' => [
-          'first_name' => 'John',
-          'last_name' => 'Doe',
-          'company' => '',
-          'address_1' => '969 Market',
-          'address_2' => '',
-          'city' => 'San Francisco',
-          'state' => 'CA',
-          'postcode' => '94103',
-          'country' => 'US',
-          'email' => 'john.doe@example.com',
-          'phone' => '(555) 555-5555'
-      ],
-      'shipping' => [
-          'first_name' => 'John',
-          'last_name' => 'Doe',
-          'company' => '',
-          'address_1' => '969 Market',
-          'address_2' => '',
-          'city' => 'San Francisco',
-          'state' => 'CA',
-          'postcode' => '94103',
-          'country' => 'US'
-      ]
-    ];
+      $wcRest = $this->makeWCClean();
 
-    return print_r($woocommerce->post(CUSTOMERS, $data));
-  }
+      $this->result .= "<p>log_by_roll<br>";
+      $this->result .= "params ";
+      $this->result .= pre_print($params);
+      $this->result .= pre_print($wcRest->get(CUSTOMERS , $params));
 
-  function wc_get_customer($search_term) {
-    //$customerDS = new WC_Customer_Data_Store();
-    //$customerDS->search_customers($search_term);
-  }
+      $body = $lastResponse = $wcRest->http->getResponse()->getBody();
+      //$body = json_decode($body, null, 512, JSON_THROW_ON_ERROR);
+    }
 
-  function do_shortcode_run_tests() {
-    global $woocommerce;
-    $woocommerce = create_wc();
+    function log_by_name() {
+      $params = array('first_name' => 'John', 'last_name' => 'Doe', 'role' => 'all');
+      $this->result .= "<p>by customer name<br>";
+      $this->result .= pre_print($this->makeWCClean()->get(CUSTOMERS, $params));
+    }
 
-  try {
-    //log_by_name();
-    log_by_roll();
-    //log_customer_by_id(4);
-  } catch (HttpClientException $e) {
-    write_log("Caught. Message:", $e->getMessage() ); // Error message.
-    write_log(" Request:", $e->getRequest() ); // Last request data.
-    write_log(" Response:", $e->getResponse() ); // Last response data.
-  }
-    //return return_wc_endpoints();
+    function log_customer_by_id($id) {
+      $this->result .= "<p>by customer id {$id}<br>";
+      $this->result .= pre_print($this->makeWCClean()->get(CUSTOMERS, ['id' => $id])); 
+    }
 
-    return "Forgot to return the test result";
-  } 
+    function log_order_by_id($id) {
+      $this->result .= "<p>by order id {$id}<br>";
+      $this->result .= pre_print($this->makeWCClean()->get(ORDERS, ['id' => $id]));
+    }
+
+    function create_john_doe() {
+      $data = [
+        'email' => 'john.doe@example.com',
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'username' => 'john.doe',
+        'billing' => [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'company' => '',
+            'address_1' => '969 Market',
+            'address_2' => '',
+            'city' => 'San Francisco',
+            'state' => 'CA',
+            'postcode' => '94103',
+            'country' => 'US',
+            'email' => 'john.doe@example.com',
+            'phone' => '(555) 555-5555'
+        ],
+        'shipping' => [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'company' => '',
+            'address_1' => '969 Market',
+            'address_2' => '',
+            'city' => 'San Francisco',
+            'state' => 'CA',
+            'postcode' => '94103',
+            'country' => 'US'
+        ]
+      ];
+
+      return pre_print($woocommerce->post(CUSTOMERS, $data));
+    }
+
+    function wc_get_customer($search_term) {
+      //$customerDS = new WC_Customer_Data_Store();
+      //$customerDS->search_customers($search_term);
+    }
+  } // end: class WC_Customers(
 ?>

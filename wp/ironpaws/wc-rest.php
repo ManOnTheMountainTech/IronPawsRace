@@ -1,6 +1,8 @@
 <?php
     defined( 'ABSPATH' ) || exit;
 
+    namespace IronPaws;
+
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
     require plugin_dir_path(__FILE__) . 'vendor/autoload.php';
@@ -12,7 +14,7 @@
         protected $woocommerce;
 
         public function __construct() {
-            $woocommerce = WC_Rest::create_wc();
+            $this->woocommerce = WC_Rest::create_wc();
         }
 
         function query_race_is_editable(int $wc_order_id) {
@@ -25,7 +27,7 @@
             // TODO: Jump back from logging in.
 
             // Validate the order id
-            $results = $this->woocommerce->get('orders/' . $wc_order_id);
+            $results = $this->woocommerce->get(ORDERS . $wc_order_id);
             if (NULL == $results) {
                 return "Unable to talk to WooCommerce while getting customer information";
             }
@@ -41,6 +43,51 @@
             return null;
         }
 
+        // Return an array of orders that are raceable (PROCESSING)
+        function getOrdersByCustomerId(int $wc_customer_id) {
+            // Validate the order id
+            $results = $this->woocommerce->get(
+                ORDERS, ['customer_id' => $wc_customer_id]);
+            if (NULL == $results) {
+                return "Unable to talk to WooCommerce while getting customer information";
+            }
+
+            return $results;
+        }
+
+        function getProductIdsFromOrderId(int $wc_order_id) {
+            // Validate the order id
+            $results = $this->woocommerce->get(ORDERS . $wc_order_id);
+            if (NULL == $results) {
+                return "Unable to talk to WooCommerce while getting customer information";
+            }
+
+            // TODO: process orders in a loop. Make checkRaceEditable check if paying customer.
+
+            try {
+                checkRaceEditable($results);
+            }
+            catch(WCRaceRegistrationException $e) {
+                $error = $e->processRaceAccessCase();
+                if (!is_null($error)) {return $error;}
+            }
+
+            $line_items = $results->line_items;
+
+            if (isset($line_items)) {
+                $product_ids = [$line_items.count];
+
+                $count = count($line_items);
+
+                for($i = 0; $i < $count; ++$i) {
+                    $product_ids[$i] = $line_item->product_id;
+                }
+
+                return $product_ids;
+            }
+
+            return null;
+        }
             
         /** 
          * @param: array $params -> 
@@ -84,11 +131,26 @@
             }
         }
 
+                // Checks to see if edits to the race are allowed.
+        // @param: $wc_rest_result: the result of a WooCommerce /orders 
+        //  REST api V3 call.
+        // @returns: TRUE = race is editable. FALSE = Race is not editable.
+        static function checkRaceEditable_noThrow($wc_rest_result_orders) {
+            switch ($wc_rest_result_orders->status) {
+                case 'processing':
+                    return true;
+                case 'completed':
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
         static function checkRaceReadble($wc_rest_result_order) {
             switch ($wc_rest_result_orders->status) {
-                case PROCESSING:
+                case 'processing':
                     return;
-                case COMPLETED:
+                case 'completed':
                     return;
                 default:
                     throw new WCRaceRegistrationException(PAYMENT_NOT_COMPLETED_MSG, 

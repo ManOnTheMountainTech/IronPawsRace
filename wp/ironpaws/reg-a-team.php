@@ -1,6 +1,8 @@
 <?php
   defined( 'ABSPATH' ) || exit;
 
+  namespace IronPaws;
+
   require_once plugin_dir_path(__FILE__) . 'mush-db.php';
   require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
@@ -43,7 +45,7 @@
     return $team_names . " sucessfully looked up.<br>";
   } // end do_shortcode_reg_team
     
-  function get_dogTeamAssignments(PDO $db, $team_names) { 
+  function get_dogTeamAssignments(\PDO $db, $team_names) { 
     $execSql = "CALL sp_getCurrentDogTeamAssignment (:teams)";
     $dog_team_info = "<table>";
     
@@ -51,13 +53,13 @@
       $stmt = $db->prepare($execSql);
       $stmt->execute([ 'teams' => $team_names ]);
   
-      while ($row = $stmt->fetch(PDO::FETCH_NUM, PDO::FETCH_ORI_NEXT)) {
+      while ($row = $stmt->fetch(\PDO::FETCH_NUM, PDO::FETCH_ORI_NEXT)) {
         $dog_team_info .= '<tr><td>' . $row[0] . "<td>" . $row[1] . "<td>" . $row[2] . "</tr>";
       }
 
       $stmt = null; 
     }
-    catch(PDOException $e) { 
+    catch(\PDOException $e) { 
       return ( 'The database returned an error while finding teams for dogs.');
       write_log(__FUNCTION__ . ': produced exception {$e}');
     }

@@ -1,5 +1,8 @@
 <?php
     defined( 'ABSPATH' ) || exit;
+
+    namespace IronPaws;
+
     require_once('includes/wp-defs.php');
     require_once('includes/debug.php');
 

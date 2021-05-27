@@ -1,5 +1,7 @@
 <?php
     defined( 'ABSPATH' ) || exit;
+
+    namespace IronPaws;
     
     function val_or_zero_int(INT $var) {
         return (isset($var) ? ($var) : 0);
@@ -11,6 +13,28 @@
 
     function makeHTMLErrorMessage($error_msg) {
         return "<p>$error_msg</p>";
+    }
+
+    // makes a string like "id=blah" name="blah" value="foo"
+    // @param: string $id -> The identifier
+    // @param: string $value -> What the user will see
+    // @returns: string -> ready to use html select entry
+    function makeHTMLIdString(string $id, string $value) {
+      return <<<MAKE_HTML_ID
+        "id={$id}" "name={$value}" "value={$value}"
+      MAKE_HTML_ID;
+    }
+
+    function makeHTMLInputString(string $input_type, string $id, string $value) {
+      return '<input type=' . $input_type . ' ' . makeHTMLIdString($id, $value) . ">\n";
+    }
+
+    function makeHTMLOptionString(string $value, string $description) {
+      $str = <<<FORM_OPTION
+        <option value="{$value}">{$description}</option>
+    FORM_OPTION;
+
+      return $str . "\n";
     }
 
       // Processes get args to wc customer params

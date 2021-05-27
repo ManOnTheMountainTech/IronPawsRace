@@ -1,27 +1,14 @@
 <?php
     defined( 'ABSPATH' ) || exit;
 
+    namespace IronPaws;
+
+    require_once plugin_dir_path(__FILE__) . 'includes/mysql.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/mush-db-exception.php';
+
     const DEBUG=true;
 
-    class MySql {
-        static public $reconnectErrors = [
-            1317, // interrupted
-            2002, // refused
-            2006, // CR_SERVER_GONE_ERROR
-            2013 // CR_SERVER_LOST
-        ];
-    }
-
-    class MushDBException extends Exception {
-        static public function throwErrorCoreException(string $errorCore, int $instance) {
-            $this->message = "Creating the $errorCore was unsuccessful[{$instance}]";
-            $this->code = 0;
-            throw $this;
-        }
-    }
-
-    class MushDB {
-        //protected const SERVERNAME = "supermooseapps.com";
+    class Mush_DB {
         protected const SERVERNAME = "localhost";
         protected const USERNAME = "bryan_mushuser";
         protected const PASSWORD = '9E{y)E;32.Qep7%m';
@@ -40,36 +27,38 @@
         }
 
         public function connect() {
-            $this->conn = new PDO("mysql:host=" . MushDB::SERVERNAME . ";dbname=" . MushDB::DBNAME, 
-                MushDB::USERNAME, MushDB::PASSWORD);
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $this->conn = new \PDO("mysql:host=" . Mush_DB::SERVERNAME . ";dbname=" . Mush_DB::DBNAME, 
+                Mush_DB::USERNAME, Mush_DB::PASSWORD);
+            $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $this->conn->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         }
 
         // @param $errorCore The "core" of the error message to display.
-        public function queryAndGetInsertId(string $statement, 
+        // @returns -> the returned id
+        public function execAndReturnInt(string $statement, 
             array $params,
             string $errorCore) {
 
             $stmt = $this->execSql($statement, $params);
 
             if (is_null($stmt)) {
-                MushDBException::throwErrorCoreException($errorCore, 0);
+                Mush_DB_Exception::throwErrorCoreException($errorCore, 0);
             }
 
             // PDO::lastInsertId() may have issues with stored procedures
             // https://stackoverflow.com/questions/15562478/php-mysql-pdo-lastinsertid-is-returning-0-when-using-a-procedure-to-insert-rows
-            $rawId = $stmt->fetchAll(PDO::FETCH_NUM);
+            $rawId = $stmt->fetchAll(\PDO::FETCH_NUM);
             $stmt->closeCursor();
 
             if (0 == $rawId) {
-                MushDBException::throwErrorCoreException($errorCore, 1);
+                Mush_DB_Exception::throwErrorCoreException($errorCore, 1);
             }
 
+            // Result always comes back in the array of the array.
             $id = $rawId[0][0];
 
             if (0 == $id) {
-                MushDbException::throwErrorCoreException($errorCore, 2);
+                Mush_Db_Exception::throwErrorCoreException($errorCore, 2);
             }
 
             return $id;
@@ -85,9 +74,7 @@
                     try{
                         // Turn off the display of errors so we don't see packets
                         // out of order. We allready deal with that.
-                        statement_log(__FUNCTION__, __LINE__, "prepare:", $statement);
                         @$prepared = $this->conn->prepare($statement);
-                        statement_log(__FUNCTION__, __LINE__, "execute:", $params);
                         if (@$prepared->execute($params)) {
                             return $prepared;
                         }
@@ -95,10 +82,11 @@
                             return null;
                         }
                     }   // Retry case
-                    catch(Exception $e) {
+                    // higher-level exception handlers will catch more specific exceptions.
+                    // So catch here so that the retry case works.
+                    catch(\PDOException | Exception $e) {
                         if (isset($e->errorInfo) && 
                             (in_array($e->errorInfo[1], MySql::$reconnectErrors))) {
-                                write_log("...error is mysql");
                                 $this->conn = null;
                                 usleep($this->reconnectDelay * 1000);
                                 ++$this->reconnectTries;
@@ -107,9 +95,12 @@
                         
                         } else {
                             statement_log(__FUNCTION__, __LINE__, "Caught exception", $e);
+                            statement_log(__FUNCTION__, __LINE__, "prepare:", $statement);
+                            statement_log(__FUNCTION__, __LINE__, "execute:", $params);
 
                             if (is_wp_debug()) {
                                 var_dump($e);
+                                    return "Unhandled MySQL exception";
                             }
                             throw new Exception("Encountered a network error that cannot be retried. Out of options."); 
                         }
@@ -128,15 +119,15 @@
     // Returns: 0 if the number is invalid
     function test_number($number) {
         if (is_numeric(test_input($number))) { 
-        return $number; }
+            return $number; }
         else {
-        $number = 0; }
+            $number = 0; }
     }
 
     function test_input($data) {
-    $data = trim($data);
-    $data = stripslashes($data);
-    $data = htmlspecialchars($data);
+        $data = trim($data);
+        $data = stripslashes($data);
+        $data = htmlspecialchars($data);
     return $data;
     }
 
