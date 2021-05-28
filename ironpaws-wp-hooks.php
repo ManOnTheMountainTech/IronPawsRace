@@ -32,10 +32,10 @@
 
     function ironpaws_add_loginout_link(string $items, \stdClass $args ) {
         if (is_user_logged_in() && $args->theme_location == 'primary') {
-            $items .= '<li><a href="'. wp_logout_url( get_permalink( wc_get_page_id( 'myaccount' ) ) ) .'">Log Out</a></li>';
+            $items .= '<li><a href="'. wp_logout_url( get_permalink( wc_get_page_id( 'myaccount' ) ) ) .'">Log out</a></li>';
         }
             elseif (!is_user_logged_in() && $args->theme_location == 'primary') {
-            $items .= '<li><a href="' . get_permalink( wc_get_page_id( 'myaccount' ) ) . '">Log In</a></li>';
+            $items .= '<li><a href="' . get_permalink( wc_get_page_id( 'myaccount' ) ) . '">Log in</a></li>';
         }
         return $items;
     }   

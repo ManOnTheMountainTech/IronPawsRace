@@ -8,9 +8,7 @@
   require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
   require_once plugin_dir_path(__FILE__) . 'wc-rest.php';
-  require_once plugin_dir_path(__FILE__) . 'mush-db.php';
   require_once plugin_dir_path(__FILE__) . 'logon.php';;
-  require_once plugin_dir_path(__FILE__) . "container-html-pattern.php";
   require_once plugin_dir_path(__FILE__) . "autoloader.php";
 
   use Automattic\WooCommerce\Client;
@@ -64,8 +62,7 @@
         statement_log(__FUNCTION__, __LINE__, "Unable to create db object", $e);
         return "Unable to connect to the database. Please try again later.";
       }
-      catch(Race_Registration_Exception $e) {    
-        var_dump($e);      
+      catch(Race_Registration_Exception $e) {         
         $error = $e->processRaceAccessCase();
         if (!is_null($error)) {return $error;}
       } catch(Exception $e) {
@@ -139,6 +136,17 @@
       return $teams_selections_html;
     }
 
+    function makeFormCloseHTML() {
+      $teams_selections_html = '</select><br><br><button type="submit" value="' . TEAM_NAME_ID . '">Select</form>';
+      $teams_selections_html .= <<<REGISTER_TEAM_INSTEAD
+        <form action="register-a-new-team">
+          <button type="submit">Register a new team instead.</button>
+        </form>
+      REGISTER_TEAM_INSTEAD;
+
+      return $teams_selections_html;
+    }
+
     function get_race_classes() {
 
       $race_class_id = RACE_CLASS_ID;
@@ -153,15 +161,8 @@
           $teams_selections_html .= '\t<option value="' . $i . '">' . "{$race_class}</option>";
           ++$i;
       }
-      
-      $teams_selections_html .= '</select><br><br><button type="submit" value="' . TEAM_NAME_ID . '">Select</form>';
-      $teams_selections_html .= <<<REGISTER_TEAM_INSTEAD
-        <form action="register-a-new-team">
-          <button type="submit">Register a new team instead.</button>
-        </form>
-      REGISTER_TEAM_INSTEAD;
-      
-      return $teams_selections_html;
+            
+      return $teams_selections_html . makeFormCloseHTML();
     }
   }
 ?>

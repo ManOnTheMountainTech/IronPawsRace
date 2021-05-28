@@ -102,17 +102,20 @@
                                 var_dump($e);
                                     return "Unhandled MySQL exception";
                             }
-                            throw new Exception("Encountered a network error that cannot be retried. Out of options."); 
+
+                            // TODO
+                            $e->{"user_html_message"} = 'test';
+                            throw new Mush_DB_Exception("Encountered a network error that cannot be retried. Out of options."); 
                         }
                     }
                 }     
                 else {
-                    throw new Exception(__FUNCTION__ . __LINE__ . ": Params is null");
+                    throw new Mush_DB_Exception(__FUNCTION__ . __LINE__ . ": Params is null");
                 }
             }
 
             //Out of retries. Let the user know.
-            throw new Exception("Retried $this->maxConnectRetries times. I couldn't make the network work.");        
+            throw new Mush_DB_Exception("Retried $this->maxConnectRetries times. I couldn't make the network work.");        
         }
     }
 

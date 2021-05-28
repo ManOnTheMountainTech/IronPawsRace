@@ -16,8 +16,7 @@
   class TRSE extends Teams {
     const PRODUCT_ID_IDX = 0;
     const ORDER_ID_IDX = 1;
-    const RACE_CLASS_IDX = 2;
-    const TEAM_NAME_IDX = 3;
+    const TEAM_NAME_IDX = 2;
     
     static function do_shortcode_create_trse() {
       $trse = new TRSE();
@@ -37,11 +36,13 @@
         if (is_null($html)) {
           return "Unable to get any teams for this musher.";
         }
+
+        $html .= $trse->makeFormCloseHTML();
       } catch(Race_Registration_Exception $e) {
         return "<strong>{$e->getMessage()}</strong>";
       }
 
-      return $html . $trse->get_race_classes();
+      return $html;
     }
 
     function createFromFinalParams() {
@@ -51,14 +52,7 @@
       }
 
       if (array_key_exists(RACE_PARAMS, $_POST)) {
-        var_dump($_POST);
-
         $params = explode('|', $_POST[RACE_PARAMS]);
-
-        $race_class_id = test_number($params[self::RACE_CLASS_IDX]);
-        if (0 === $race_class_id) {
-          return "Race class parameter is invalid.";
-        }
 
         $wc_product_id = test_number($params[self::PRODUCT_ID_IDX]);
         if (0 == $wc_product_id) {
@@ -93,7 +87,8 @@
             "CALL sp_getTeamsByTeamNameId (?)", [$team_name_id],
             "Unable to get the team name id from wp user id={$this->wp_user->ID}");
 
-          echo "$wc_order_id | $rsi_id | $team_id";
+          if (is_wp_debug()) {
+            echo "$wc_order_id | $rsi_id | $team_id";}
 
           $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :race_stage_instance_fk, :team_fk)", 
             ['wc_order_id' => $wc_order_id, 
@@ -122,15 +117,10 @@
       $race_class_id_arg = RACE_CLASS_ID;
       $wc_product_id = WC_PRODUCT_ID;
 
-      if (array_key_exists(TEAM_NAME_ID, $_GET) && array_key_exists(RACE_CLASS_ID, $_GET)) {
+      if (array_key_exists(TEAM_NAME_ID, $_GET)) {
         $team_name_id = test_number($_GET[TEAM_NAME_ID]);
         if ($team_name_id < 1) {
           return "Bad team name id passed in.";
-        }
-
-        $race_class_id = test_number($_GET[RACE_CLASS_ID]);
-        if (!isset(self::RACE_CLASSES[$race_class_id])) {
-          return "Out of bounds race class index.";
         }
 
         $i = 0;
@@ -157,8 +147,7 @@
             foreach ($order->line_items as $line_item) {
               $form_html .= makeHTMLOptionString(
                 $line_item->product_id . '|' . 
-                $order->id . '|' . 
-                $race_class_id . '|' . 
+                $order->id . '|' .  
                 $team_name_id , 
                 $line_item->name);
               //$form_html .= makeHTMLInputString(HIDDEN, WC_ORDER_ID, $order->id);
