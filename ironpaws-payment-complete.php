@@ -6,20 +6,22 @@
      require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
      require_once plugin_dir_path(__FILE__) . 'wc-rest.php';
 
+    use Automattic\WooCommerce\Admin\Overrides\Order;
+
     // Called at the very end of the final order screen, as part of 
     // templates/order/order-detail-customer.php
     // @args: WC_Order -> The order object
-     function ironpaws_order_details_after_customer_details(WC_Order $order) {
+     function ironpaws_order_details_after_customer_details(Order $order) {
       if (!is_null($order)) {
         $wc_order_arg = $order->get_order_number();
 
-        $woocommerce = create_wc();
+        $woocommerce = new WC_Rest();
 
         // Make sure that the payment is complete
         if ($wc_order_arg > 0) {
           // We're being called after payment for a race. Ask WooCommerce the details.
           try {
-            $results = $woocommerce->get('orders/' . $wc_order_arg);
+            $results = $woocommerce->getOrdersByCustomerId($wc_order_arg);
             if (NULL == $results) {
               return;
             }
@@ -33,7 +35,7 @@
 
           $wc_order_var = WC_ORDER_ID . '=';
 
-          $teams_path = plugins_url("fetch-teams?{$wc_order_var}{$wc_order_arg}", __FILE__);
+          $teams_path = plugins_url("fetch-teams?{$wc_order_var}={$wc_order_arg}", __FILE__);
           echo <<<ASK_LOCATION_REGISTRATION
             <a href="$teams_path">Team registration</a>
           ASK_LOCATION_REGISTRATION;

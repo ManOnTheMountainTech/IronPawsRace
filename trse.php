@@ -16,9 +16,14 @@
   class TRSE extends Teams {
     const PRODUCT_ID_IDX = 0;
     const ORDER_ID_IDX = 1;
-    const TEAM_NAME_IDX = 2;
+    const TEAM_NAME__ID_IDX = 2;
     
-    static function do_shortcode_create_trse() {
+    static function do_shortcode() {
+      $logon_form = ensure_loggedon();
+      if (!is_null($logon_form)) {
+        return $logon_form;
+      }
+
       $trse = new TRSE();
 
       try { 
@@ -46,27 +51,32 @@
     }
 
     function createFromFinalParams() {
-      $logon_form = ensure_loggedon();
-      if (!is_null($logon_form)) {
-        return $logon_form;
-      }
-
       if (array_key_exists(RACE_PARAMS, $_POST)) {
-        $params = explode('|', $_POST[RACE_PARAMS]);
+        $params_handle_with_care = $_POST[RACE_PARAMS]);
+        $wc_product_id;
+        $wc_order_id;
+        $team_id;
 
-        $wc_product_id = test_number($params[self::PRODUCT_ID_IDX]);
-        if (0 == $wc_product_id) {
-          return "Invalid product id argument";
-        }
+        try {
+          $params = sanitize_text_field($params_handle_with_care);
+          $params = explode('|', $params);
 
-        $team_name_id = test_number($params[self::TEAM_NAME_IDX]);
-        if (0 == $team_name_id) {
-          return "Invalid team name id argument";
-        }
+          $wc_product_id = test_number($params[self::PRODUCT_ID_IDX]);
+          if (0 == $wc_product_id) {
+            return "Invalid product id argument";
+          }
 
-        $wc_order_id = test_number($params[self::ORDER_ID_IDX]);
-        if (0 == $wc_order_id) {
-          return "Invalid order id argument";
+          $team_name_id = test_number($params[self::TEAM_NAME_ID_IDX]);
+          if (0 == $team_name_id) {
+            return "Invalid team name id argument";
+          }
+
+          $wc_order_id = test_number($params[self::ORDER_ID_IDX]);
+          if (0 == $wc_order_id) {
+            return "Invalid order id argument";
+          }
+        } catch(\Exception $e) {
+          return "The supplied parameters could not be parsed.";
         }
 
         try {
@@ -98,7 +108,7 @@
         }
         catch(Mush_DB_Exception $e) { 
             statement_log(__FUNCTION__ , __LINE__ , ': produced exception', $e);
-            return ( 'The database returned an error while registering the team.');
+            return $e->userFriendlyMessage;
           }
 
           return "Team successfully registered.";
@@ -108,67 +118,59 @@
     }
 
     function showProductSelectionForm() {
-      $logon_form = ensure_loggedon();
-      if (!is_null($logon_form)) {
-        return $logon_form;
-      }
-
-      $team_name_id_arg = TEAM_NAME_ID;
-      $race_class_id_arg = RACE_CLASS_ID;
-      $wc_product_id = WC_PRODUCT_ID;
-
       if (array_key_exists(TEAM_NAME_ID, $_GET)) {
         $team_name_id = test_number($_GET[TEAM_NAME_ID]);
         if ($team_name_id < 1) {
           return "Bad team name id passed in.";
         }
 
+        $team_name_id_arg = TEAM_NAME_ID;
+        $race_class_id_arg = RACE_CLASS_ID;
+        $wc_product_id = WC_PRODUCT_ID;
+  
         $i = 0;
         $cur_user = wp_get_current_user();
-
+  
         $wc_rest_api = new WC_Rest();
         $orders = $wc_rest_api->getOrdersByCustomerId($cur_user->ID);
-
-        $form_html = '<form method="post" id="' . WC_ORDER_ID . '" action="' 
-        . '/' . TEAM_REGISTRATION . '">';
-
+  
+        $wc_order_id = WC_ORDER_ID;
+   
+        $form_html = <<<RACE_PRE
+          <form method="{$method}" action="">
+        RACE_PRE;
+  
         $race_select = RACE_SELECT;
         $race_params = RACE_PARAMS;
-
+  
         // Get the products from the orders, then let the customer choose which
         // product (race) they want to go with.
         $form_html .= <<<GET_RACES
-            <label for="{$race_select}">Please select a race to enter the team into.</label>
+            <label for="{$race_select}">{$message}</label>
             <select name="{$race_params}" id="{$race_select}">
         GET_RACES;
-
+  
         foreach($orders as $order) {
           if ($wc_rest_api->checkRaceEditable_noThrow($order)) {
             foreach ($order->line_items as $line_item) {
               $form_html .= makeHTMLOptionString(
                 $line_item->product_id . '|' . 
                 $order->id . '|' .  
-                $team_name_id , 
+                $team_name_id, 
                 $line_item->name);
-              //$form_html .= makeHTMLInputString(HIDDEN, WC_ORDER_ID, $order->id);
             }
           }
-
+  
           ++$i;
         }
   
         $form_html .= "</select><br>\n";
         $form_html .= '<button type="submit" value="' . WC_PRODUCT_ID . '">Select</button>';
         $form_html .= "</form>";
-
+  
         if (0 == $i) {
           $form_html = "<em>No orders have been placed.";
         }
-
-        write_log($form_html);
-
-        return $form_html;
-
       }
 
       return null;

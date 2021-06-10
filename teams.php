@@ -41,7 +41,7 @@
       $this->wp_user = wp_get_current_user();
     }
 
-    // Fetch's a musher's teams.
+    // Fetch's a musher's teams as HTML.
     // @param: optional: _GET[WC_ORDER_ID] -> WooCommerce order ID
     public function get(string $form_action) { 
       $logon_form = ensure_loggedon();
@@ -49,18 +49,32 @@
         return $logon_form;
       }
 
-      $Mush_DB = new Mush_DB();
+      $mush_db = new Mush_DB();
+      //$teams_path = plugins_url('modify_teams.php', __FILE__);
+
+      // TODO: Change to 
+      //$teams_path = plugins_url('fetch-teams', __FILE__);
+      $teams = '<form method="get" id="' . TEAM_NAME_ID . '" action="' 
+        . $form_action . '">';
+
+      $teams .= $this->makeTeamsSelectHTML($mush_db);
+
+      return $teams;
+    }
+
+    function makeTeamsSelectHTML(Mush_DB $mush_db) {
       $mushers_teams_failed = false;
+      $teams;
 
       try {
-        $teams = $this->get_mushers_teams($Mush_DB, $form_action);
+        $teams = $this->get_mushers_teams($mush_db);
         if (null == $teams) {
           $mushers_teams_failed = true;  
         }
       }
-      catch(\PDOException $e) {
+      catch(Mush_DB_Exception $e) {
         statement_log(__FUNCTION__, __LINE__, "Unable to create db object", $e);
-        return "Unable to connect to the database. Please try again later.";
+        return $e->userFriendlyMessage;
       }
       catch(Race_Registration_Exception $e) {         
         $error = $e->processRaceAccessCase();
@@ -83,23 +97,16 @@
         <a href="register-a-new-team">Register a new team</a>
       ONLY_REGISTER);
     }
-    
+  
     // @params: 
     // @returns: an HTML select table of the mushers's teams. null on failure.
-    function get_mushers_teams(Mush_DB $db, string $form_action) { 
-      //$teams_path = plugins_url('modify_teams.php', __FILE__);
-
-      // TODO: Change to 
-      //$teams_path = plugins_url('fetch-teams', __FILE__);
-      $teams_selections_html = '<form method="get" id="' . TEAM_NAME_ID . '" action="' 
-        . $form_action . '">';
-
+    function get_mushers_teams(Mush_DB $db) { 
       $team_name_id = TEAM_NAME_ID;
 
       //$container_html = $this->makeOpeningHTML();
 
       // TODO: Handle both add a team and modify a team.
-      $teams_selections_html .= $this->makeOpeningHTML();
+      $teams_selections_html = $this->makeOpeningHTML();
   
       $people_id = $db->execAndReturnInt(
         "CALL sp_getPersonIdFromWPUserId (?)", 

@@ -6,6 +6,9 @@
     require_once('includes/wp-defs.php');
     require_once('includes/debug.php');
 
+    use Automattic\WooCommerce\Client;
+    use Automattic\WooCommerce\HttpClient\HttpClientException;
+
     /*
     function ironpaws_woocommerce_order_status_completed( $order_id ) {
         echo 'woocommerce_order_status_completed';

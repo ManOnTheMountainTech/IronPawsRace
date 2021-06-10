@@ -55,7 +55,7 @@
 
                 } catch(Mush_DB_Exception $e) { 
                     write_log(__FUNCTION__ . " produced exception ", $e);
-                    return 'An error occured while saving the team information.';
+                    return $e->userFriendlyMessage;
                 }
      
                 $strippedTeamName = stripslashes($teamName);
@@ -79,10 +79,10 @@
         $race_class_id = RACE_CLASS_ID;
 
         $add_team_html .= <<<ADD_TEAM_PRE
-        <form method="get" id="new_team_form" action="register-a-new-team">
-            <label for="{$team_name}">Team name:</label>
-            <input type="text" id="{$team_name}" name="{$team_name}"><br>
-            <label for="{$race_class_id}">Race class:</label><br>
+        <form required method="get" id="new_team_form" action="register-a-new-team">
+            <label for="{$team_name}">Team name*:</label>
+            <input required type="text" id="{$team_name}" name="{$team_name}"><br>
+            <label for="{$race_class_id}">Race class*:</label><br>
             <select id="{$race_class_id}" name="{$race_class_id}"><br>
         ADD_TEAM_PRE;
 

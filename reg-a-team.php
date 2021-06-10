@@ -36,9 +36,13 @@
     @params: $dogNames - A comma seperated list of dogs, with every name escape quoted*/
     if ($_SERVER["REQUEST_METHOD"] == "GET") {
     
-      $team_names = test_input($_POST["dogNames"]);
-      if (empty($team_names)) {
-        return ($team_names . " is not a valid list of dogs.");
+      try {
+        $team_names = sanitize_text_field($_POST["dogNames"]);
+        if (empty($team_names)) {
+          return ($team_names . " is not a valid list of dogs.");
+        }
+      } catch (\Exception $e) {
+        return "Invalid parameters getting dog team information.";
       }
     }
       

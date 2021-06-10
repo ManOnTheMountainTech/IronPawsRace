@@ -28,8 +28,8 @@ register_wc_hooks();
 function register_shortcodes() {
     add_shortcode('ironpaws_create_team_race_stage_entry', 'IronPaws\\do_shortcode_create_team_race_stage_entry');
     add_shortcode('ironpaws_register_a_team', 'IronPaws\\do_shortcode_reg_a_team');  
-    add_shortcode('ironpaws_fetch_teams', ['IronPaws\\Fetch_Teams', 'do_shortcode_fetch_teams']);
-    add_shortcode('ironpaws_create_trse', ['IronPaws\\TRSE', 'do_shortcode_create_trse']);
+    add_shortcode('ironpaws_fetch_teams', ['IronPaws\\Fetch_Teams', 'do_shortcode']);
+    add_shortcode('ironpaws_create_trse', ['IronPaws\\TRSE', 'do_shortcode']);
     add_shortcode('ironpaws_add_a_team', 'IronPaws\\do_shortcode_add_a_team');
     add_shortcode('ironpaws_run_tests', 'IronPaws\\do_shortcode_run_tests');
     add_shortcode('ironpaws_race_stage_entry', ['IronPaws\\Race_Stage_Entry', 'do_shortcode']);

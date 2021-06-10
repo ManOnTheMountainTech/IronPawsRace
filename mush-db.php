@@ -34,6 +34,28 @@
         }
 
         // @param $errorCore The "core" of the error message to display.
+        // @returns -> the column from the database
+        public function execAndReturnColumn(string $statement, 
+            array $params,
+            string $errorCore) {
+
+            $stmt = $this->execSql($statement, $params);
+
+            if (is_null($stmt)) {
+                Mush_DB_Exception::throwErrorCoreException($errorCore, 0);
+            }
+
+            $column = $stmt->fetchAll(\PDO::FETCH_NUM);
+            $stmt->closeCursor();
+
+            if (is_null($column)) {
+                Mush_Db_Exception::throwErrorCoreException($errorCore, 2);
+            }
+
+            return $column;
+        }
+
+        // @param $errorCore The "core" of the error message to display.
         // @returns -> the returned id
         public function execAndReturnInt(string $statement, 
             array $params,
@@ -104,7 +126,6 @@
                             }
 
                             // TODO
-                            $e->{"user_html_message"} = 'test';
                             throw new Mush_DB_Exception("Encountered a network error that cannot be retried. Out of options."); 
                         }
                     }
@@ -127,6 +148,9 @@
             $number = 0; }
     }
 
+    // Generic all-date validation function.
+    // WARNING: Gaurd this with an exception handler. Trim can explode with
+    // bad input.
     function test_input($data) {
         $data = trim($data);
         $data = stripslashes($data);

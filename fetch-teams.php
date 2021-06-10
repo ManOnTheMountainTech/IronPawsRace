@@ -5,8 +5,6 @@
 
   namespace IronPaws;
 
-  session_start(); 
-
   require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
   require_once plugin_dir_path(__FILE__) . 'teams.php';
@@ -15,7 +13,7 @@
   use Automattic\WooCommerce\HttpClient\HttpClientException;
 
   class Fetch_Teams extends Teams {
-    static function do_shortcode_fetch_teams() {
+    static function do_shortcode() {
       return (new Fetch_Teams())->get('fetch-teams');
     }
 
