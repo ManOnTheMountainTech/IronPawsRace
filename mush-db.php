@@ -76,7 +76,7 @@
                 Mush_DB_Exception::throwErrorCoreException($errorCore, 1);
             }
 
-            // Result always comes back in the array of the array.
+            // Result always comes back in the array of the array for single object returns.
             $id = $rawId[0][0];
 
             if (0 == $id) {

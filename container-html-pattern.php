@@ -5,7 +5,7 @@
 
     interface Container_HTML_Pattern {
         function makeOpeningHTML();
-        function makeListItemHTML(array $row);
+        function makeListItemHTML(array $team_idxs);
         function makeClosingHTML();
     }
 ?>

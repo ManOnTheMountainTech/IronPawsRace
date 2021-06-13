@@ -37,6 +37,12 @@
       "5-6 Dog Sled",
       "Unlimited Sled and Rig");
 
+    const TEAM_IDX = 0;
+    const TEAM_BIB_NUMBER = 1;
+    const TEAM_TN_FK = 2;
+    const TEAM_CLASS_ID = 3;
+    const TEAM_NAME_ID = 4;
+      
     public function __construct() {
       $this->wp_user = wp_get_current_user();
     }
@@ -117,13 +123,15 @@
         throw new Race_Registration_Exception("Failed to get who this musher is.");
       }
 
-      $stmt = $db->execSql("CALL sp_getMushersTeamNames (?)", [$people_id]);
+      // TODO: May want to pass in the team and team name IDs
+      $stmt = $db->execSql("CALL sp_getAllTeamInfoAndTNByPersonId(?)", [$people_id]);
       $foundATeam = false;
 
       try {
-        while ($row = $stmt->fetch(\PDO::FETCH_NUM, \PDO::FETCH_ORI_NEXT)) {
+        while ($team_idxs = $stmt->fetch(\PDO::FETCH_NUM, \PDO::FETCH_ORI_NEXT)) {
+
           // remember: $TEAMS for add-a-team must be an index.
-          $teams_selections_html .= $this->makeListItemHTML($row);
+          $teams_selections_html .= $this->makeListItemHTML($team_idxs);
           $foundATeam = true;
         }
 

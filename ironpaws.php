@@ -5,7 +5,7 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.1.6
+ * Version: 0.1.7
  */
 
 /* Place custom code below this line. */
@@ -40,6 +40,7 @@ function register_wp_hooks() {
     add_action('delete_user', 'IronPaws\\ironpaws_wp_delete_user');
     add_action('delete_user_form', 'IronPaws\\ironpaws_wp_delete_user_form');
     add_filter('wp_nav_menu_items', 'IronPaws\\ironpaws_add_loginout_link', 10, 2);
+    add_action('wp_enqueue_scripts', 'IronPaws\\ironpaws_wp_load_css' );
 }
 
 /*

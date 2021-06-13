@@ -38,5 +38,10 @@
             $items .= '<li><a href="' . get_permalink( wc_get_page_id( 'myaccount' ) ) . '">Log in</a></li>';
         }
         return $items;
-    }   
+    }  
+    
+    function ironpaws_wp_load_css() {
+        \wp_enqueue_style("ironpaws_rse", 
+            plugins_url('/css/race-stage-entry.css', __FILE__));
+    }
 ?>

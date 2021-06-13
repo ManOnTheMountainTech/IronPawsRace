@@ -33,7 +33,6 @@
         const SECONDS = 'seconds';
         const OUTCOME = 'outcome';
 
-        const RACE_CLASS_ID = 'race_class_id';
         const RACE_STAGE_RESULTS_PARAMS = 'race_stage_results_params';
 
         const RACE_STAGE_ENTRY = 'race_stage_entry';
@@ -50,8 +49,6 @@
 
         const OUTCOME_DISQUALIFIED_IDX = 5;
 
-        const RI_START_DATE_TIME = 3;
-        const RI_RACE_DEFS_FK = 2;
 
         function makeHTMLOptionStringForOutcome(int $i) {
             $outcome = Race_Stage_Entry::OUTCOMES[$i];
@@ -146,27 +143,14 @@
                 // TODO: 
                 // Select the TRSEs that are currentelly active for the date.
                 // Fully populate TRSEs in TRSE.php
-                // Figure out what stage we are racing
-                $person_id = $mush_db->execAndReturnInt(
-                    'CALL sp_getPersonIdFromWPUserId (?)',
-                    [$this->cur_user->ID],
-                    "Unfortunately the user id could not be retrieved.");
 
-                $stmt = $mush_db->execSql('CALL sp_getAllRaceInstanceInfo(?)',
-                [$wpProductId],
-                "Unable to get information about the race");
+                $cur_ri_info = $mush_db->execAndReturnColumn('CALL sp_getAllRaceInstanceInfo(?)',
+                    [$wpProductId],
+                    "Unable to get information about the race");
+                $cur_ri_info = $cur_ri_info[0]; // Should only have 1 match from the query
 
-                if (is_null($stmt)) {
-                    return "Unable to get information about the race.";
-                }
-    
-                $cur_ri_info = $stmt->fetchAll(\PDO::FETCH_NUM);
-                $stmt->closeCursor();
-
-                $cur_ri_info = $cur_ri_info[0]; // Should only be 1
-
-                $race_start_date_time = date_create($cur_ri_info[Race_Stage_Entry::RI_START_DATE_TIME]);
-                $ri_race_defs_fk = $cur_ri_info[Race_Stage_Entry::RI_RACE_DEFS_FK];
+                $race_start_date_time = date_create($cur_ri_info[TRSE::RI_START_DATE_TIME]);
+                $ri_race_defs_fk = $cur_ri_info[TRSE::RI_RACE_DEFS_FK];
 
                 $num_race_stages = $mush_db->execAndReturnInt(
                     'CALL sp_getNumRaceStagesByRD (?)',
@@ -264,7 +248,7 @@
                     return "Mileage must be positive. Are you sure you were going the right direction?";
                 }
 
-                $race_stage_instance = test_number($_POST[Race_Stage_Entry::RACE_STAGE_ARG]);
+                $race_stage = test_number($_POST[Race_Stage_Entry::RACE_STAGE_ARG]);
                 $wc_pair_args = sanitize_text_field($_GET[WC_PAIR_ARGS]);
                 $wc_pairs = explode('|', $wc_pair_args);
                 $wc_order_id_handle_with_care = $wc_pairs[1];
@@ -287,15 +271,20 @@
 
             $race_elapsed_time = sprintf("%02d:%02d:%05.2F", $hours, $minutes, $seconds);
 
-            $db->execSql("call sp_updateTRSEForRSE(:wcOrderId, :mileage, :outcome, :raceElapsedTime, :raceStageInstance, :dateCreated)",
+            $modified_columns = $db->execAndReturnColumn(
+                "call sp_updateTRSEForRSE(:wcOrderId, :mileage, :outcome, :raceElapsedTime, :raceStage, :dateCreated)",
                 ['wcOrderId' => $wc_order_id, 
                 'mileage' => $mileage, 
                 'outcome' => $outcome, 
                 'raceElapsedTime' => $race_elapsed_time, 
-                'raceStageInstance' => $race_stage_instance, 
-                'dateCreated' => date("Y-m-d H:i:s")]);
+                'raceStage' => $race_stage, 
+                'dateCreated' => date("Y-m-d H:i:s")],
+                "A failure occured writing this team race stage entry.");
 
-            return "Successfully wrote race stage <strong>{$race_stage_instance}</strong> to the server.";
+            unset($_GET);
+            unset($_POST);
+
+            return "Successfully wrote race stage <strong>{$race_stage}</strong> to the server.";
         }
 
         // TODO: See if the race was set up to be untimed.

@@ -22,8 +22,8 @@
       return "<h3>Below are your teams:</h3>";
     }
 
-    function makeListItemHTML(array $row) {
-      return '<em>' . $row[1] . '<br>';
+    function makeListItemHTML(array $team_idxs) {
+      return '<em>' . $team_idxs[Teams::TEAM_NAME_ID] . '<br>';
     }
 
     function makeClosingHTML() {

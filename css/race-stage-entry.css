@@ -1,0 +1,32 @@
+.hide-overflow {
+    overflow: hidden;/* Makes this div contain its floats */
+}
+
+.hide-overflow .col {
+    float: left;
+}
+
+.hide-overflow label {
+    display: block;
+}
+
+.disp-flex {
+	display: flex;
+}
+
+.disp-block {
+	display: block;
+}
+
+.border {
+	border-style: inset;
+	border-width: thin;
+	border-radius: 1rem;
+	padding-top: 1rem;
+	padding-right: 1rem;
+	display: table;
+}
+
+.def-pad {
+	padding: 0% 0% 1rem 1rem;
+}

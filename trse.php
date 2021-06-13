@@ -16,8 +16,11 @@
   class TRSE extends Teams {
     const PRODUCT_ID_IDX = 0;
     const ORDER_ID_IDX = 1;
-    const TEAM_NAME__ID_IDX = 2;
-    
+    const TEAM_IDX = 2;
+
+    const RI_START_DATE_TIME = 3;
+    const RI_RACE_DEFS_FK = 2;
+
     static function do_shortcode() {
       $logon_form = ensure_loggedon();
       if (!is_null($logon_form)) {
@@ -52,7 +55,7 @@
 
     function createFromFinalParams() {
       if (array_key_exists(RACE_PARAMS, $_POST)) {
-        $params_handle_with_care = $_POST[RACE_PARAMS]);
+        $params_handle_with_care = $_POST[RACE_PARAMS];
         $wc_product_id;
         $wc_order_id;
         $team_id;
@@ -66,8 +69,8 @@
             return "Invalid product id argument";
           }
 
-          $team_name_id = test_number($params[self::TEAM_NAME_ID_IDX]);
-          if (0 == $team_name_id) {
+          $team_id = test_number($params[self::TEAM_IDX]);
+          if (0 == $team_id) {
             return "Invalid team name id argument";
           }
 
@@ -80,48 +83,77 @@
         }
 
         try {
+          $error_message;
+
           $db = new Mush_DB();
-          $people_id = $db->execAndReturnInt(
-            "CALL sp_getPersonIdFromWPUserId (?)", [$this->wp_user->ID],
-            "Unable to get the person id from wp user id={$this->wp_user->ID}");
 
-          $team_ids = $db->execAndReturnInt(
-            "CALL sp_getMushersTeams (?)", [$people_id],
-            "Unable to get the person id from wp user id={$this->wp_user->ID}");
-
-          $rsi_id = $db->execAndReturnInt(
-            "CALL sp_getRSIByWCProdId (?)", [$wc_product_id],
-            "Unable to get the RSI id from wp user id={$this->wp_user->ID}");
-
-          $team_id = $db->execAndReturnInt(
-            "CALL sp_getTeamsByTeamNameId (?)", [$team_name_id],
-            "Unable to get the team name id from wp user id={$this->wp_user->ID}");
-
+          $num_race_stages = $db->execAndReturnInt(
+            "CALL sp_getRaceStagesFromWC(?)", [$wc_product_id],
+            "Failure in getting the number of race stages.");
+  
           if (is_wp_debug()) {
-            echo "$wc_order_id | $rsi_id | $team_id";}
+            echo "wc_order_id =$wc_order_id | team_id=$team_id | race_stage=$num_race_stages";}
 
-          $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :race_stage_instance_fk, :team_fk)", 
-            ['wc_order_id' => $wc_order_id, 
-            'race_stage_instance_fk' => $rsi_id, 
-            'team_fk' => $team_id],
-            "Writing the team race stage entry failed. Please try again.");
+          for ($race_stage = 0; $race_stage < $num_race_stages; ++$race_stage) {
+            $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :team_fk, :race_stage)", 
+              ['wc_order_id' => $wc_order_id, 
+              'team_fk' => $team_id,
+              'race_stage' => $race_stage],
+              "Writing the team race stage entry failed. Please try again.");
+          }
+
+          if (0 == $trse_id) {
+            if (isset($error_message)) {
+              $error_message = "Team race stage entry {$race_stage} could not be recorded.";
+            }
+            else {
+              $error_message .= "Team race stage entry {$race_stage} could not be recorded.";
+            }
+          }
         }
         catch(Mush_DB_Exception $e) { 
             statement_log(__FUNCTION__ , __LINE__ , ': produced exception', $e);
             return $e->userFriendlyMessage;
           }
 
-          return "Team successfully registered.";
-        }
+        unset($_GET);
+        unset($_POST);
+        return "Team successfully registered.";
+      }
 
-        return null;
+      return null;
     }
 
+    // Previous state: makeOpeningHTML
     function showProductSelectionForm() {
-      if (array_key_exists(TEAM_NAME_ID, $_GET)) {
-        $team_name_id = test_number($_GET[TEAM_NAME_ID]);
-        if ($team_name_id < 1) {
-          return "Bad team name id passed in.";
+      if (array_key_exists(TEAM_ARGS, $_GET)) {
+        $team_id;
+        $team_name_id;
+
+        try {
+          $team_args_danger_will_robertson = $_GET[TEAM_ARGS];
+          $team_args = sanitize_text_field($team_args_danger_will_robertson);
+
+          $team_params_unsafe = explode('|', $team_args);
+          $team_params_size = count($team_params_unsafe);
+          if (2 != $team_params_size) {
+            return "Invalid number of team params passed in";
+          }
+
+          $team_id = test_number($team_params_unsafe[0]);
+          if ($team_id < 1) {
+            return "Bad team id passed in.";
+          }
+
+          $team_name_id = test_number($team_params_unsafe[1]);
+          if ($team_name_id < 1) {
+            return "Bad team name passed in.";
+          }
+        } catch (\Exception $e) {
+          if (is_wp_debug()) {
+            var_dump($e);
+          }
+          return "Bad parameters passed in.";
         }
 
         $team_name_id_arg = TEAM_NAME_ID;
@@ -135,6 +167,8 @@
         $orders = $wc_rest_api->getOrdersByCustomerId($cur_user->ID);
   
         $wc_order_id = WC_ORDER_ID;
+
+        $method = POST;
    
         $form_html = <<<RACE_PRE
           <form method="{$method}" action="">
@@ -145,6 +179,8 @@
   
         // Get the products from the orders, then let the customer choose which
         // product (race) they want to go with.
+        $message = "Please choose a race for your team.";
+
         $form_html .= <<<GET_RACES
             <label for="{$race_select}">{$message}</label>
             <select name="{$race_params}" id="{$race_select}">
@@ -156,7 +192,7 @@
               $form_html .= makeHTMLOptionString(
                 $line_item->product_id . '|' . 
                 $order->id . '|' .  
-                $team_name_id, 
+                $team_id, 
                 $line_item->name);
             }
           }
@@ -166,26 +202,32 @@
   
         $form_html .= "</select><br>\n";
         $form_html .= '<button type="submit" value="' . WC_PRODUCT_ID . '">Select</button>';
-        $form_html .= "</form>";
+        $form_html .= "</form>\n";
   
         if (0 == $i) {
           $form_html = "<em>No orders have been placed.";
         }
+
+        return $form_html;
       }
 
       return null;
     } // end: showProductSelectionForm
 
+    //function get(string $form_action) {}
+
     function makeOpeningHTML() {
+      $team_args = TEAM_ARGS;
       $team_name_id = TEAM_NAME_ID;
       return <<<GET_TEAMS
             <label for="{$team_name_id}">Please select a team to race:</label>
-            <select name="{$team_name_id}" id="{$team_name_id}">
+            <select name="{$team_args}" id="{$team_name_id}">
       GET_TEAMS;
     }
 
-    function makeListItemHTML(array $row) {
-      return '<option value="' . $row[0] . '">' . $row[1] . '</option>';
+    function makeListItemHTML(array $team_idxs) {
+      return '<option value="' . $team_idxs[TEAMS::TEAM_IDX] . '|' . 
+        $team_idxs[TEAMS::TEAM_TN_FK] . '">' . $team_idxs[TEAMS::TEAM_NAME_ID] . '</option>';
     }
 
     function makeClosingHTML() {
