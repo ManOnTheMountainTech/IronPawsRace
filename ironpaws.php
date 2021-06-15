@@ -33,6 +33,7 @@ function register_shortcodes() {
     add_shortcode('ironpaws_add_a_team', 'IronPaws\\do_shortcode_add_a_team');
     add_shortcode('ironpaws_run_tests', 'IronPaws\\do_shortcode_run_tests');
     add_shortcode('ironpaws_race_stage_entry', ['IronPaws\\Race_Stage_Entry', 'do_shortcode']);
+    add_shortcode('ironpaws_test_updateTRSEForRSE', 'IronPaws\\do_shortcode_test_sp_updateTRSEForRSE');
 }
 
 function register_wp_hooks() {

@@ -1,4 +1,6 @@
 <?php
+  namespace IronPaws;
+
   defined( 'ABSPATH' ) || exit;
 
   // also refer to <wordpress>_wpip_wc_customer_lookup

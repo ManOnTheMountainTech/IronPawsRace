@@ -31,4 +31,20 @@
 
     return "Forgot to return the test result";
   }
+
+  function do_shortcode_test_sp_updateTRSEForRSE() {
+    $db = new Mush_DB();
+                        
+    $modified_columns = $db->execAndReturnColumn(
+      "call sp_updateTRSEForRSE(:wcOrderId, :mileage, :outcome, :raceElapsedTime, :raceStage, :dateCreated)",
+      ['wcOrderId' => 64, 
+      'mileage' => 12, 
+      'outcome' => 'dropped', 
+      'raceElapsedTime' => '01:02:04.2', 
+      'raceStage' => 1, 
+      'dateCreated' => date("Y-m-d H:i:s")],
+      "A failure occured writing this team race stage entry.");
+
+      return print_r($modified_columns, true);
+  }
 ?>
