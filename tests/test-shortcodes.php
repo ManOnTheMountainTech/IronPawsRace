@@ -1,8 +1,8 @@
 <?php
     // also refer to <wordpress>_wpip_wc_customer_lookup
-    defined( 'ABSPATH' ) || exit;
+  namespace IronPaws;
 
-    namespace IronPaws;
+    defined( 'ABSPATH' ) || exit;
   
     require_once plugin_dir_path(__FILE__) . '../includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . '../includes/debug.php';

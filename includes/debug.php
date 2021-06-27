@@ -1,7 +1,7 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
+    
+    defined( 'ABSPATH' ) || exit;
 
     function is_wp_debug() {
         return (defined('WP_DEBUG') && true === WP_DEBUG);

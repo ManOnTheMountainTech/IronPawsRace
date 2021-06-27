@@ -1,14 +1,14 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
 
+    defined( 'ABSPATH' ) || exit;
     define("FORM_NAME", "RSE_Form");
 
     require_once plugin_dir_path(__FILE__) . 'autoloader.php';
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
     require_once plugin_dir_path(__FILE__) . 'includes/util.php';
+    require_once plugin_dir_path(__FILE__) . 'add-a-team.php';
 
     class Race_Stage_Entry { 
         protected \WP_User $cur_user;
@@ -37,6 +37,8 @@
 
         const RACE_STAGE_ENTRY = 'race_stage_entry';
         const RACE_STAGE_ARG = 'race_stage_arg';
+
+        const RAN_CLASS = 'ran_class';
 
         const OUTCOMES = [
             'completed',
@@ -120,8 +122,11 @@
             return $form_html;
         } // end: makeProductSelectionForm
 
+
+        // IN: GET -> <product id> | <order id>
         function makeHTMLRaceStageEntryForm() {
             $wpProductId;
+            $wpOrderId;
 
             try {
                 $wc_pair_args = test_input($_GET[WC_PAIR_ARGS]);
@@ -129,6 +134,10 @@
                 $wpProductId = $pieces[0];
                 if ($wpProductId < 1) {
                     return "Invalid product id supplied.";
+                }
+                $wpOrderId = $pieces[1];
+                if ($wpOrderId < 1) {
+                    return "Invalid order id supplied.";
                 }
             } catch (\Exception $e) {
                 return "Invalid parameters specified.";
@@ -138,6 +147,7 @@
 
             // Don't penalize the racer for our slowness in processing.
             $cur_date_time = date_create();
+            $trse_params;
 
             try {
                 // TODO: 
@@ -156,6 +166,11 @@
                     'CALL sp_getNumRaceStagesByRD (?)',
                     [$ri_race_defs_fk],
                     "Unfortunately the number of race stages could not be retrieved.");
+
+                $trse_params = (new Mush_DB)->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
+                    ['wc_order_id' => $wpOrderId],
+                    "Internal error race-stage-entry-1. Please contact support or file a bug.");
+                $trse_params = $trse_params[0];
             }
             catch(Mush_DB_Exeption $e) {
                 statement_log(__FUNCTION__, __LINE__, "Produced exception", $e);
@@ -180,35 +195,43 @@
             $mileage = Race_Stage_Entry::MILEAGE;
             $minutes = Race_Stage_Entry::MINUTES;
 
+            $ran_classes = Teams::makeRunRaceClassesHTML($trse_params[4]);
+            $ran_class = self::RAN_CLASS;
+
             $trse_selections_html .= <<<FORM_BODY
-                    <div class="border">\n
-                        <div>\n
-                            <div class="hide-overflow def-pad">\n
-                                <label for="mileage">Mileage*:</label>\n
-                                <input required type="number" id="mileage" name="mileage">\n
-                            </div>\n
+                <div class="border">\n
+                    <div class="hide-overflow disp-flex">\n
+                        <div class="hide-overflow def-pad">\n
+                            <label for="mileage">Mileage*:</label>\n
+                            <input required type="number" id="mileage" name="mileage" min="0" step="0.1">\n
                         </div>\n
-                        <div class="hide-overflow disp-flex">\n
-                            <div class="def-pad">\n
-                                <label for="hours">Hours*:</label>\n
-                                <input required min="0" type="number" id="hours" name="hours" class="disp-block">\n
-                            </div>\n
-                            <div class="def-pad">\n
-                                <label for="minutes">Minutes*:</label>\n
-                                <input required type="number" min="0" max="60" id="minutes" name="minutes" class="disp-block">\n
-                            </div>\n
-                            <div class="def-pad">\n
-                                <label for="seconds">Seconds*:</label>\n
-                                <input required type="number" min="0" max="60" id="seconds" name="seconds" step="0.1" class="disp-block">\n
-                            </div>\n
+                        <div class="hide-overflow def-pad">\n
+                            <label for="ran_class">Class ran in*:</label>\n
+                            <select id="{$ran_class}" name="{$ran_class}"><br>
+                                {$ran_classes}
+                            </select>
                         </div>\n
                     </div>\n
-                    <div>\n
+                    <div class="hide-overflow disp-flex">\n
+                        <div class="def-pad">\n
+                            <label for="hours">Hours*:</label>\n
+                            <input required min="0" type="number" id="hours" name="hours" class="disp-block">\n
+                        </div>\n
+                        <div class="def-pad">\n
+                            <label for="minutes">Minutes*:</label>\n
+                            <input required type="number" min="0" max="60" id="minutes" name="minutes" class="disp-block">\n
+                        </div>\n
+                        <div class="def-pad">\n
+                            <label for="seconds">Seconds*:</label>\n
+                            <input required type="number" min="0" max="60" id="seconds" name="seconds" step="0.1" class="disp-block">\n
+                        </div>\n
+                    </div>\n
+                </div>\n
             FORM_BODY;
 
             $trse_selections_html .= $this->makeHTMLSelectableOutcomes();
 
-            $trse_selections_html .= "</div>\n"; // for border
+            //$trse_selections_html .= "</div>\n"; // for border
 
             $race_stage_arg = Race_Stage_Entry::RACE_STAGE_ARG;
 
@@ -226,6 +249,11 @@
             return $trse_selections_html;
         }
 
+        // params: $_POST
+        //  -> Hours, Minutes, Seconds, Mileage, Race stage,
+        //      -> WC_PAIR_ARGS ->
+        //          product id | order id
+        //      -> Outcome - Enum as string
         function writeToMush_DB() {
             try {
                 $hours = test_number($_POST[Race_Stage_Entry::HOURS]);
@@ -249,6 +277,10 @@
                 }
 
                 $race_stage = test_number($_POST[Race_Stage_Entry::RACE_STAGE_ARG]);
+                if ($race_stage < 0) {
+                    return "Race stage must be greater than 0";
+                }
+
                 $wc_pair_args = sanitize_text_field($_GET[WC_PAIR_ARGS]);
                 $wc_pairs = explode('|', $wc_pair_args);
                 $wc_order_id_handle_with_care = $wc_pairs[1];
@@ -263,6 +295,14 @@
                     return "Invalid race outcome supplied.";
                 }
 
+                $run_class_id = test_number($_POST[Race_Stage_Entry::RAN_CLASS]);
+                if ($run_class_id < 0) {
+                    return "Run class id must be greater than 0";
+                }
+                if ($run_class_id > Teams::MAX_RUN_RACE_CLASSES) {
+                    return "No such run class id.";
+                }
+
             } catch(\Exception $e) {
                 return GENERIC_INVALID_PARAMETER_MSG;
             }
@@ -272,19 +312,22 @@
             $race_elapsed_time = sprintf("%02d:%02d:%05.2F", $hours, $minutes, $seconds);
 
             $modified_columns = $db->execAndReturnColumn(
-                "call sp_updateTRSEForRSE(:wcOrderId, :mileage, :outcome, :raceElapsedTime, :raceStage, :dateCreated)",
+                "call sp_updateTRSEForRSE(:wcOrderId, :mileage, :outcome, :raceElapsedTime, :raceStage, :dateCreated, :runClassId)",
                 ['wcOrderId' => $wc_order_id, 
                 'mileage' => $mileage, 
                 'outcome' => $outcome, 
                 'raceElapsedTime' => $race_elapsed_time, 
                 'raceStage' => $race_stage, 
-                'dateCreated' => date("Y-m-d H:i:s")],
+                'dateCreated' => date("Y-m-d H:i:s"),
+                'runClassId' => $run_class_id],
                 "A failure occured writing this team race stage entry.");
 
             unset($_GET);
             unset($_POST);
 
-            return "Successfully wrote race stage <strong>{$race_stage}</strong> to the server.";
+            $user_return_msg = (empty($modified_columns)) ?  "Failed to write" : "Successfully wrote";
+                 
+            return "{$user_return_msg} race stage <strong>{$race_stage}</strong> to the server.";
         }
 
         // TODO: See if the race was set up to be untimed.

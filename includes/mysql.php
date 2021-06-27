@@ -1,7 +1,7 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
+
+    defined( 'ABSPATH' ) || exit;
 
     class MySql {
         static public $reconnectErrors = [

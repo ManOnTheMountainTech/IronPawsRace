@@ -18,6 +18,8 @@
 
         function runTests() {
             $db->execSQL("CALL sp_getRaceInstance(?)", [14]);
+
+            $db->execSQL("CALL sp_initTRSE(:wcOrderId,:wcProdId,:teamId,:stage)", [64,14,7,6]);
         }
     }
 ?>

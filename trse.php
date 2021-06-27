@@ -1,7 +1,7 @@
 <?php
-  defined( 'ABSPATH' ) || exit;
-
   namespace IronPaws;
+
+  defined( 'ABSPATH' ) || exit;
 
   require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
@@ -92,11 +92,12 @@
             "Failure in getting the number of race stages.");
   
           if (is_wp_debug()) {
-            echo "wc_order_id =$wc_order_id | team_id=$team_id | race_stage=$num_race_stages";}
+            echo "wc_order_id =$wc_order_id | team_id=$team_id | num_race_stages=$num_race_stages | wc_product_id=$wc_product_id\n";}
 
-          for ($race_stage = 0; $race_stage < $num_race_stages; ++$race_stage) {
-            $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :team_fk, :race_stage)", 
+          for ($race_stage = 1; $race_stage <= $num_race_stages; ++$race_stage) {
+            $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :wc_product_id, :team_fk, :race_stage)", 
               ['wc_order_id' => $wc_order_id, 
+              'wc_product_id' => $wc_product_id,
               'team_fk' => $team_id,
               'race_stage' => $race_stage],
               "Writing the team race stage entry failed. Please try again.");
@@ -112,9 +113,9 @@
           }
         }
         catch(Mush_DB_Exception $e) { 
-            statement_log(__FUNCTION__ , __LINE__ , ': produced exception', $e);
-            return $e->userFriendlyMessage;
-          }
+          statement_log(__FUNCTION__ , __LINE__ , ': produced exception', $e);
+          return $e->userHTMLMessage;
+        }
 
         unset($_GET);
         unset($_POST);

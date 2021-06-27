@@ -1,7 +1,8 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
 
     namespace IronPaws;
+
+    defined( 'ABSPATH' ) || exit;
 
     require_once plugin_dir_path(__FILE__) . 'includes/mysql.php';
     require_once plugin_dir_path(__FILE__) . 'includes/mush-db-exception.php';
@@ -36,7 +37,7 @@
         // @param $errorCore The "core" of the error message to display.
         // @returns -> the column from the database
         public function execAndReturnColumn(string $statement, 
-            array $params,
+            array $params = [],
             string $errorCore) {
 
             $stmt = $this->execSql($statement, $params);
@@ -58,7 +59,7 @@
         // @param $errorCore The "core" of the error message to display.
         // @returns -> the returned id
         public function execAndReturnInt(string $statement, 
-            array $params,
+            array $params = [],
             string $errorCore) {
 
             $stmt = $this->execSql($statement, $params);
@@ -85,24 +86,32 @@
 
             return $id;
         }
+
+        public function preparedExec(string $statement, array $params = []) {
+            // Turn off the display of errors so we don't see packets
+            // out of order. We allready deal with that.
+            @$prepared = $this->conn->prepare($statement);
+            if (@$prepared->execute($params)) {
+                return $prepared;
+            }
+            else {
+                return null;
+            }
+        }
+
+        public function query(string $statement) {
+            return $this->conn->query($statement);
+        }
         
         // based off of:
         // https://www.tobymackenzie.com/blog/2020/08/18/automatic-reconnect-pdo-connection-time-out/
-        public function execSql(string $statement, array $params) { // TODO: See if we really need an empty array.
+        public function execSql(string $statement, array $params = []) { // TODO: See if we really need an empty array.
             $this->reconnectTries = 0;
 
             while($this->reconnectTries < $this->maxReconnectTries) {
                 if($params) {       
                     try{
-                        // Turn off the display of errors so we don't see packets
-                        // out of order. We allready deal with that.
-                        @$prepared = $this->conn->prepare($statement);
-                        if (@$prepared->execute($params)) {
-                            return $prepared;
-                        }
-                        else {
-                            return null;
-                        }
+                        return (empty($params)) ? $this->query($statement) : $this->preparedExec($statement, $params);
                     }   // Retry case
                     // higher-level exception handlers will catch more specific exceptions.
                     // So catch here so that the retry case works.

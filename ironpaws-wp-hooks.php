@@ -1,7 +1,7 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
+
+    defined( 'ABSPATH' ) || exit;
 
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . 'wc-rest.php';
@@ -43,5 +43,7 @@
     function ironpaws_wp_load_css() {
         \wp_enqueue_style("ironpaws_rse", 
             plugins_url('/css/race-stage-entry.css', __FILE__));
+        \wp_enqueue_style("ironpaws_tables", 
+            plugins_url('/css/table.css', __FILE__));
     }
 ?>

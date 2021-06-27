@@ -9,9 +9,9 @@
  */
 
 /* Place custom code below this line. */
-defined( 'ABSPATH' ) || exit;
-
 namespace IronPaws;
+
+defined( 'ABSPATH' ) || exit;
 
 require_once 'autoloader.php';
 require_once plugin_dir_path(__FILE__) . 'tests/test-shortcodes.php';
@@ -34,6 +34,7 @@ function register_shortcodes() {
     add_shortcode('ironpaws_run_tests', 'IronPaws\\do_shortcode_run_tests');
     add_shortcode('ironpaws_race_stage_entry', ['IronPaws\\Race_Stage_Entry', 'do_shortcode']);
     add_shortcode('ironpaws_test_updateTRSEForRSE', 'IronPaws\\do_shortcode_test_sp_updateTRSEForRSE');
+    add_shortcode('ironpaws_race_results', ['IronPaws\\Race_Results', 'do_shortcode']);
 }
 
 function register_wp_hooks() {

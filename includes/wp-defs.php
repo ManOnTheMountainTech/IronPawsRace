@@ -1,12 +1,11 @@
 <?php
-     defined( 'ABSPATH' ) || exit;
-
      namespace IronPaws;
+
+     defined( 'ABSPATH' ) || exit;
 
      const non_web_php = '/home/bryany/php/';
                                       // sent out
      const COMPLETED = 'completed';
-     const CUSTOMERS = 'customers/';
      const DOG_NAME = 'dogNames';
      const EMAIL = 'email';
      const FIRST_NAME = 'first_name';

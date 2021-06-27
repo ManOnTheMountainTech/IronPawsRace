@@ -1,7 +1,7 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
+
+    defined( 'ABSPATH' ) || exit;
 
     require_once plugin_dir_path(__FILE__) . 'mush-db.php';
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
@@ -32,7 +32,7 @@
                 } 
 
             $race_class_id = test_number($_GET[RACE_CLASS_ID]);
-            if (!isset(Teams::RACE_CLASSES[$race_class_id])) {
+            if (!isset(Teams::RACE_CLASSES[$race_class_id][0])) {
                 $add_team_html .= "Invalid race_class passed in. Please choose again.<br>";
             }
 
@@ -55,7 +55,7 @@
 
                 } catch(Mush_DB_Exception $e) { 
                     write_log(__FUNCTION__ . " produced exception ", $e);
-                    return $e->userFriendlyMessage;
+                    return $e->userHTMLMessage;
                 }
      
                 $strippedTeamName = stripslashes($teamName);
@@ -76,6 +76,7 @@
         }
 
         $team_name = TEAM_NAME;
+
         $race_class_id = RACE_CLASS_ID;
 
         $add_team_html .= <<<ADD_TEAM_PRE
@@ -86,11 +87,7 @@
             <select id="{$race_class_id}" name="{$race_class_id}"><br>
         ADD_TEAM_PRE;
 
-        $i = 0;
-        foreach(Teams::RACE_CLASSES as $race_class) {
-            $add_team_html .= '<option value="' . $i . '">' . "{$race_class}</option>";
-            ++$i;
-        }
+        $add_team_html .= Teams::makeRaceStageHTML();
 
         $add_team_html .= <<<ADD_TEAM_POST
             </select>
@@ -100,6 +97,7 @@
 
         return $add_team_html;
      }
+
 
      function is_team_name_taken() {
         return false;
@@ -126,10 +124,6 @@
             else {
                 $salutation = null;
             }
-
-
-            
-
         }
      }
 ?>

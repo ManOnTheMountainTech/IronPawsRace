@@ -1,9 +1,7 @@
 <?php
-  // Load wordpress regardless of where it is located. Remember, it could be
-  // in any subfolder.
-  defined( 'ABSPATH' ) || exit;
-
   namespace IronPaws;
+
+  defined( 'ABSPATH' ) || exit;
 
   require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
@@ -22,8 +20,8 @@
       return "<h3>Below are your teams:</h3>";
     }
 
-    function makeListItemHTML(array $team_idxs) {
-      return '<em>' . $team_idxs[Teams::TEAM_NAME_ID] . '<br>';
+    function makeListItemHTML(array $params) {
+      return '<em>' . $params[Teams::TEAM_NAME_ID] . '<br>';
     }
 
     function makeClosingHTML() {

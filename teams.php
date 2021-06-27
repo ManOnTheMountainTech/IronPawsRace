@@ -1,9 +1,7 @@
 <?php
-  // Load wordpress regardless of where it is located. Remember, it could be
-  // in any subfolder.
-  defined( 'ABSPATH' ) || exit;
-
   namespace IronPaws;
+
+  defined( 'ABSPATH' ) || exit;
 
   require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
@@ -19,23 +17,49 @@
 
     protected $wp_user = null;
 
-    const RACE_CLASSES = array(
-      "Old Dogs Rule",
-      "Off the Couch",
+    const RACE_CLASSES = [
+      ["1 Dog skijor",	    1,	  0.5,	0.5,	0.5,	0.5,	0.5,	0.5,	0.5],	
+      ["2 Dog skijor",	    1,	  0.5,	0.5,	0.5,	0.5,	0.5,	0.5,	0.5],	// 1		
+      ["3 Dog Skijor",	    1,	  0.5,	0.5,	0.5,	0.5,	0.5,	0.5,	0.5],						
+      ["1 Dog sled",	      0.5,	0.5,	1,	  0.5,	0.5,	0.5,	0.5,	0.5], // 3				
+      ["2 Dog sled",	      0.5,	0.5,	1,	  0.5,	0.5,	0.5,	0.5,	0.5],				
+      ["3-4 Dog sled",	    0.5,	0.5,	1,	  0.5,	0.5,	0.5,	0.5,	0.5], // 5				
+      ["4 Dog skijor",      -1,   -1,   -1,   -1,  -1,    -1,   -1,   -1],									
+      ["5-6 Dog sled",	    0.5,	0.5,	1,	  0.5,	0.5,	0.5,	1,	  0.5], // 7				
+      ["Unlimited dog sled",0.5,	0.5,	1,	  0.5,	0.5,	0.5,	1,	  0.5],		
+      ["Canicross", 	      0.5,	0,	  0,	  1,	  1,	  0,	  0,	  0],  // 9			
+      ["3-4 Dog dryland",	  0.5,	0.5,	0.5,	0.5,	1,	  1,	  1,	  1],				
+      ["1 Dog fatbikejor",	0.5,  0.5,	0.5,	0.5,	0,	  0,	  0,	  1,	1.5,	1.5,	1.5, 1.0], // 11
+      ["2 Dog fatbikejor",	0.5,	0.5,	0.5,	0.5,	0,	  0,	  0,	  1,	1.5,	1.5,	1.5, 1.0], // 12
+      ["1 Dog bikejor",	    0.5,	0.5,	0.5,	0.5,	1,	  1,	  0.5,	0.5],				
+      ["2 Dog bikejor",	    0.5,	0.5,	0.5,	0.5,	1,	  1,	  0.5,	0.5],	// 14			
+      ["1 Dog scooter",	    0.5,	0.5,	0.5,	0.5,	1,	  0.5,	1,	  1],				
+      ["2 Dog scooter",	    0.5,	0.5,	0.5,	0.5,	1,	  0.5,	1,	  1],  // 16
+      ["Old dogs rule",     1,    1,    1,    1,    1,    1,    1,    1],
+      ["Off the couch",     1,    1,    1,    1,    1,    1,    1,    1]];  // 18
+      
+    const MAX_RACE_CLASSES = 18;
+
+    // These are the categories that are listed in the "{x} points for skijor,
+    // ..." These are the coumn headers for the points matrix.
+    const RUN_RACE_CLASSES = [
+      "Skijor",
+      "FatBikeJor", // 1
+      "Sled",
+      "Snowshoe", // 3
       "Canicross",
-      "1 Dog Bikejor",
-      "2 Dog Bikejor",
-      "1 Dog Scooter and Rig",
-      "2 Dog Scooter and Rig",
-      "3-4 Dog Dryland",
-      "1-2 Dog Fatbikejor",
-      "1 Dog Skijor",
-      "2-3 Dog Skijor",
-      "1 Dog Sled",
-      "2 Dog Sled",
-      "3-4 Dog Sled",
-      "5-6 Dog Sled",
-      "Unlimited Sled and Rig");
+      "BikeJor",  // 5
+      "Cart",
+      "Scooter",  // 7
+      "FatBike dryland", //8
+      "FatBike snow", //9
+      "FatBike ice",
+      "FatBike sand"
+    ];
+
+    const MAX_NON_FATBIKEJOR_CLASSES = 8;
+    const MAX_RUN_RACE_CLASSES = 12;
+    const RUN_CLASSES_FATBIKEJOR_IDXS = [8, 9];
 
     const TEAM_IDX = 0;
     const TEAM_BIB_NUMBER = 1;
@@ -80,7 +104,7 @@
       }
       catch(Mush_DB_Exception $e) {
         statement_log(__FUNCTION__, __LINE__, "Unable to create db object", $e);
-        return $e->userFriendlyMessage;
+        return $e->userHTMLMessage;
       }
       catch(Race_Registration_Exception $e) {         
         $error = $e->processRaceAccessCase();
@@ -171,13 +195,38 @@
         <select id="{$race_class_id}" name="{$race_class_id}"><br>
       ADD_TEAM_PRE;
       
-      $i = 0;
-      foreach (self::RACE_CLASSES as $race_class) {
-          $teams_selections_html .= '\t<option value="' . $i . '">' . "{$race_class}</option>";
-          ++$i;
-      }
+      $teams_selections_html .= self::makeRaceStageHTML();
             
       return $teams_selections_html . makeFormCloseHTML();
+    }
+
+    static function makeRaceStageHTML() {   
+      $retHTML = "";
+      
+      for($i = 0; $i < Teams::MAX_RACE_CLASSES; $i++) {
+          $race_class = Teams::RACE_CLASSES[$i][0];
+          $retHTML .= '<option value="' . $i . '">' . "{$race_class}</option>";
+      }
+
+      return $retHTML;
+    }
+
+    static function makeRunRaceClassesHTML(int $registered_race_class) {   
+      $retHTML = "";
+
+      $num_run_race_classes_for_race_class;
+
+      $num_run_race_classes_for_race_class = (in_array($registered_race_class, 
+        self::RUN_CLASSES_FATBIKEJOR_IDXS)) ? self::MAX_RUN_RACE_CLASSES : self::MAX_NON_FATBIKEJOR_CLASSES;
+      
+      for($i = 0; $i < $num_run_race_classes_for_race_class; $i++) {
+          $run_class = self::RUN_RACE_CLASSES[$i];
+
+          // Index 0 will be the row headers of the points matrix
+          $retHTML .= '<option value="' . ($i + 1) . '">' . "{$run_class}</option>\n";
+      }
+
+      return $retHTML;
     }
   }
 ?>

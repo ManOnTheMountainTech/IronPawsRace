@@ -1,7 +1,7 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
+
+    defined( 'ABSPATH' ) || exit;
 
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
@@ -12,6 +12,8 @@
 
     class WC_Rest {
         protected $woocommerce;
+
+        const CUSTOMERS = "customers/";
 
         public function __construct() {
             $this->woocommerce = WC_Rest::create_wc();
@@ -50,6 +52,18 @@
                 ORDERS, ['customer_id' => $wc_customer_id]);
             if (NULL == $results) {
                 return "Unable to talk to WooCommerce while getting customer information";
+            }
+
+            return $results;
+        }
+
+        // Return a JSON'ized WC_CUSTOMER
+        function getCustomerDetailsByCustomerId(int $wc_customer_id) {
+            // Validate the order id
+            $results = $this->woocommerce->get(
+                self::CUSTOMERS . $wc_customer_id);
+            if (NULL == $results) {
+                return "Unable to talk to WooCommerce while getting a customers information";
             }
 
             return $results;
