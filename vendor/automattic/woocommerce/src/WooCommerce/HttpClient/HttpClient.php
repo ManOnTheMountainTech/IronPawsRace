@@ -228,7 +228,7 @@ class HttpClient
         $body    = '';
         $url     = $this->url . $endpoint;
         $hasData = !empty($data);
-        
+
         // Setup authentication.
         $parameters = $this->authenticate($url, $method, $parameters);
 
@@ -240,9 +240,6 @@ class HttpClient
             $body = \json_encode($data);
             \curl_setopt($this->ch, CURLOPT_POSTFIELDS, $body);
         }
-        
-        $paramsDump = print_r($parameters, true);
-        error_log("createRequest2: url = $url method = $method endpoint= $endpoint parameters=$paramsDump");
 
         $this->request = new Request(
             $this->buildUrlQuery($url, $parameters),

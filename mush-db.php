@@ -115,7 +115,7 @@
                     }   // Retry case
                     // higher-level exception handlers will catch more specific exceptions.
                     // So catch here so that the retry case works.
-                    catch(\PDOException | Exception $e) {
+                    catch(\PDOException | \Exception $e) {
                         if (isset($e->errorInfo) && 
                             (in_array($e->errorInfo[1], MySql::$reconnectErrors))) {
                                 $this->conn = null;

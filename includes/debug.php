@@ -7,6 +7,12 @@
         return (defined('WP_DEBUG') && true === WP_DEBUG);
     }
 
+    function var_debug($var) {
+        if (is_wp_debug()) {
+            var_dump($var);
+        }
+    }
+
     if (!function_exists('write_log')) {
         function write_log($message, $log = "") {
             if (\is_array($log) || \is_object($log)) {

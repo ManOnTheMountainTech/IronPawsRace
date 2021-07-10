@@ -57,6 +57,18 @@
             return $results;
         }
 
+        // Return a JSON'ized array of WC_CUSTOMER
+        function getAllCustomers() {
+            // Validate the order id
+            $results = $this->woocommerce->get(
+                'customers');
+            if (NULL == $results) {
+                return "Unable to talk to WooCommerce while getting all customers information";
+            }
+
+            return $results;
+        }
+
         // Return a JSON'ized WC_CUSTOMER
         function getCustomerDetailsByCustomerId(int $wc_customer_id) {
             // Validate the order id
@@ -174,7 +186,7 @@
 
         static function create_wc() {
             return new Client(
-                'http://ironpawsllc.com', 
+                'https://ironpawsllc.com', 
                 'ck_f79eca540f4d74a63f85845426de32283f80f9d0', 
                 'cs_056dc40407f6219fbd5705594c32460130175aa9',
                 [
@@ -182,6 +194,18 @@
                     'version' => 'wc/v3'
                 ]
             );
+
+            /*return new Client(
+                'http://localhost', 
+                'ck_f79eca540f4d74a63f85845426de32283f80f9d0', 
+                'cs_056dc40407f6219fbd5705594c32460130175aa9',
+                [
+                    'wp_api' => true,
+                    'version' => 'wc/v3',
+                    'query_string_auth' => true,
+                    'verify_ssl' => false
+                ]
+            );*/
         }
 
         function getResponseBody($response) {
