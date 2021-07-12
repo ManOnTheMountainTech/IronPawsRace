@@ -18,6 +18,11 @@
     const ORDER_ID_IDX = 1;
     const TEAM_IDX = 2;
 
+    const TRSE_MILES_IDX = 1;
+    const TRSE_OUTCOME_IDX = 2;
+    const TRSE_RACE_CLASSES_IDX = 4;
+    const RUN_RACE_CLASS_ID_IDX = 7;
+
     const RI_START_DATE_TIME = 3;
     const RI_RACE_DEFS_FK = 2;
 

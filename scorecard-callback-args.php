@@ -9,6 +9,8 @@
             //$this->wc_rest = $wc_rest;
         }
 
+        public int $rank = 0;
+
         public string $result;
         //public WC_Rest $wc_rest;
     }

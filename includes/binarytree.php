@@ -44,7 +44,9 @@ namespace Algorithms {
       private function insertOrFetchNode($node, $current) {
           $added = false;
           while($added === false) {
-              if ($node->data->bib_number > $current->data->bib_number) {
+              $result = $node->data->compareTo($current->data);
+
+              if ($result < 0) {
                   if($current->left === null) {
                       $current->addChildren($node, $current->right);
                       $added = $node;
@@ -55,7 +57,7 @@ namespace Algorithms {
                   }
                   
               }
-              elseif ($node->data->bib_number < $current->data->bib_number) {
+              elseif ($result > 0) {
                   if($current->right === null) {
                       $current->addChildren($current->left, $node);
                       $added = $node;

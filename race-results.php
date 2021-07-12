@@ -14,12 +14,8 @@
     
     class Race_Results implements Container_HTML_Pattern {
         const BIB_NUMBER_IDX = 0;
-        const TRSE_MILES_IDX = 1;
-        const TRSE_OUTCOME_IDX = 2;
-        const RACE_CLASSES_IDX = 4;
         const TEAM_NAME_IDX = 5;
         const WC_CUSTOMER_ID_IDX = 6;
-        const RUN_RACE_CLASS_ID_IDX = 7;
 
         protected WC_Rest $wc_rest;
 
@@ -117,7 +113,7 @@
                 $stmt->closeCursor();
 
                 $race_data = new BinaryTree();
-                $data_holder = new ScoreCardByBibNumber();
+                $data_holder = new ScoreCardByScoreAndClass();
 
                 foreach($all_wc_orders as $wc_order) {
                     $error_message;
@@ -147,21 +143,21 @@
                         }
 
                         $data_holder->bib_number = $bib_number;
+                        $data_holder->run_details = $row;
 
                         $cur_node = $race_data->insertOrFetch($data_holder);
                         if (-1 == $cur_node->data->score) { // new insert?
-                            $cur_node->data = new ScoreCardByBibNumber($bib_number, $row, 0); // don't use placeholder
+                            $cur_node->data = new ScoreCardByScoreAndClass($bib_number, $row, 0); // don't use placeholder
                         }
                         
                         $cur_scorecard = $cur_node->data;
-                        $race_class_idx = $row[self::RACE_CLASSES_IDX];
+                        $race_class_idx = $row[TRSE::TRSE_RACE_CLASSES_IDX];
 
                         $cur_scorecard->score += $this->milesToPoints(
-                            $row[self::TRSE_MILES_IDX], 
+                            $row[TRSE::TRSE_MILES_IDX], 
                             $race_class_idx, 
-                            $row[self::RUN_RACE_CLASS_ID_IDX],
-                            $row[self::TRSE_OUTCOME_IDX]);
-
+                            $row[TRSE::RUN_RACE_CLASS_ID_IDX],
+                            $row[TRSE::TRSE_OUTCOME_IDX]);
                     }
                     $stmt->closeCursor();
                 }
@@ -181,9 +177,9 @@
             return $args->result;
         }
 
-        function nodeToHTML(ScoreCardByBibNumber $scorecard, ScoreCard_CallBack_Args $args) {
+        function nodeToHTML(ScoreCardByScoreAndClass $scorecard, ScoreCard_CallBack_Args $args) {
             $row = $scorecard->run_details;
-            $race_class_idx = $row[self::RACE_CLASSES_IDX];
+            $race_class_idx = $row[TRSE::TRSE_RACE_CLASSES_IDX];
 
             $race_class_description = Teams::RACE_CLASSES[$race_class_idx][0];
 
@@ -191,15 +187,16 @@
             $this_customers_info = $this_customers_info->billing;
             $customer_flname = $this_customers_info->first_name . ' ' . $this_customers_info->last_name;
 
-            $run_race_id = $row[self::RUN_RACE_CLASS_ID_IDX];
+            $run_race_id = $row[TRSE::RUN_RACE_CLASS_ID_IDX];
 
             // rank | bib | team name | mushers' name | class | score
             $bib_number_idx = self::BIB_NUMBER_IDX;
             $team_name_idx = self::TEAM_NAME_IDX;
+            $args->rank++;
             $args->result .= <<<RACE_RESULTS_ROW
                 <div class="Row">  
                     <div class="Cell"> 
-                        1  
+                        {$args->rank} 
                     </div>  
                     <div class="Cell">    
                         {$scorecard->bib_number}  

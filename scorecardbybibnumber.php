@@ -9,7 +9,7 @@
         use ScoreCard;
 
         function compareTo(Comparable $other): int {
-            return $this->bib_number <=> $other->value;
+            return $this->bib_number <=> $other->bib_number;
         }
     }
 ?>
