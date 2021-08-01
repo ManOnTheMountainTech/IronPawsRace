@@ -27,9 +27,9 @@
 
         $wc_order_id = WC_ORDER_ID;
 
-        write_log( <<<ASK_LOCATION_REGISTRATION
+        return  <<<ASK_LOCATION_REGISTRATION
             Ready to race? Register your team!
             <a href="team-registration">Team registration?$wc_order_id=$order_id</a>
-        ASK_LOCATION_REGISTRATION);
+        ASK_LOCATION_REGISTRATION;
     }
 ?>

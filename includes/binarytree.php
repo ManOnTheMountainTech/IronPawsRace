@@ -129,7 +129,7 @@ namespace Algorithms {
       private function findParent($child, $current) {
           $parent = false;
           while ($parent === false) {
-            if ($child->data < $current->data) {
+            if ($child->data > $current->data) {
               if ($child->data === $current->left->data) {
                 $parent = $current;
                 break;
@@ -138,7 +138,7 @@ namespace Algorithms {
                 break;
               }
             }
-            elseif ($child->data > $current->data) {
+            elseif ($child->data < $current->data) {
               if ($child->data === $current->right->data) {
                 $parent = $current;
                 break;

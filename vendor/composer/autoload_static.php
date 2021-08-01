@@ -7,6 +7,10 @@ namespace Composer\Autoload;
 class ComposerStaticInit51acd943ce5ad59af4d0047b4337a1ed
 {
     public static $prefixLengthsPsr4 = array (
+        'B' => 
+        array (
+            'BlueM\\' => 6,
+        ),
         'A' => 
         array (
             'Automattic\\WooCommerce\\' => 23,
@@ -14,6 +18,10 @@ class ComposerStaticInit51acd943ce5ad59af4d0047b4337a1ed
     );
 
     public static $prefixDirsPsr4 = array (
+        'BlueM\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/bluem/tree/src',
+        ),
         'Automattic\\WooCommerce\\' => 
         array (
             0 => __DIR__ . '/..' . '/automattic/woocommerce/src/WooCommerce',

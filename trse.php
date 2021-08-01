@@ -99,6 +99,8 @@
           if (is_wp_debug()) {
             echo "wc_order_id =$wc_order_id | team_id=$team_id | num_race_stages=$num_race_stages | wc_product_id=$wc_product_id\n";}
 
+          // Preallocate the race stage entries. Better to fail while signing
+          // up than during the race.
           for ($race_stage = 1; $race_stage <= $num_race_stages; ++$race_stage) {
             $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :wc_product_id, :team_fk, :race_stage)", 
               ['wc_order_id' => $wc_order_id, 

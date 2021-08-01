@@ -26,7 +26,7 @@
         $db->execSql("CALL sp_deletePerson(:wp_user_id)", ['wp_user_id' => $id]);
     }
 
-    function ironpaws_wp_delete_user_form(WP_User $current_user) {
+    function ironpaws_wp_delete_user_form(\WP_User $current_user) {
         echo "WARNING: All awards, positions, teams, and dogs associated with this user will be destroyed.";
     }
 
@@ -45,5 +45,11 @@
             plugins_url('/css/race-stage-entry.css', __FILE__));
         \wp_enqueue_style("ironpaws_tables", 
             plugins_url('/css/table.css', __FILE__));
+    }
+
+    class IronPaws_WP_Hooks {
+        static function install() {
+            echo "Installing IronPaws plugin";
+        }
     }
 ?>

@@ -84,6 +84,7 @@
             $i = 0;
     
             $wc_rest_api = new WC_Rest();
+            //BUGBUG: Getting back all of the customers instead of the current user.
             $orders = $wc_rest_api->getOrdersByCustomerId($this->cur_user->ID);
         
             $form_html = <<<RACE_PRE
@@ -170,6 +171,15 @@
                 $trse_params = (new Mush_DB)->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
                     ['wc_order_id' => $wpOrderId],
                     "Internal error race-stage-entry-1. Please contact support or file a bug.");
+                
+                if (empty($trse_params)) {
+                    return <<<SELECT_A_TEAM
+                        <p>No team is entered in this race.</p>
+                        <a href="/team-registration">Enter a team in a race.</a>
+                        <a href="/register-a-new-team">Create a new team.</a>
+                    SELECT_A_TEAM;
+                }
+
                 $trse_params = $trse_params[0];
             }
             catch(Mush_DB_Exeption $e) {

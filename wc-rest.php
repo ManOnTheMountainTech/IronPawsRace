@@ -45,11 +45,25 @@
             return null;
         }
 
+        // BUGBUG: This doesn't work
         // Return an array of orders that are raceable (PROCESSING)
+        // https://github.com/woocommerce/wc-api-php/issues/156
         function getOrdersByCustomerId(int $wc_customer_id) {
             // Validate the order id
             $results = $this->woocommerce->get(
-                ORDERS, ['customer_id' => $wc_customer_id]);
+                ORDERS, ['customer' => $wc_customer_id]);
+            if (NULL == $results) {
+                return "Unable to talk to WooCommerce while getting customer information";
+            }
+
+            return $results;
+        }
+
+        // Return an array of orders that are raceable (PROCESSING)
+        function getAllOrders() {
+            // Validate the order id
+            $results = $this->woocommerce->get(
+                ORDERS);
             if (NULL == $results) {
                 return "Unable to talk to WooCommerce while getting customer information";
             }

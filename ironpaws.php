@@ -5,7 +5,7 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.1.7
+ * Version: 0.1.8
  */
 
 /* Place custom code below this line. */
@@ -15,10 +15,10 @@ defined( 'ABSPATH' ) || exit;
 
 require_once 'autoloader.php';
 require_once plugin_dir_path(__FILE__) . 'tests/test-shortcodes.php';
-require_once plugin_dir_path(__FILE__) . 'ironpaws-wp-hooks.php';
+require_once plugin_dir_path(__FILE__) . 'wp-hooks.php';
 require_once plugin_dir_path(__FILE__) . 'add-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'reg-a-team.php';
-require_once plugin_dir_path(__FILE__) . 'ironpaws-payment-complete.php';
+require_once plugin_dir_path(__FILE__) . 'wc-payment-complete.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-hooks.php';
 
 register_wp_hooks();
@@ -38,6 +38,7 @@ function register_shortcodes() {
 }
 
 function register_wp_hooks() {
+    register_activation_hook(__FILE__, ['IronPaws\\WP_Hooks', 'install']);
     add_action('user_register', 'IronPaws\\ironpaws_user_register');
     add_action('delete_user', 'IronPaws\\ironpaws_wp_delete_user');
     add_action('delete_user_form', 'IronPaws\\ironpaws_wp_delete_user_form');
