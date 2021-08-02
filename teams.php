@@ -114,18 +114,18 @@
       }
 
       if ($mushers_teams_failed) {
-        $this->throwNoDogTeamsFound();
+        return $this->htmlNoDogTeamsFound();
       }
 
       return $teams;
     }
 
-    function throwNoDogTeamsFound() {
-      throw new Race_Registration_Exception( 
+    function htmlNoDogTeamsFound() {
+      return 
         <<<ONLY_REGISTER
-        No dog teams found for {$this->wp_user->get('display_name')}.</br>
-        <a href="register-a-new-team">Register a new team</a>
-      ONLY_REGISTER);
+          No dog teams found for {$this->wp_user->get('display_name')}.</br>
+          <a href="register-a-new-team">Register a new team</a>
+      ONLY_REGISTER;
     }
   
     // @params: 
