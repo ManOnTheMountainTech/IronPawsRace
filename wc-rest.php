@@ -45,16 +45,13 @@
             return null;
         }
 
-        // BUGBUG: This doesn't work
         // Return an array of orders that are raceable (PROCESSING)
         // https://github.com/woocommerce/wc-api-php/issues/156
+        // Returns => Order(s), if there are any orders, else null
         function getOrdersByCustomerId(int $wc_customer_id) {
             // Validate the order id
             $results = $this->woocommerce->get(
                 ORDERS, ['customer' => $wc_customer_id]);
-            if (NULL == $results) {
-                return "Unable to talk to WooCommerce while getting customer information";
-            }
 
             return $results;
         }

@@ -1,43 +1,70 @@
 <?php
-  defined( 'ABSPATH' ) || exit;
-
   namespace IronPaws;
+
+  defined( 'ABSPATH' ) || exit;
 
   require_once("setIncPath.php");
   require_once(non_web_php . "/mush-db.php");
 
-  // define variables and set to empty values
-  $bibnumber = $age = 0;
-  $dogname = "";
-  $dogbirthday = "";
+  class Reg_A_Dog {
 
-  $numberError = FALSE;
+    static function do_shortcode() {
+      $dogRegistration = new Reg_A_Dog();
+      $retHTML = "";
+      $retHTML .= $dogRegistration->writeToDB();
+    } 
 
+    function writeToDB() {
+      // define variables and set to empty values
+      $dogname = "";
 
-  if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    //$bibnumber = test_number($_POST["bibNumber"]);
-    $dogname = test_input($_POST["dogName"]);
-    if (empty($dogname)) {
-      die ($dogname . "is not a valid name.");
-    }
+      $numberError = FALSE;
 
-    $dogbirthday = test_input($_POST["dogDOB"]);
-    if (empty($dogbirthday)) {
-      die ($dogbirthday . " is not a valid birth date.");
-    }
+      if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $dogname = sanitize_text_field($_POST["dogName"]);
+        if (empty($dogname)) {
+          return ($dogname . "is not a valid name.");
+        }
 
-    //$dogowner = test_input($_POST["dogOwner"]);
+        $dogage = test_input($_POST["dogAge"]);
+        if (empty($dogage)) {
+          return ($dogage . " is not a valid age.");
+        }
 
-    $execSql = "CALL NewDog ('{$dogname}', '{$dogbirthday}')";
-    echo "sql to execute: " . $execSql . "<BR>";
+        $dogOwnerFirstName = sanitize_text_field($_POST["dogOwnerFirstName"]);
+        $dogOwnerLastName = sanitize_text_field($_POST["dogOwnerLastName"]);
+        $dogOwnerEmail = sanitize_test_field($_POST["dogOwnerEmail"]);
+        $dogOwnerUserName = sanitize_test_field($_POST["dogOwnerUserName"]);
+        $dogOwnerId = test_input($_POST["dogOwnerId"]);
 
-    try {
-      Mush_DB::connect()->exec($execSql);
-    }
-    catch(\PDOException $e) {
-      die ( "The database returned an error while saving dog details. The details are: " . $e->getMessage());
+        // call wp_get_current_user in form code
+        $dogOwnerId;
+
+        // Get the person id from the owner name
+        // get_users?
+        // https://rudrastyh.com/wordpress/get-user-id.html
+        if (null != $dogOwnerId) {
+          if (!$wp_current_user->exists()) {
+            return "<p>Internal error registering a dog-1. Please file a bug or contact support.</p>";
+          }
+
+          $dogOwnerId = $wp_current_user->ID;
+        } else {
+          $dogOwnerId = email_exists($dogOwner);
+          if (false == $dogOwnerId) {
+            $dogOwnerId = username_exists($dogOwner);
+            if (false == $dogOwnerId) {
+              return "$dogOwner is not a username nor email";
+            }
+          }
+        }
+
+        $db = new MushDB();
+        $dogId = $db->execAndReturnInt("CALL sp_NewDog (:dogName, :dogAge, :dogOwnerId)",
+          ['dogName' => $dogname, 'dogAge' => $dogage, 'owner' => $dogOwnerId]);
+      }
+
+      return $dogname . " is sucessfully registered.<br>";
     }
   }
-
-  echo $dogname . " is sucessfully registered.<br>";
 ?>

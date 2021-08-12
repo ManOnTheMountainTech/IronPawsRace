@@ -173,6 +173,10 @@
   
         $wc_rest_api = new WC_Rest();
         $orders = $wc_rest_api->getOrdersByCustomerId($cur_user->ID);
+
+        if (is_null($orders)) {
+          return "No orders found. Have you purchased a race?";
+        }
   
         $wc_order_id = WC_ORDER_ID;
 

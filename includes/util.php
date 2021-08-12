@@ -1,8 +1,8 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
     
+    defined( 'ABSPATH' ) || exit;
+
     function val_or_zero_int(INT $var) {
         return (isset($var) ? ($var) : 0);
     }

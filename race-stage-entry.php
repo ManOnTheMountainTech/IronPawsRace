@@ -84,8 +84,11 @@
             $i = 0;
     
             $wc_rest_api = new WC_Rest();
-            //BUGBUG: Getting back all of the customers instead of the current user.
             $orders = $wc_rest_api->getOrdersByCustomerId($this->cur_user->ID);
+
+            if (is_null($orders)) {
+                return "No orders found. Have you purchased a race?";
+            }
         
             $form_html = <<<RACE_PRE
                 <form method="get" action="">

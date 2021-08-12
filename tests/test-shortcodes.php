@@ -4,23 +4,36 @@
 
     defined( 'ABSPATH' ) || exit;
   
-    require_once plugin_dir_path(__FILE__) . '../includes/wp-defs.php';
-    require_once plugin_dir_path(__FILE__) . '../includes/debug.php';
-    require_once plugin_dir_path(__FILE__) . '../wc-rest.php';
-    require_once plugin_dir_path(__FILE__) . 'sprocs-tests.php';
-    require_once plugin_dir_path(__FILE__) . 'wc-customers.php';
+  require_once plugin_dir_path(__FILE__) . '../includes/wp-defs.php';
+  require_once plugin_dir_path(__FILE__) . '../includes/debug.php';
+  require_once plugin_dir_path(__FILE__) . '../wc-rest.php';
+  require_once plugin_dir_path(__FILE__) . 'sprocs-tests.php';
+  require_once plugin_dir_path(__FILE__) . 'wc-customers.php';
+  require_once plugin_dir_path(__FILE__) . '../includes/users.php';
 
   function do_shortcode_run_tests() {
     $sprocs_tests = new Sprocs_Tests();
     $wc_customers = new WC_Customers();
+
+    $result = "";
 
     try {
       //log_by_name();
       //$wc_customers->log_by_roll();
       //$wc_customers->log_by_name();
       //$wc_customers->log_customer_by_id(4);
-      $wc_customers->log_order_by_id(54);
-      return $wc_customers->result;
+      //$wc_customers->log_order_by_id(54);
+      //$result .= "log_order_by_id(54)";
+      //$result .= $wc_customers->result;
+
+      $result .= Users::get(Users::KEY_FIRST_NAME, "Bryan");
+      $result .= Users::get(Users::KEY_FIRST_NAME, "Invalid");
+      $result .= Users::get(Users::KEY_FIRST_NAME, "Karen");
+      
+      $lookup = Users::lookup(null, "Bryan", "Young");
+      var_debug($lookup);
+
+      return $result;
     } catch (HttpClientException $e) {
       $result = $wc_customers->result;
       $result .= "Caught. Message: " . $e->getMessage(); // Error message.
@@ -32,6 +45,7 @@
     return "Forgot to return the test result";
   }
 
+  /*
   function do_shortcode_test_sp_updateTRSEForRSE() {
     $db = new Mush_DB();
                         
@@ -46,5 +60,5 @@
       "A failure occured writing this team race stage entry.");
 
       return print_r($modified_columns, true);
-  }
+  }*/
 ?>
