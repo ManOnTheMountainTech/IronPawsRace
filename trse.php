@@ -7,7 +7,7 @@
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
   require_once plugin_dir_path(__FILE__) . 'mush-db.php';
   require_once plugin_dir_path(__FiLE__) . 'includes/util.php';
-  //require_once plugin_dir_path(__FILE__) . 'orders.php';
+  require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
 
   use Automattic\WooCommerce\Client;
   use Automattic\WooCommerce\HttpClient\HttpClientException;
@@ -90,7 +90,15 @@
         try {
           $error_message;
 
-          $db = new Mush_DB();
+          try {
+            $db = new Mush_DB();
+          } catch(\PDOException $e) {
+              return Strings::CONTACT_SUPPORT . Strings::ERROR . 'trse-connect.';
+          }
+
+          if (is_wp_debug()) {
+            write_log("wc_product_id=$wc_product_id\n");
+          }
 
           $num_race_stages = $db->execAndReturnInt(
             "CALL sp_getRaceStagesFromWC(?)", [$wc_product_id],
@@ -107,7 +115,7 @@
               'wc_product_id' => $wc_product_id,
               'team_fk' => $team_id,
               'race_stage' => $race_stage],
-              "Writing the team race stage entry failed. Please try again.");
+              "Writing the team race stage entry failed for stage {$race_stage}. Please try again. If this continues, contact support or file a bug.");
           }
 
           if (0 == $trse_id) {
@@ -120,7 +128,7 @@
           }
         }
         catch(Mush_DB_Exception $e) { 
-          statement_log(__FUNCTION__ , __LINE__ , ': produced exception', $e);
+          statement_log(__FUNCTION__ , __LINE__ , ': produced exception' . var_debug($e));
           return $e->userHTMLMessage;
         }
 

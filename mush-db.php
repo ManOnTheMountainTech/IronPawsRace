@@ -11,9 +11,11 @@
 
     class Mush_DB {
         protected const SERVERNAME = "localhost";
-        protected const USERNAME = "bryan_mushuser";
-        protected const PASSWORD = '9E{y)E;32.Qep7%m';
-        protected const DBNAME = 'bryan_mush';
+        //protected const USERNAME = "bryan_mushuser";
+        protected const USERNAME = "bryan_mushbeta";
+        //protected const PASSWORD = '9E{y)E;32.Qep7%m';
+        protected const PASSWORD = '2-NAMC8gqBS&Dmhe';
+        protected const DBNAME = 'bryan_mush_beta';
         
         protected $maxReconnectTries = 100;
 

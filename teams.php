@@ -79,7 +79,13 @@
         return $logon_form;
       }
 
-      $mush_db = new Mush_DB();
+      $mush_db;
+
+      try {
+        $mush_db = new Mush_DB();
+      } catch (\PDOException $e) {
+        return Strings::CONTACT_SUPPORT . Strings::ERROR . 'teams-connect.';
+      }
       //$teams_path = plugins_url('modify_teams.php', __FILE__);
 
       // TODO: Change to 
@@ -103,7 +109,7 @@
         }
       }
       catch(Mush_DB_Exception $e) {
-        statement_log(__FUNCTION__, __LINE__, "Unable to create db object", $e);
+        statement_log(__FUNCTION__, __LINE__, "Unable to create db object " . var_debug($e));
         return $e->userHTMLMessage;
       }
       catch(Race_Registration_Exception $e) {         
@@ -123,8 +129,7 @@
     function htmlNoDogTeamsFound() {
       return 
         <<<ONLY_REGISTER
-          No dog teams found for {$this->wp_user->get('display_name')}.</br>
-          <a href="register-a-new-team">Register a new team</a>
+          No dog teams found for {$this->wp_user->get('display_name')}.
       ONLY_REGISTER;
     }
   

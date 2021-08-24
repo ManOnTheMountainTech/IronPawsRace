@@ -39,7 +39,7 @@
         }
     }
 
-    function html_walker($arg) {
+    function html_walker($arg): string {
         foreach ($arr as $key=>$val){
             if (\is_array($val)  || \is_object($val)) {
                 $retStr .= '<li>' . $key . ' => ' . pp($val) . '</li>';
@@ -47,6 +47,20 @@
                 $retStr .= '<li>' . $key . ' => ' . $val . '</li>';
             }
         }
+
+        return $retStr;
+    }
+
+    function var_log($arg) {
+        if (empty($arg)) {
+            return;
+        }
+
+        ob_start();
+        var_dump($arg);
+        $dumped = ob_get_contents();
+        error_log($dumped);
+        ob_end_flush();
     }
 
     // Pretty-print. Doesn't work.

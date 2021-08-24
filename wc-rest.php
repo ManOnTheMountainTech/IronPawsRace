@@ -27,11 +27,13 @@
             //  3 -> Purchased previously and logged in
             // The user should be verified as logged in.
             // TODO: Jump back from logging in.
+            // return: An array that contains a single dimensional array
+            // of orders.
 
             // Validate the order id
             $results = $this->woocommerce->get(ORDERS . $wc_order_id);
             if (NULL == $results) {
-                return "Unable to talk to WooCommerce while getting customer information";
+                return null;
             }
 
             try {
@@ -47,7 +49,7 @@
 
         // Return an array of orders that are raceable (PROCESSING)
         // https://github.com/woocommerce/wc-api-php/issues/156
-        // Returns => Order(s), if there are any orders, else null
+        // Returns => Order(s), if there are any orders, else empty array
         function getOrdersByCustomerId(int $wc_customer_id) {
             // Validate the order id
             $results = $this->woocommerce->get(
@@ -85,9 +87,6 @@
             // Validate the order id
             $results = $this->woocommerce->get(
                 self::CUSTOMERS . $wc_customer_id);
-            if (NULL == $results) {
-                return "Unable to talk to WooCommerce while getting a customers information";
-            }
 
             return $results;
         }
@@ -196,10 +195,20 @@
         }
 
         static function create_wc() {
-            return new Client(
+            /*return new Client(
                 'https://ironpawsllc.com', 
                 'ck_f79eca540f4d74a63f85845426de32283f80f9d0', 
                 'cs_056dc40407f6219fbd5705594c32460130175aa9',
+                [
+                    'wp_api' => true,
+                    'version' => 'wc/v3'
+                ]
+            );*/
+
+            return new Client(
+                'https://beta.ironpawsllc.com', 
+                'ck_0bb09da903e0b344cb4112b885a077fbc3a501c2', 
+                'cs_2fd8415ab167193563eefaea976952a483e6d54e',
                 [
                     'wp_api' => true,
                     'version' => 'wc/v3'

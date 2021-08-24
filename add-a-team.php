@@ -37,7 +37,13 @@
             }
 
             if (is_null($add_team_html)) { 
-                $db = new Mush_DB();
+                $db;
+
+                try {
+                    $db = new Mush_DB();
+                } catch(\PDOException $e) {
+                    return Strings::CONTACT_SUPPORT . Strings::ERROR . 'add-a-team-connect.';
+                }
                         
                 try { 
                     $teamName_id = $db->execAndReturnInt('CALL sp_addTeamName (?)', 
@@ -54,7 +60,7 @@
                         "Failed to set the team. Please try again.");
 
                 } catch(Mush_DB_Exception $e) { 
-                    write_log(__FUNCTION__ . " produced exception ", $e);
+                    statement_log(__FUNCTION__, __LINE__, "exception " . print_r($e));
                     return $e->userHTMLMessage;
                 }
      
@@ -62,10 +68,10 @@
 
                 $reg_a_team = TEAM_REGISTRATION;
                 
+                // <a href="{$reg_a_team}">Register a team</a>
                 $add_team_html .= <<<SUCCESS_MSG
                     <p>
                         Team <strong>$strippedTeamName</strong> added to the database.<br>
-                        <a href="{$reg_a_team}">Register a team</a>
                     </p>
                 SUCCESS_MSG;
 
@@ -113,8 +119,6 @@
             $person_id = 0;
             $race_class_id = 0;
             $wc_order_id = 0;
-
-
 
             // Verify that they have at least one order
  

@@ -292,6 +292,8 @@ class HttpClient
             return \strlen($headers);
         });
 
+        //var_dump($this);
+
         // Get response data.
         $body    = \curl_exec($this->ch);
         $code    = \curl_getinfo($this->ch, CURLINFO_HTTP_CODE);

@@ -5,7 +5,7 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.1.8
+ * Version: 0.2.0
  */
 
 /* Place custom code below this line. */
@@ -44,6 +44,18 @@ function register_wp_hooks() {
     add_action('delete_user_form', 'IronPaws\\ironpaws_wp_delete_user_form');
     add_filter('wp_nav_menu_items', 'IronPaws\\ironpaws_add_loginout_link', 10, 2);
     add_action('wp_enqueue_scripts', 'IronPaws\\ironpaws_wp_load_css' );
+
+    // https://stackoverflow.com/questions/38693992/notice-ob-end-flush-failed-to-send-buffer-of-zlib-output-compression-1-in
+    /**
+     * Proper ob_end_flush() for all levels
+     *
+     * This replaces the WordPress `wp_ob_end_flush_all()` function
+     * with a replacement that doesn't cause PHP notices.
+     */
+    remove_action( 'shutdown', 'wp_ob_end_flush_all', 1 );
+    add_action( 'shutdown', function() {
+        while ( @ob_end_flush() );
+    } );
 }
 
 /*

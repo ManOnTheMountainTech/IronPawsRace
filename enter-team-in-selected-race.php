@@ -7,7 +7,7 @@
     function do_shortcode_write_team_to_db() {
             $team_id = 0;
             
-            $db = new MushDB();
+            $db = new Mush_DB();
                     
             try { 
                 $db->connect();

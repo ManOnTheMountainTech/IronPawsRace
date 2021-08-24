@@ -6,11 +6,15 @@
     require_once plugin_dir_path(__FILE__) . 'container-html-pattern.php';
     require_once plugin_dir_path(__FILE__) . 'includes/binarynode.php';
     require_once plugin_dir_path(__FILE__) . 'includes/binarytree.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
     require_once plugin_dir_path(__FILE__) . 'scorecard-callback-args.php';
     require_once plugin_dir_path(__FILE__) . 'scorecardbybibnumber.php';
 
     use Algorithms\BinaryTree;
     use Algorithms\BinaryNode;
+
+    use Automattic\WooCommerce\Client;
+    use Automattic\WooCommerce\HttpClient\HttpClientException;
     
     class Race_Results implements Container_HTML_Pattern {
         const BIB_NUMBER_IDX = 0;
@@ -105,7 +109,12 @@
         function makeListItemHTML(array $params) {
             //$wc_order_id = $params[0];
 
-            $db = new Mush_DB();
+            $db;
+            try {
+                $db = new Mush_DB();
+            } catch (\PDOException $e) {
+                return Strings::CONTACT_SUPPORT . Strings::ERROR . 'race-results_connect-1.';
+            }
 
             try {
                 $stmt = $db->query("CALL sp_getAllWCOrders()");
@@ -165,8 +174,7 @@
                 
             }
             catch(Mush_DB_Exception $e) { 
-                statement_log(__FUNCTION__ , __LINE__ , ': produced exception', $e);
-                var_debug($e);
+                statement_log(__FUNCTION__ , __LINE__ , ': produced exception' . var_debug($e));
                 return $e->userHTMLMessage;
             }
 
@@ -183,16 +191,55 @@
 
             $race_class_description = Teams::RACE_CLASSES[$race_class_idx][0];
 
-            $this_customers_info = $this->wc_rest->getCustomerDetailsByCustomerId($row[self::WC_CUSTOMER_ID_IDX]);
+            $this_customers_info = "";
+            $args->rank++;
+            $bib_number_idx = self::BIB_NUMBER_IDX;
+            $team_name_idx = self::TEAM_NAME_IDX;
+
+            // rank | bib | team name | mushers' name | class | score
+
+            try {
+                $this_customers_info = $this->wc_rest->getCustomerDetailsByCustomerId($row[self::WC_CUSTOMER_ID_IDX]);
+                if (is_null($this_customers_info)) {
+                    $args->result .= "This musher no longer exists.";
+                }
+            } catch (HttpClientException $e) {
+                $responseBody = json_decode($e->getResponse()->getBody());
+
+                if ("woocommerce_rest_invalid_id" == $responseBody) {
+                    $args->result .= "Musher id {$row[self::WC_CUSTOMER_ID_IDX]} no longer exists";
+                }
+                $args->result .= <<<RACE_RESULTS_ROW
+                    <div class="Row">  
+                        <div class="Cell"> 
+                            {$args->rank} 
+                        </div>  
+                        <div class="Cell">    
+                            Unknown  
+                        </div>  
+                        <div class="Cell">  
+                            Left race
+                        </div> 
+                        <div class="Cell">  
+                            Unknown
+                        </div>  
+                        <div class="Cell">
+                            {$race_class_description}
+                        </div>
+                        <div class="Cell">
+                            {$scorecard->score}
+                        </div>
+                    </div> 
+                RACE_RESULTS_ROW;
+
+            return;
+            }
+
             $this_customers_info = $this_customers_info->billing;
             $customer_flname = $this_customers_info->first_name . ' ' . $this_customers_info->last_name;
 
             $run_race_id = $row[TRSE::RUN_RACE_CLASS_ID_IDX];
 
-            // rank | bib | team name | mushers' name | class | score
-            $bib_number_idx = self::BIB_NUMBER_IDX;
-            $team_name_idx = self::TEAM_NAME_IDX;
-            $args->rank++;
             $args->result .= <<<RACE_RESULTS_ROW
                 <div class="Row">  
                     <div class="Cell"> 

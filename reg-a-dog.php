@@ -3,8 +3,7 @@
 
   defined( 'ABSPATH' ) || exit;
 
-  require_once("setIncPath.php");
-  require_once(non_web_php . "/mush-db.php");
+  require_once  plugin_dir_path(__FILE__) . 'includes/srings.php';
 
   class Reg_A_Dog {
 
@@ -59,7 +58,15 @@
           }
         }
 
-        $db = new MushDB();
+        $db;
+
+        try {
+          $db = new Mush_DB();
+        }
+        catch(\PDOException $e) {
+          return Strings::CONTACT_SUPPORT . Strings::ERROR . 'reg-a-dog_connect.';
+        }
+
         $dogId = $db->execAndReturnInt("CALL sp_NewDog (:dogName, :dogAge, :dogOwnerId)",
           ['dogName' => $dogname, 'dogAge' => $dogage, 'owner' => $dogOwnerId]);
       }

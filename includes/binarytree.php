@@ -204,13 +204,27 @@ namespace Algorithms {
           }
       }
 
-      public function traverse() {
-          // dump the tree rooted at "root"
-          $this->root->dump();
+      // @return-> true = success, false == failure
+      public function traverse(): bool {
+        if ($this->isEmpty()) {
+          return false;
+        }
+
+        // dump the tree rooted at "root"
+        $this->root->dump();
+
+        return true;
       }
 
-      public function walk($callable, $arg) {
+      // @return-> true = success, false = failure
+      public function walk($callable, $arg): bool {
+        if ($this->isEmpty()) {
+          return false;
+        }
+
         $this->root->walk($callable, $arg);
+
+        return true;
       }
   }
 }

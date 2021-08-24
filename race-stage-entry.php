@@ -8,6 +8,8 @@
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
     require_once plugin_dir_path(__FILE__) . 'includes/util.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/orders.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
     require_once plugin_dir_path(__FILE__) . 'add-a-team.php';
 
     class Race_Stage_Entry { 
@@ -80,13 +82,11 @@
 
         function makeProductSelectionForm() {
             $wc_pair_args = WC_PAIR_ARGS;
-
-            $i = 0;
     
             $wc_rest_api = new WC_Rest();
             $orders = $wc_rest_api->getOrdersByCustomerId($this->cur_user->ID);
 
-            if (is_null($orders)) {
+            if (empty($orders)) {
                 return "No orders found. Have you purchased a race?";
             }
         
@@ -111,17 +111,11 @@
                         $line_item->name);
                     }
                 }
-    
-                ++$i;
             }
     
             $form_html .= "</select><br>\n";
             $form_html .= '<button type="submit" value="' . WC_PAIR_ARGS . '">Select</button>';
             $form_html .= "</form>";
-    
-            if (0 == $i) {
-                $form_html = "<em>No orders have been placed.";
-            }
         
             return $form_html;
         } // end: makeProductSelectionForm
@@ -147,7 +141,13 @@
                 return "Invalid parameters specified.";
             }
 
-            $mush_db = new Mush_DB();
+            $mush_db;
+
+            try {
+                $mush_db = new Mush_DB();
+            } catch (\PDOException $e) {
+                return Strings::CONTACT_SUPPORT . Strings::ERROR . 'race-stage-entry_connect-1.';
+            }
 
             // Don't penalize the racer for our slowness in processing.
             $cur_date_time = date_create();
@@ -160,8 +160,12 @@
 
                 $cur_ri_info = $mush_db->execAndReturnColumn('CALL sp_getAllRaceInstanceInfo(?)',
                     [$wpProductId],
-                    "Unable to get information about the race");
+                    "Race Instance Info is not set up.");
                 $cur_ri_info = $cur_ri_info[0]; // Should only have 1 match from the query
+
+                if (is_null($cur_ri_info)) {
+                    return "The information about race {$wpProductId} is not set up.";
+                }
 
                 $race_start_date_time = date_create($cur_ri_info[TRSE::RI_START_DATE_TIME]);
                 $ri_race_defs_fk = $cur_ri_info[TRSE::RI_RACE_DEFS_FK];
@@ -171,14 +175,16 @@
                     [$ri_race_defs_fk],
                     "Unfortunately the number of race stages could not be retrieved.");
 
-                $trse_params = (new Mush_DB)->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
+                $trse_params;
+
+                $mush_db->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
                     ['wc_order_id' => $wpOrderId],
                     "Internal error race-stage-entry-1. Please contact support or file a bug.");
                 
                 if (empty($trse_params)) {
                     return <<<SELECT_A_TEAM
-                        <p>No team is entered in this race.</p>
-                        <a href="/team-registration">Enter a team in a race.</a>
+                        <p>No team selected.</p>
+                        <a href="/team-registration">Enter a team in a race.</a><br>
                         <a href="/register-a-new-team">Create a new team.</a>
                     SELECT_A_TEAM;
                 }
@@ -320,7 +326,11 @@
                 return GENERIC_INVALID_PARAMETER_MSG;
             }
 
-            $db = new Mush_DB();
+            try {
+                $db = new Mush_DB();
+            } catch(\PDOException $e) {
+                return Strings::CONTACT_SUPPORT . Strings::ERROR . 'reg-a-dog_connect.';
+            }
 
             $race_elapsed_time = sprintf("%02d:%02d:%05.2F", $hours, $minutes, $seconds);
 

@@ -1,7 +1,7 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
+
+    defined( 'ABSPATH' ) || exit;
 
     class Mush_DB_Exception extends \Exception {
         static public function throwErrorCoreException(string $errorCore, int $instance, \Exception $e = null) {

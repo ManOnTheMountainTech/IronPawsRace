@@ -9,8 +9,12 @@
 
     /** @param: int $user_id -> Id of the user to add
      */ 
-    function ironpaws_user_register(int $user_id) {
-        $db = new Mush_DB();
+    function ironpaws_user_register(int $user_id) {;
+        try {
+            $db = new Mush_DB();
+        } catch(\PDOException $e) {
+            return Strings::CONTACT_SUPPORT . Strings::ERROR . 'shortcode-usr_register.';
+        }
 
         // TODO: form for Mr. Field.
         $db->execSql("CALL sp_newPersonUsingWCOrderID(:salutation, :wp_user_id)", 
@@ -22,7 +26,11 @@
     * @param: $user -> WP_User object of the user that is being deleted
     */
     function ironpaws_wp_delete_user(int $id) {
-        $db = new Mush_DB();
+        try {
+            $db = new Mush_DB();
+        } catch(\PDOException $e) {
+            return Strings::CONTACT_SUPPORT . Strings::ERROR . 'shortcode-delete_user.';
+        }
         $db->execSql("CALL sp_deletePerson(:wp_user_id)", ['wp_user_id' => $id]);
     }
 
