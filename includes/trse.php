@@ -3,11 +3,11 @@
 
   defined( 'ABSPATH' ) || exit;
 
-  require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
-  require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
+  require_once plugin_dir_path(__FILE__) . 'wp-defs.php';
+  require_once plugin_dir_path(__FILE__) . 'debug.php';
   require_once plugin_dir_path(__FILE__) . 'mush-db.php';
-  require_once plugin_dir_path(__FiLE__) . 'includes/util.php';
-  require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
+  require_once plugin_dir_path(__FiLE__) . 'util.php';
+  require_once plugin_dir_path(__FILE__) . 'strings.php';
 
   use Automattic\WooCommerce\Client;
   use Automattic\WooCommerce\HttpClient\HttpClientException;

@@ -3,7 +3,7 @@
 
     defined( 'ABSPATH' ) || exit;
 
-    require_once plugin_dir_path(__FILE__) . 'includes/comparable.php';
+    require_once 'comparable.php';
 
     class ScoreCardByScoreAndClass implements Comparable {
         use ScoreCard;

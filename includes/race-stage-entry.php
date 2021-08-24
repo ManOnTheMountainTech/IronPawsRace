@@ -4,13 +4,12 @@
     defined( 'ABSPATH' ) || exit;
     define("FORM_NAME", "RSE_Form");
 
-    require_once plugin_dir_path(__FILE__) . 'autoloader.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/util.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/orders.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
-    require_once plugin_dir_path(__FILE__) . 'add-a-team.php';
+    require_once 'autoloader.php';
+    require_once 'wp-defs.php';
+    require_once 'debug.php';
+    require_once 'util.php';
+    require_once 'strings.php';
+    require_once 'add-a-team.php';
 
     class Race_Stage_Entry { 
         protected \WP_User $cur_user;

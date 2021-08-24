@@ -13,10 +13,11 @@ namespace IronPaws;
 
 defined( 'ABSPATH' ) || exit;
 
-require_once 'autoloader.php';
+require_once 'includes/autoloader.php';
 require_once plugin_dir_path(__FILE__) . 'tests/test-shortcodes.php';
+require_once plugin_dir_path(__FILE__) . 'race-results.php';
 require_once plugin_dir_path(__FILE__) . 'wp-hooks.php';
-require_once plugin_dir_path(__FILE__) . 'add-a-team.php';
+require_once plugin_dir_path(__FILE__) . 'includes/add-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'reg-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-complete.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-hooks.php';

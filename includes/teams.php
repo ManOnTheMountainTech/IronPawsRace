@@ -3,11 +3,10 @@
 
   defined( 'ABSPATH' ) || exit;
 
-  require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
-  require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
-  require_once plugin_dir_path(__FILE__) . 'wc-rest.php';
-  require_once plugin_dir_path(__FILE__) . 'logon.php';;
-  require_once plugin_dir_path(__FILE__) . "autoloader.php";
+  require_once 'wp-defs.php';
+  require_once 'debug.php';
+  require_once 'logon.php';;
+  require_once "autoloader.php";
 
   use Automattic\WooCommerce\Client;
   use Automattic\WooCommerce\HttpClient\HttpClientException;

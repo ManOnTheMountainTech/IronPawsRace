@@ -6,8 +6,8 @@ namespace Algorithms {
 
   defined( 'ABSPATH' ) || exit;
 
-  require_once plugin_dir_path(__FILE__) . 'wp-defs.php';
-  require_once plugin_dir_path(__FILE__) . 'debug.php';
+  require_once 'wp-defs.php';
+  require_once 'debug.php';
 
   class BinaryNode { 
 

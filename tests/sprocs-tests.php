@@ -5,7 +5,7 @@
 
     require_once plugin_dir_path(__FILE__) . '../includes/wp-defs.php';
     require_once plugin_dir_path(__FILE__) . '../includes/debug.php';
-    require_once plugin_dir_path(__FILE__) . '../mush-db.php';
+    require_once plugin_dir_path(__FILE__) . '../includes/autoloader.php';
 
     class Sprocs_Tests {
         protected Mush_DB $db;

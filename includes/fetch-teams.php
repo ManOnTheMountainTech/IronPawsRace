@@ -3,8 +3,8 @@
 
   defined( 'ABSPATH' ) || exit;
 
-  require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
-  require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
+  require_once plugin_dir_path(__FILE__) . 'wp-defs.php';
+  require_once plugin_dir_path(__FILE__) . 'debug.php';
   require_once plugin_dir_path(__FILE__) . 'teams.php';
 
   use Automattic\WooCommerce\Client;

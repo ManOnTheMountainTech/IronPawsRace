@@ -3,13 +3,9 @@
 
     defined( 'ABSPATH' ) || exit;
 
-    require_once plugin_dir_path(__FILE__) . 'mush-db.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
-    require_once plugin_dir_path(__FILE__) . "teams.php";
-    require_once plugin_dir_path(__FILE__) . "includes/util.php";
-    require_once plugin_dir_path(__FILE__) . "logon.php";
-    require_once plugin_dir_path(__FILE__) . "wc-rest.php";
+    require_once plugin_dir_path(__FILE__) . 'autoloader.php';
+    require_once plugin_dir_path(__FILE__) . 'wp-defs.php';
+    require_once plugin_dir_path(__FILE__) . 'debug.php';
 
     // Adds a team from scratch
     function do_shortcode_add_a_team() {

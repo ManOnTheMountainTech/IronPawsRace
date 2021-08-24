@@ -4,8 +4,8 @@
 
     defined( 'ABSPATH' ) || exit;
 
-    require_once plugin_dir_path(__FILE__) . 'includes/mysql.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/mush-db-exception.php';
+    require_once 'mysql.php';
+    require_once 'mush-db-exception.php';
 
     const DEBUG=true;
 

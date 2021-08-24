@@ -3,12 +3,8 @@
 
     defined( 'ABSPATH' ) || exit;
 
-    require_once plugin_dir_path(__FILE__) . 'container-html-pattern.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/binarynode.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/binarytree.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
     require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
-    require_once plugin_dir_path(__FILE__) . 'scorecard-callback-args.php';
-    require_once plugin_dir_path(__FILE__) . 'scorecardbybibnumber.php';
 
     use Algorithms\BinaryTree;
     use Algorithms\BinaryNode;

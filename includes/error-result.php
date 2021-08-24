@@ -1,7 +1,7 @@
 <?php
-    defined( 'ABSPATH' ) || exit;
-
     namespace IronPaws;
+
+    defined( 'ABSPATH' ) || exit;
 
     class Error_Result {
         public string $errorMessage;
