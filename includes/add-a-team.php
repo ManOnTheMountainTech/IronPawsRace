@@ -6,6 +6,7 @@
     require_once plugin_dir_path(__FILE__) . 'autoloader.php';
     require_once plugin_dir_path(__FILE__) . 'wp-defs.php';
     require_once plugin_dir_path(__FILE__) . 'debug.php';
+    require_once plugin_dir_path(__FILE__) . 'verify.php';
 
     // Adds a team from scratch
     function do_shortcode_add_a_team() {

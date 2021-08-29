@@ -240,7 +240,7 @@
       $team_args = TEAM_ARGS;
       $team_name_id = TEAM_NAME_ID;
       return <<<GET_TEAMS
-            <label for="{$team_name_id}">Please select a team to race:</label>
+            <label for="{$team_name_id}">Please select a dog team:</label>
             <select name="{$team_args}" id="{$team_name_id}">
       GET_TEAMS;
     }

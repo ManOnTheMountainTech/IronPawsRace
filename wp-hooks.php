@@ -4,7 +4,7 @@
     defined( 'ABSPATH' ) || exit;
 
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
-    require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
+    //require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
 
     /** @param: int $user_id -> Id of the user to add
      */ 

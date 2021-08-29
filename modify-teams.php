@@ -1,7 +1,10 @@
 <?php
+
+  namespace IronPaws\Mush;
+
   defined( 'ABSPATH' ) || exit;
 
-  namespace IronPaws;
+
 
   require_once "wp-defs.php";
   require_once plugin_dir_path(__FILE__) . 'mush-db.php';

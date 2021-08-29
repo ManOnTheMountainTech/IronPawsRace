@@ -3,7 +3,7 @@
         
         defined( 'ABSPATH' ) || exit;
 
-        require_once 'includes/autoloader.php';
+        //require_once 'includes/autoloader.php';
         require_once 'includes/wp-defs.php';
         require_once 'includes/debug.php';
 

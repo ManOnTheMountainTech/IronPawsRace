@@ -6,7 +6,17 @@
      const non_web_php = '/home/bryany/php/';
                                       // sent out
      const COMPLETED = 'completed';
-     const DOG_NAME = 'dogNames';
+
+     class Dogs {
+          const NAME = 'dogNames';
+          const AGE = "dogAge";
+          const OWNER_FIRST_NAME = "dogOwnerFirstName";
+          const OWNER_LAST_NAME = "dogOwnerLastName";
+          const OWNER_EMAIL = "dogOwnerEmail";
+          const OWNER_USER_NAME = "dogOwnerUserName";
+          const OWNER_PERSON_ID = "dogOwnerPersonId";
+     }
+     
      const EMAIL = 'email';
      const FIRST_NAME = 'first_name';
      const GENERIC_INVALID_PARAMETER_MSG = "Invalid query string were supplied.";

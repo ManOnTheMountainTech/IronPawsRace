@@ -3,7 +3,7 @@
 
     defined( 'ABSPATH' ) || exit;
 
-    require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
+    //require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
     require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
 
     use Algorithms\BinaryTree;

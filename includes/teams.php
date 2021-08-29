@@ -71,7 +71,9 @@
     }
 
     // Fetch's a musher's teams as HTML.
-    // @param: optional: _GET[WC_ORDER_ID] -> WooCommerce order ID
+    // @param-> $form_action -> the action (web page) to go to on 
+    // GET: TEAM_NAME_ID -> The id of the team name.
+    // form completion.
     public function get(string $form_action) { 
       $logon_form = ensure_loggedon();
       if (!is_null($logon_form)) {

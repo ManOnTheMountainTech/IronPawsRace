@@ -6,17 +6,11 @@
 
     require_once 'mysql.php';
     require_once 'mush-db-exception.php';
+    require_once  plugin_dir_path(__FILE__) . '../settings/db.php';
 
     const DEBUG=true;
 
     class Mush_DB {
-        protected const SERVERNAME = "localhost";
-        //protected const USERNAME = "bryan_mushuser";
-        protected const USERNAME = "bryan_mushbeta";
-        //protected const PASSWORD = '9E{y)E;32.Qep7%m';
-        protected const PASSWORD = '2-NAMC8gqBS&Dmhe';
-        protected const DBNAME = 'bryan_mush_beta';
-        
         protected $maxReconnectTries = 100;
 
         protected $reconnectTries = 0;
@@ -30,8 +24,8 @@
         }
 
         public function connect() {
-            $this->conn = new \PDO("mysql:host=" . Mush_DB::SERVERNAME . ";dbname=" . Mush_DB::DBNAME, 
-                Mush_DB::USERNAME, Mush_DB::PASSWORD);
+            $this->conn = new \PDO("mysql:host=" . DB::SERVERNAME . ";dbname=" . DB::DBNAME, 
+                DB::USERNAME, DB::PASSWORD);
             $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             $this->conn->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
         }
@@ -149,24 +143,6 @@
             //Out of retries. Let the user know.
             throw new Mush_DB_Exception("Retried $this->maxConnectRetries times. I couldn't make the network work.");        
         }
-    }
-
-    // Returns: 0 if the number is invalid
-    function test_number($number) {
-        if (is_numeric(test_input($number))) { 
-            return $number; }
-        else {
-            $number = 0; }
-    }
-
-    // Generic all-date validation function.
-    // WARNING: Gaurd this with an exception handler. Trim can explode with
-    // bad input.
-    function test_input($data) {
-        $data = trim($data);
-        $data = stripslashes($data);
-        $data = htmlspecialchars($data);
-    return $data;
     }
 
     function makeSqlString(string $value) {

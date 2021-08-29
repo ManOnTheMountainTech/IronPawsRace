@@ -5,7 +5,7 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.2.0
+ * Version: 0.2.2
  */
 
 /* Place custom code below this line. */
@@ -13,14 +13,15 @@ namespace IronPaws;
 
 defined( 'ABSPATH' ) || exit;
 
-require_once 'includes/autoloader.php';
 require_once plugin_dir_path(__FILE__) . 'tests/test-shortcodes.php';
 require_once plugin_dir_path(__FILE__) . 'race-results.php';
 require_once plugin_dir_path(__FILE__) . 'wp-hooks.php';
 require_once plugin_dir_path(__FILE__) . 'includes/add-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'reg-a-team.php';
+require_once plugin_dir_path(__FILE__) . 'reg-a-dog.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-complete.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-hooks.php';
+//require_once 'includes/autoloader.php';
 
 register_wp_hooks();
 register_shortcodes();
@@ -36,10 +37,11 @@ function register_shortcodes() {
     add_shortcode('ironpaws_race_stage_entry', ['IronPaws\\Race_Stage_Entry', 'do_shortcode']);
     add_shortcode('ironpaws_test_updateTRSEForRSE', 'IronPaws\\do_shortcode_test_sp_updateTRSEForRSE');
     add_shortcode('ironpaws_race_results', ['IronPaws\\Race_Results', 'do_shortcode']);
+    add_shortcode('ironpaws_reg_a_dog', ['IronPaws\\Reg_A_Dog', 'do_shortcode']);
 }
 
 function register_wp_hooks() {
-    register_activation_hook(__FILE__, ['IronPaws\\WP_Hooks', 'install']);
+    //register_activation_hook(__FILE__, ['IronPaws\\WP_Hooks', 'install']);
     add_action('user_register', 'IronPaws\\ironpaws_user_register');
     add_action('delete_user', 'IronPaws\\ironpaws_wp_delete_user');
     add_action('delete_user_form', 'IronPaws\\ironpaws_wp_delete_user_form');
