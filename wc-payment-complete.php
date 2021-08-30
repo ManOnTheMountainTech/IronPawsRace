@@ -12,34 +12,29 @@
     // templates/order/order-detail-customer.php
     // @args: WC_Order -> The order object
      function ironpaws_order_details_after_customer_details(Order $order) {
+      $teams_path = plugins_url("fetch-teams", __FILE__);
+
       if (!is_null($order)) {
         $wc_order_arg = $order->get_order_number();
-
-        $woocommerce = new WC_Rest();
-
-        // Make sure that the payment is complete
         if ($wc_order_arg > 0) {
-          // We're being called after payment for a race. Ask WooCommerce the details.
-          try {
-            $results = $woocommerce->getOrdersByCustomerId($wc_order_arg);
-            if (NULL == $results) {
-              return;
-            }
-          }
-          catch (HttpClientException $e) {
-            write_log(__FUNCTION__ . __LINE__ . "Caught. Message:", $e->getMessage() ); // Error message.
-            write_log(" Request:", $e->getRequest() ); // Last request data.
-            write_log(" Response:", $e->getResponse() ); // Last response data.
-            return;
-          }
-
-          $wc_order_var = WC_ORDER_ID . '=';
-
-          $teams_path = plugins_url("fetch-teams?{$wc_order_var}={$wc_order_arg}", __FILE__);
-          echo <<<ASK_LOCATION_REGISTRATION
-            <a href="$teams_path">Team registration</a>
-          ASK_LOCATION_REGISTRATION;
+          $wc_order_id = WC_ORDER_ID;
+          $teams_path .= "?{$wc_order_id}={$wc_order_arg}";
         }
       }
+
+      // IE6/7 - non tables way:
+      // 
+      // <a href="$teams_path" style="display:inline-flex;flex-direction:row;aligns-items:center;vertical-align:center;line-height:5rem;height:5rem;">
+
+      echo <<<ASK_LOCATION_REGISTRATION
+      <div style="display: inline-flex;">
+      <a href="$teams_path" style="display:inline-flex;flex-direction:row;aligns-items:center;vertical-align:center;line-height:5rem;height:5rem;">
+        <img 
+          src="https://beta.ironpawsllc.com/wp-content/uploads/2021/08/noun_hard-work_1154847-.svg" 
+          alt="A musher pulling their dog on a sled">
+        <p style="aligns-items: center;">Lookup the teams that are assigned to this race</p>
+      </a>
+      </div>
+      ASK_LOCATION_REGISTRATION;
     }
   ?>

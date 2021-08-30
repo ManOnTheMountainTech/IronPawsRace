@@ -5,6 +5,7 @@
 
     require_once 'wp-defs.php';
     require_once 'debug.php';
+    require plugin_dir_path(__FILE__) . '../settings/wc-rest-creator.php';
     require plugin_dir_path(__FILE__) . '../vendor/autoload.php';
 
     use Automattic\WooCommerce\Client;
@@ -16,7 +17,7 @@
         const CUSTOMERS = "customers/";
 
         public function __construct() {
-            $this->woocommerce = WC_Rest::create_wc();
+            $this->woocommerce = WC_Rest_Creator::create_wc();
         }
 
         function query_race_is_editable(int $wc_order_id) {
@@ -49,7 +50,7 @@
 
         // Return an array of orders that are raceable (PROCESSING)
         // https://github.com/woocommerce/wc-api-php/issues/156
-        // Returns => Order(s), if there are any orders, else empty array
+        // @return: => Order(s), if there are any orders, else empty array
         function getOrdersByCustomerId(int $wc_customer_id) {
             // Validate the order id
             $results = $this->woocommerce->get(
@@ -58,7 +59,7 @@
             return $results;
         }
 
-        // Return an array of orders that are raceable (PROCESSING)
+        // @return-> an array of orders that are raceable (PROCESSING)
         function getAllOrders() {
             // Validate the order id
             $results = $this->woocommerce->get(
@@ -70,7 +71,7 @@
             return $results;
         }
 
-        // Return a JSON'ized array of WC_CUSTOMER
+        // @return-> a JSON'ized array of WC_CUSTOMER
         function getAllCustomers() {
             // Validate the order id
             $results = $this->woocommerce->get(
@@ -82,7 +83,7 @@
             return $results;
         }
 
-        // Return a JSON'ized WC_CUSTOMER
+        // @return: a JSON'ized WC_CUSTOMER
         function getCustomerDetailsByCustomerId(int $wc_customer_id) {
             // Validate the order id
             $results = $this->woocommerce->get(
@@ -192,40 +193,6 @@
                     throw new WCRaceRegistrationException(PAYMENT_NOT_COMPLETED_MSG, 
                         PAYMENT_NOT_COMPLETED_ERROR);
             }
-        }
-
-        static function create_wc() {
-            /*return new Client(
-                'https://ironpawsllc.com', 
-                'ck_f79eca540f4d74a63f85845426de32283f80f9d0', 
-                'cs_056dc40407f6219fbd5705594c32460130175aa9',
-                [
-                    'wp_api' => true,
-                    'version' => 'wc/v3'
-                ]
-            );*/
-
-            return new Client(
-                'https://beta.ironpawsllc.com', 
-                'ck_0bb09da903e0b344cb4112b885a077fbc3a501c2', 
-                'cs_2fd8415ab167193563eefaea976952a483e6d54e',
-                [
-                    'wp_api' => true,
-                    'version' => 'wc/v3'
-                ]
-            );
-
-            /*return new Client(
-                'http://localhost', 
-                'ck_f79eca540f4d74a63f85845426de32283f80f9d0', 
-                'cs_056dc40407f6219fbd5705594c32460130175aa9',
-                [
-                    'wp_api' => true,
-                    'version' => 'wc/v3',
-                    'query_string_auth' => true,
-                    'verify_ssl' => false
-                ]
-            );*/
         }
 
         function getResponseBody($response) {

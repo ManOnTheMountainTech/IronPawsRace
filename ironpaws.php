@@ -76,6 +76,7 @@ function init($request) {
 //add_action( 'woocommerce_order_status_completed', 'ironpaws_woocommerce_order_status_completed');
 //add_action( 'woocommerce_payment_complete_order_status_completed', 'ironpaws_woocommerce_payment_complete_order_status');
 
+// In: wc-payment-complete.php
 function register_wc_hooks() {
 /* This is the one that is hit when everything is said and done */
     add_action( 'woocommerce_payment_complete', 'IronPaws\\ironpaws_woocommerce_payment_complete');

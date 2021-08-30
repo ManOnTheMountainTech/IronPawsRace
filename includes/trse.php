@@ -67,7 +67,7 @@
 
         try {
           $params = sanitize_text_field($params_handle_with_care);
-          $params = explode('|', $params);
+          $params = explode(QUERY_ARG_SEPERATOR, $params);
 
           $wc_product_id = test_number($params[self::PRODUCT_ID_IDX]);
           if (0 == $wc_product_id) {
@@ -150,7 +150,7 @@
           $team_args_danger_will_robertson = $_GET[TEAM_ARGS];
           $team_args = sanitize_text_field($team_args_danger_will_robertson);
 
-          $team_params_unsafe = explode('|', $team_args);
+          $team_params_unsafe = explode(QUERY_ARG_SEPERATOR, $team_args);
           $team_params_size = count($team_params_unsafe);
           if (2 != $team_params_size) {
             return "Invalid number of team params passed in";
@@ -182,7 +182,7 @@
         $wc_rest_api = new WC_Rest();
         $orders = $wc_rest_api->getOrdersByCustomerId($cur_user->ID);
 
-        if (is_null($orders)) {
+        if (is_null($orders) || (empty($orders))) {
           return "No orders found. Have you purchased a race?";
         }
   
@@ -210,8 +210,8 @@
           if ($wc_rest_api->checkRaceEditable_noThrow($order)) {
             foreach ($order->line_items as $line_item) {
               $form_html .= makeHTMLOptionString(
-                $line_item->product_id . '|' . 
-                $order->id . '|' .  
+                $line_item->product_id . QUERY_ARG_SEPERATOR . 
+                $order->id . QUERY_ARG_SEPERATOR .  
                 $team_id, 
                 $line_item->name);
             }
@@ -225,7 +225,7 @@
         $form_html .= "</form>\n";
   
         if (0 == $i) {
-          $form_html = "<em>No orders have been placed.";
+          $form_html = "<em>No races can be entered into..";
         }
 
         return $form_html;
@@ -246,7 +246,7 @@
     }
 
     function makeListItemHTML(array $team_idxs) {
-      return '<option value="' . $team_idxs[TEAMS::TEAM_IDX] . '|' . 
+      return '<option value="' . $team_idxs[TEAMS::TEAM_IDX] . QUERY_ARG_SEPERATOR . 
         $team_idxs[TEAMS::TEAM_TN_FK] . '">' . $team_idxs[TEAMS::TEAM_NAME_ID] . '</option>';
     }
 

@@ -101,33 +101,39 @@
                 <label for="{$race_select}">Please choose a race to enter results for:</label>
                 <select name="{$wc_pair_args}" id="{$race_select}">
             GET_RACES;
+
+            $query_arg_seperator = QUERY_ARG_SEPERATOR;
     
             foreach($orders as $order) {
                 if ($wc_rest_api->checkRaceEditable_noThrow($order)) {
                     foreach ($order->line_items as $line_item) {
                     $form_html .= makeHTMLOptionString(
-                        "{$line_item->product_id}|{$order->id}", 
+                        "{$line_item->product_id}{$query_arg_seperator}{$order->id}", 
                         $line_item->name);
                     }
                 }
             }
+
+            $product_id_const = PRODUCT_ID;
     
-            $form_html .= "</select><br>\n";
-            $form_html .= '<button type="submit" value="' . WC_PAIR_ARGS . '">Select</button>';
-            $form_html .= "</form>";
+            $form_html .= <<<GET_RACES_END
+                    </select><br>\n
+                    <button type="submit" value="{$wc_pair_args}">Select</button>\n
+                </form>\n
+            GET_RACES_END;
         
             return $form_html;
         } // end: makeProductSelectionForm
 
 
-        // IN: GET -> <product id> | <order id>
+        // IN: GET -> <product id> <QUERY_ARG_SEPERATOR> <order id>
         function makeHTMLRaceStageEntryForm() {
             $wpProductId;
             $wpOrderId;
 
             try {
                 $wc_pair_args = test_input($_GET[WC_PAIR_ARGS]);
-                $pieces = explode('|', $wc_pair_args);
+                $pieces = explode(QUERY_ARG_SEPERATOR, $wc_pair_args);
                 $wpProductId = $pieces[0];
                 if ($wpProductId < 1) {
                     return "Invalid product id supplied.";
@@ -270,7 +276,7 @@
         // params: $_POST
         //  -> Hours, Minutes, Seconds, Mileage, Race stage,
         //      -> WC_PAIR_ARGS ->
-        //          product id | order id
+        //          product id <QUERY_ARG_SEPERATOR> order id
         //      -> Outcome - Enum as string
         function writeToMush_DB() {
             try {
@@ -300,7 +306,7 @@
                 }
 
                 $wc_pair_args = sanitize_text_field($_GET[WC_PAIR_ARGS]);
-                $wc_pairs = explode('|', $wc_pair_args);
+                $wc_pairs = explode(QUERY_ARG_SEPERATOR, $wc_pair_args);
                 $wc_order_id_handle_with_care = $wc_pairs[1];
                 $wc_order_id = test_number($wc_order_id_handle_with_care);
 
