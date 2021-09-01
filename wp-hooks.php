@@ -52,6 +52,8 @@
             plugins_url('/css/race-stage-entry.css', __FILE__));
         \wp_enqueue_style("ironpaws_tables", 
             plugins_url('/css/table.css', __FILE__));
+        //\wp_enqueue_style("ironpaws_a_href", 
+        //     plugins_url('/css/a_href.css', __FILE__));
     }
 
     class IronPaws_WP_Hooks {

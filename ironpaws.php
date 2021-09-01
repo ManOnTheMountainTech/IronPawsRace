@@ -40,6 +40,7 @@ function register_shortcodes() {
     add_shortcode('ironpaws_reg_a_dog', ['IronPaws\\Reg_A_Dog', 'do_shortcode']);
 }
 
+// wp-hooks.php
 function register_wp_hooks() {
     //register_activation_hook(__FILE__, ['IronPaws\\WP_Hooks', 'install']);
     add_action('user_register', 'IronPaws\\ironpaws_user_register');
