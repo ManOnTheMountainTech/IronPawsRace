@@ -70,10 +70,9 @@
       $this->wp_user = wp_get_current_user();
     }
 
-    // Fetch's a musher's teams as HTML.
+    // Outer envolope of a teams selection form.
     // @param-> $form_action -> the action (web page) to go to on 
-    // GET: TEAM_NAME_ID -> The id of the team name.
-    // form completion.
+ 
     public function get(string $form_action) { 
       $logon_form = ensure_loggedon();
       if (!is_null($logon_form)) {
@@ -128,9 +127,18 @@
     }
 
     function htmlNoDogTeamsFound() {
+      $icon = plugins_url('ironpaws/img/icons/dogs/sleds/noun_hard_work_1154847.svg');
+      $link = plugins_url('ironpaws/register-a-new-team');
+
       return 
         <<<ONLY_REGISTER
-          No dog teams found for {$this->wp_user->get('display_name')}.
+          <p>No dog teams found for {$this->wp_user->get('display_name')} ('{$this->wp_user->get('user_login')}').</p>
+          <a href="$link" class="img-a">
+          <img 
+            src="{$icon}" 
+            alt="A musher pulling their dog on a sled">
+          <p class="p-aligned">Register a new team</p>
+        </a>
       ONLY_REGISTER;
     }
   

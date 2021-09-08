@@ -5,7 +5,7 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.2.2
+ * Version: 0.2.3
  */
 
 /* Place custom code below this line. */
@@ -46,6 +46,8 @@ function register_wp_hooks() {
     add_action('user_register', 'IronPaws\\ironpaws_user_register');
     add_action('delete_user', 'IronPaws\\ironpaws_wp_delete_user');
     add_action('delete_user_form', 'IronPaws\\ironpaws_wp_delete_user_form');
+
+    // https://stackoverflow.com/questions/5034826/wp-nav-menu-change-sub-menu-class-name
     add_filter('wp_nav_menu_items', 'IronPaws\\ironpaws_add_loginout_link', 10, 2);
     add_action('wp_enqueue_scripts', 'IronPaws\\ironpaws_wp_load_css' );
 

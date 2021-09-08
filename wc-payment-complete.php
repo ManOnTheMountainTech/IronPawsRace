@@ -31,14 +31,13 @@
       $icon_abs_path = $icon_abs_path . $icon;
 
       echo <<<ASK_LOCATION_REGISTRATION
-      <div style="display: inline-flex;">
-      <a href="$teams_path" style="display:inline-flex;flex-direction:row;aligns-items:center;vertical-align:center;line-height:5rem;height:5rem;">
+      <a href="$teams_path" class="img-a">
         <img 
           src="{$icon_abs_path}" 
           alt="A musher pulling their dog on a sled">
-        <p style="aligns-items: center;">Lookup the teams that are assigned to this race</p>
+        <p class="p-aligned">Lookup the teams that are assigned to this race</p>
       </a>
-      </div>
+  
       ASK_LOCATION_REGISTRATION;
     }
   ?>

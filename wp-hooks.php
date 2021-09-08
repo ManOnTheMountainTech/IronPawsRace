@@ -38,6 +38,7 @@
     }
 
     function ironpaws_add_loginout_link(string $items, \stdClass $args ) {
+        // sub-menu->class
         if (is_user_logged_in() && $args->theme_location == 'primary') {
             $items .= '<li><a href="'. wp_logout_url( get_permalink( wc_get_page_id( 'myaccount' ) ) ) .'">Log out</a></li>';
         }
@@ -52,8 +53,8 @@
             plugins_url('/css/race-stage-entry.css', __FILE__));
         \wp_enqueue_style("ironpaws_tables", 
             plugins_url('/css/table.css', __FILE__));
-        //\wp_enqueue_style("ironpaws_a_href", 
-        //     plugins_url('/css/a_href.css', __FILE__));
+        \wp_enqueue_style("ironpaws_a_href", 
+            plugins_url('/css/a_href.css', __FILE__));
     }
 
     class IronPaws_WP_Hooks {

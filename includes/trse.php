@@ -45,15 +45,24 @@
           return $html;
         }
 
-        $html = $trse->get(TEAM_REGISTRATION);
-        if (is_null($html)) {
-          return "Unable to get any teams for this musher.";
-        }
-
-        $html .= $trse->makeFormCloseHTML();
+        $html = $trse->makeDogTeamSelectionForm(TEAM_REGISTRATION);
       } catch(Race_Registration_Exception $e) {
         return "<strong>{$e->getMessage()}</strong>";
       }
+
+      return $html;
+    }
+
+    // @param-> Where to go on submit
+    // @return-> html of the dog team selection form
+    // @throws->Race_Registration_Exception
+    function makeDogTeamSelectionForm(string $where_next) {
+      $html = $this->get($where_next);
+      if (is_null($html)) {
+        return "Unable to get any teams for this musher.";
+      }
+
+      $html .= $this->makeFormCloseHTML();
 
       return $html;
     }
@@ -140,36 +149,50 @@
       return null;
     }
 
+    // Decondes team name and team Id from an untrusted variable,
+    // such as $_GET
+    // @param: IN OUT->team Id
+    // @param: IN OUT->team Name
+    // @return: null -> success, otherwise an error message
+    static function decodeUnsafeTeamArgs(int &$teamId, int &$teamNameId) {
+      try {
+        $team_args_danger_will_robertson = $_GET[TEAM_ARGS];
+        $team_args = \sanitize_text_field($team_args_danger_will_robertson);
+
+        $team_params_unsafe = explode(QUERY_ARG_SEPERATOR, $team_args);
+        $team_params_size = count($team_params_unsafe);
+        if (2 != $team_params_size) {
+          return "Invalid number of team params passed in";
+        }
+
+        $teamId = test_number($team_params_unsafe[0]);
+        if ($teamId < 1) {
+          return "Bad team id passed in.";
+        }
+
+        $teamNameId = test_number($team_params_unsafe[1]);
+        if ($teamNameId < 1) {
+          return "Bad team name passed in.";
+        }
+      } catch (\Exception $e) {
+        if (is_wp_debug()) {
+          var_dump($e);
+        }
+        return "Bad parameters passed in.";
+      }
+
+      return null;
+    }
+
     // Previous state: makeOpeningHTML
     function showProductSelectionForm() {
       if (array_key_exists(TEAM_ARGS, $_GET)) {
-        $team_id;
-        $team_name_id;
+        $team_id = 0;
+        $team_name_id = 0;
 
-        try {
-          $team_args_danger_will_robertson = $_GET[TEAM_ARGS];
-          $team_args = sanitize_text_field($team_args_danger_will_robertson);
-
-          $team_params_unsafe = explode(QUERY_ARG_SEPERATOR, $team_args);
-          $team_params_size = count($team_params_unsafe);
-          if (2 != $team_params_size) {
-            return "Invalid number of team params passed in";
-          }
-
-          $team_id = test_number($team_params_unsafe[0]);
-          if ($team_id < 1) {
-            return "Bad team id passed in.";
-          }
-
-          $team_name_id = test_number($team_params_unsafe[1]);
-          if ($team_name_id < 1) {
-            return "Bad team name passed in.";
-          }
-        } catch (\Exception $e) {
-          if (is_wp_debug()) {
-            var_dump($e);
-          }
-          return "Bad parameters passed in.";
+        $error = self::decodeUnsafeTeamArgs($team_id, $team_name_id);
+        if (!is_null($error)) {
+          return $error;
         }
 
         $team_name_id_arg = TEAM_NAME_ID;
@@ -177,7 +200,7 @@
         $wc_product_id = WC_PRODUCT_ID;
   
         $i = 0;
-        $cur_user = wp_get_current_user();
+        $cur_user = \wp_get_current_user();
   
         $wc_rest_api = new WC_Rest();
         $orders = $wc_rest_api->getOrdersByCustomerId($cur_user->ID);
@@ -185,11 +208,9 @@
         if (is_null($orders) || (empty($orders))) {
           return "No orders found. Have you purchased a race?";
         }
-  
-        $wc_order_id = WC_ORDER_ID;
 
         $method = POST;
-   
+      
         $form_html = <<<RACE_PRE
           <form method="{$method}" action="">
         RACE_PRE;
@@ -234,6 +255,11 @@
       return null;
     } // end: showProductSelectionForm
 
+    // Teams::get
+    // End result is to have the team args from the form in _GET
+    // @return: GET: TEAM_ARGS -> The ids of the team and team name upon
+    // form completion.
+    // @see: decodeUnsafeTeamArgs() -> Decodes TEAM_ARGS
     //function get(string $form_action) {}
 
     function makeOpeningHTML() {

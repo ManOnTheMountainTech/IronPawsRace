@@ -180,9 +180,7 @@
                     [$ri_race_defs_fk],
                     "Unfortunately the number of race stages could not be retrieved.");
 
-                $trse_params;
-
-                $mush_db->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
+                $trse_params = $mush_db->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
                     ['wc_order_id' => $wpOrderId],
                     "Internal error race-stage-entry-1. Please contact support or file a bug.");
                 

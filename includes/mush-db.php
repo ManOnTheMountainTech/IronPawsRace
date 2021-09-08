@@ -73,11 +73,15 @@
                 Mush_DB_Exception::throwErrorCoreException($errorCore, 1);
             }
 
+            if (empty($rawId)) {
+                Mush_DB_Exception::throwErrorCoreException($errorCore, 2);     
+            }
+
             // Result always comes back in the array of the array for single object returns.
             $id = $rawId[0][0];
 
             if (0 == $id) {
-                Mush_Db_Exception::throwErrorCoreException($errorCore, 2);
+                Mush_Db_Exception::throwErrorCoreException($errorCore, 3);
             }
 
             return $id;
