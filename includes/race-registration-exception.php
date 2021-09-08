@@ -22,28 +22,28 @@
         const CANT_GET_INFO_FROM_ORDER_MSG = "Can't get information about the musher from the order";
         const CANT_GET_INFO_FROM_ORDER_ERROR = -5;
 
-        public function __construct($string) {
-            if (is_wp_debug() && isset($e->xdebug_message)) {
-                $this->$message = $this->message . '\n' . $e->xdebug_message;
+        public function __construct($message, $code = 0, \Throwable $previous = null) {
+            if (is_wp_debug() && property_exists($previous, 'xdebug_message')) {
+                $this->$message = $this->message . '\n' . $previous->xdebug_message;
             }
 
-            parent::__construct($string);
+            parent::__construct($message, $code, $previous);
         }
 
         static function throwPaymentNotCompleted($wc_rest_result_orders) {
             throw new Race_Registration_Exception(
-                sprintf(PAYMENT_NOT_COMPLETED_MSG, 
+                sprintf(self::PAYMENT_NOT_COMPLETED_MSG, 
                     $wc_rest_result_orders),
-                PAYMENT_NOT_COMPLETED_ERROR);
+                self::PAYMENT_NOT_COMPLETED_ERROR);
         }
 
         function processRaceAccessCase() {
             switch($this->getCode()) {
                 case self::RACE_CLOSED_ERROR:
-                    return '<p>' . RACE_CLOSED_MSG . '</p>';
+                    return '<p>' . self::RACE_CLOSED_MSG . '</p>';
         
                 case self::PAYMENT_NOT_COMPLETED_ERROR:
-                    return '<p>' . $this->getMesssage() . '</p>';
+                    return '<p>' . $this->getMessage() . '</p>';
             }
         }
 

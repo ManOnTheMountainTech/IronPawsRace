@@ -108,7 +108,7 @@
           $mushers_teams_failed = true;  
         }
       }
-      catch(Mush_DB_Exception $e) {
+      catch(User_Visible_Exception_Thrower $e) {
         statement_log(__FUNCTION__, __LINE__, "Unable to create db object " . var_debug($e));
         return $e->userHTMLMessage;
       }
@@ -144,6 +144,7 @@
   
     // @params: 
     // @returns: an HTML select table of the mushers's teams. null on failure.
+    // @throws: Race_Registration_Exception on error
     function get_mushers_teams(Mush_DB $db) { 
       $team_name_id = TEAM_NAME_ID;
 
@@ -151,19 +152,23 @@
 
       // TODO: Handle both add a team and modify a team.
       $teams_selections_html = $this->makeOpeningHTML();
-  
-      $people_id = $db->execAndReturnInt(
-        "CALL sp_getPersonIdFromWPUserId (?)", 
-        [$this->wp_user->ID],
-        "Unable to get person id from wp user id={$this->wp_user->ID}");
 
-      if (0 == $people_id) {
-        throw new Race_Registration_Exception("Failed to get who this musher is.");
+      try {
+        $people_id = $db->execAndReturnInt(
+          "CALL sp_getPersonIdFromWPUserId (?)", 
+          [$this->wp_user->ID],
+          "Unable to get person id from wp user id={$this->wp_user->ID}");
+
+        if (0 == $people_id) {
+          throw new Race_Registration_Exception("Failed to get who this musher is.");
+        }
+
+        // TODO: May want to pass in the team and team name IDs
+        $stmt = $db->execSql("CALL sp_getAllTeamInfoAndTNByPersonId(?)", [$people_id]);
+        $foundATeam = false;
+      } catch(\Exception $e) {
+        return $e->userHTMLMessage;
       }
-
-      // TODO: May want to pass in the team and team name IDs
-      $stmt = $db->execSql("CALL sp_getAllTeamInfoAndTNByPersonId(?)", [$people_id]);
-      $foundATeam = false;
 
       try {
         while ($team_idxs = $stmt->fetch(\PDO::FETCH_NUM, \PDO::FETCH_ORI_NEXT)) {

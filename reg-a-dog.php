@@ -165,6 +165,7 @@
           return Strings::CONTACT_SUPPORT . Strings::ERROR . 'reg-a-dog_connect.';
         }
 
+        try {
         $personId = $db->execAndReturnInt(
           "CALL sp_getPersonIdFromWPUserId(:wpUserId)",
           [$wpUserId],
@@ -174,11 +175,10 @@
           ['dogName' => $dogname, 'dogAge' => $dogage, 'dogOwnerId' => $personId],
           "An error ocured saving the dogs information, error reg-a-dog_dog-1");
 
-        try {
           $db->execSql("CALL sp_addDogToTeam(:dogId, :teamId)", 
             ['dogId' => $dogId, 'teamId' => $teamId]);
-        } catch (Mush_DB_Exception $e) {
-          return "Error reg-a-dog_team-1 occured adding '{$dogname}' to the team.";
+        } catch (\Exception $e) {
+          return User_Visible_Exception_Thrower::getUserMessage($e);
         }
 
         return $dogname . " is now on the team.<br>";

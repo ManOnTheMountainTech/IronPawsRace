@@ -136,7 +136,7 @@
             }
           }
         }
-        catch(Mush_DB_Exception $e) { 
+        catch(User_Visible_Exception_Thrower $e) { 
           statement_log(__FUNCTION__ , __LINE__ , ': produced exception' . var_debug($e));
           return $e->userHTMLMessage;
         }

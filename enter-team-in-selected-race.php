@@ -20,8 +20,9 @@
                 // TODO: Do we refund the money?
                 write_log(__FUNCTION__ . ": produced exception " , $e);
                 return ( 'The database returned an error while creating the registering for the race.');
-            } catch(MushDBException $e) { 
+            } catch(Exception $e) { 
                 write_log(__FUNCTION__ . " produced exception ", $e);
                 return ( $e.message );
             }
+        }
 ?>

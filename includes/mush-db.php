@@ -5,10 +5,8 @@
     defined( 'ABSPATH' ) || exit;
 
     require_once 'mysql.php';
-    require_once 'mush-db-exception.php';
+    require_once 'user-visible-exception-thrower.php';
     require_once  plugin_dir_path(__FILE__) . '../settings/db.php';
-
-    const DEBUG=true;
 
     class Mush_DB {
         protected $maxReconnectTries = 100;
@@ -39,14 +37,14 @@
             $stmt = $this->execSql($statement, $params);
 
             if (is_null($stmt)) {
-                Mush_DB_Exception::throwErrorCoreException($errorCore, 0);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 0);
             }
 
             $column = $stmt->fetchAll(\PDO::FETCH_NUM);
             $stmt->closeCursor();
 
             if (is_null($column)) {
-                Mush_Db_Exception::throwErrorCoreException($errorCore, 2);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 2);
             }
 
             return $column;
@@ -61,7 +59,7 @@
             $stmt = $this->execSql($statement, $params);
 
             if (is_null($stmt)) {
-                Mush_DB_Exception::throwErrorCoreException($errorCore, 0);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 0);
             }
 
             // PDO::lastInsertId() may have issues with stored procedures
@@ -70,18 +68,18 @@
             $stmt->closeCursor();
 
             if (0 == $rawId) {
-                Mush_DB_Exception::throwErrorCoreException($errorCore, 1);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 1);
             }
 
             if (empty($rawId)) {
-                Mush_DB_Exception::throwErrorCoreException($errorCore, 2);     
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 2);     
             }
 
             // Result always comes back in the array of the array for single object returns.
             $id = $rawId[0][0];
 
             if (0 == $id) {
-                Mush_Db_Exception::throwErrorCoreException($errorCore, 3);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 3);
             }
 
             return $id;
@@ -135,17 +133,19 @@
                             }
 
                             // TODO
-                            throw new Mush_DB_Exception("Encountered a network error that cannot be retried. Out of options."); 
+                            throw User_Visible_Exception_Thrower::throwErrorCoreException(
+                                "Encountered a network error that cannot be retried. Out of options."); 
                         }
                     }
                 }     
                 else {
-                    throw new Mush_DB_Exception(__FUNCTION__ . __LINE__ . ": Params is null");
+                    User_Visible_Exception_Thrower::throwErrorCoreException("Mush_DB error-1.");
                 }
             }
 
             //Out of retries. Let the user know.
-            throw new Mush_DB_Exception("Retried $this->maxConnectRetries times. I couldn't make the network work.");        
+            User_Visible_Exception_Thrower::throwErrorCoreException(
+                "Retried $this->maxConnectRetries times. I couldn't make the network work.");        
         }
     }
 

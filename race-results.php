@@ -71,14 +71,14 @@
             $stmt = $this->execSql($statement, $params);
 
             if (is_null($stmt)) {
-                Mush_DB_Exception::throwErrorCoreException($errorCore, 0);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 0);
             }
 
             $column = $stmt->fetchAll(\PDO::FETCH_NUM);
             $stmt->closeCursor();
 
             if (is_null($column)) {
-                Mush_Db_Exception::throwErrorCoreException($errorCore, 2);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 2);
             }
 
             return $column;
@@ -129,7 +129,7 @@
                         ['wc_order_id' => $wc_order[0]]);
 
                     if (is_null($stmt)) {
-                        Mush_DB_Exception::throwErrorCoreException("Internal error race-results-1. Please contact support or file a bug.", 0);
+                        User_Visible_Exception_Thrower::throwErrorCoreException("Internal error race-results-1. Please contact support or file a bug.", 0);
                     }
 
                     // See if the scorecard is tracked.
@@ -169,7 +169,7 @@
 
                 
             }
-            catch(Mush_DB_Exception $e) { 
+            catch(User_Visible_Exception_Thrower $e) { 
                 statement_log(__FUNCTION__ , __LINE__ , ': produced exception' . var_debug($e));
                 return $e->userHTMLMessage;
             }

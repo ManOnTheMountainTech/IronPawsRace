@@ -7,11 +7,12 @@
 
 
   require_once "wp-defs.php";
-  require_once plugin_dir_path(__FILE__) . 'mush-db.php';
   require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
+  require_once plugin_dir_path(__FILE__) . 'includes/logon.php';
+  require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
 
   function do_shortcode_modify_teams() {
-    $logon_form = ensure_loggedon();
+    $logon_form = \ensure_loggedon();
     if (!is_null($logon_form)) {
       return $logon_form;
     }

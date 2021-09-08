@@ -194,9 +194,8 @@
 
                 $trse_params = $trse_params[0];
             }
-            catch(Mush_DB_Exeption $e) {
-                statement_log(__FUNCTION__, __LINE__, "Produced exception", $e);
-                return $e->userHTMLMessage;
+            catch(\Exception $e) {
+                return User_Visible_Exception_Thrower::getUserMessage($e);
             }
 
             $elapsed_race_days = ($cur_date_time->diff($race_start_date_time))->days;
