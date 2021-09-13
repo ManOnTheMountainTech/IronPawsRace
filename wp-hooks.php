@@ -11,13 +11,14 @@
     function ironpaws_user_register(int $user_id) {;
         try {
             $db = new Mush_DB();
-        } catch(\PDOException $e) {
-            return Strings::CONTACT_SUPPORT . Strings::ERROR . 'shortcode-usr_register.';
+            // TODO: form for Mr. Field.
+            $db->execSql("CALL sp_newPersonUsingWCOrderID(:salutation, :wp_user_id)", 
+                ['salutation' => null, 'wp_user_id' => $user_id ]);
+        } catch(\Exception $e) {
+            return User_Visible_Exception_Thrower::getUserMessage($e) . ' :shortcode-usr_register.';
         }
 
-        // TODO: form for Mr. Field.
-        $db->execSql("CALL sp_newPersonUsingWCOrderID(:salutation, :wp_user_id)", 
-            ['salutation' => null, 'wp_user_id' => $user_id ]);
+        return null;
     }
 
     /** @param: $id -> Id of the user to delete
@@ -27,10 +28,13 @@
     function ironpaws_wp_delete_user(int $id) {
         try {
             $db = new Mush_DB();
-        } catch(\PDOException $e) {
-            return Strings::CONTACT_SUPPORT . Strings::ERROR . 'shortcode-delete_user.';
+            $db->execSql("CALL sp_deletePerson(:wp_user_id)", ['wp_user_id' => $id]);
+        } catch(\Exception $e) {
+            return User_Visible_Exception_Thrower::getUserMessage($e) . 
+                ' :shortcode-delete_user.';
         }
-        $db->execSql("CALL sp_deletePerson(:wp_user_id)", ['wp_user_id' => $id]);
+
+        return null;
     }
 
     function ironpaws_wp_delete_user_form(\WP_User $current_user) {
@@ -40,10 +44,10 @@
     function ironpaws_add_loginout_link(string $items, \stdClass $args ) {
         // sub-menu->class
         if (is_user_logged_in() && $args->theme_location == 'primary') {
-            $items .= '<li><a href="'. wp_logout_url( get_permalink( wc_get_page_id( 'myaccount' ) ) ) .'">Log out</a></li>';
+            $items .= '<li><a href="'. wp_logout_url( get_permalink( \wc_get_page_id( 'myaccount' ) ) ) .'">Log out</a></li>';
         }
             elseif (!is_user_logged_in() && $args->theme_location == 'primary') {
-            $items .= '<li><a href="' . get_permalink( wc_get_page_id( 'myaccount' ) ) . '">Log in</a></li>';
+            $items .= '<li><a href="' . get_permalink( \wc_get_page_id( 'myaccount' ) ) . '">Log in</a></li>';
         }
         return $items;
     }  

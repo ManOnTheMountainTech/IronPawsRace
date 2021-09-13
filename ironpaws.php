@@ -5,7 +5,7 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.2.3
+ * Version: 0.2.5
  */
 
 /* Place custom code below this line. */
@@ -21,11 +21,19 @@ require_once plugin_dir_path(__FILE__) . 'reg-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'reg-a-dog.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-complete.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-hooks.php';
+require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
 //require_once 'includes/autoloader.php';
 
 register_wp_hooks();
 register_shortcodes();
 register_wc_hooks();
+set_exception_handler('IronPaws\def_exception_handler');
+
+function def_exception_handler(\Error $er) {
+    echo "Oh no! The harness broke! code={$er->getCode()}";
+    var_debug($er);
+    error_log(print_r($er));
+}
 
 function register_shortcodes() {
     add_shortcode('ironpaws_create_team_race_stage_entry', 'IronPaws\\do_shortcode_create_team_race_stage_entry');

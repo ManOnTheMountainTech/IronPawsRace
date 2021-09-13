@@ -156,7 +156,7 @@
         }*/
 
         $db;
-        $wpUserId = \wp_get_current_user()->ID;
+        $wpUserId = \get_current_user_id();
 
         try {
           $db = new Mush_DB();
@@ -164,24 +164,38 @@
         catch(\PDOException $e) {
           return Strings::CONTACT_SUPPORT . Strings::ERROR . 'reg-a-dog_connect.';
         }
+        $constructorPerf = new Sql_Perf($db);
 
         try {
         $personId = $db->execAndReturnInt(
           "CALL sp_getPersonIdFromWPUserId(:wpUserId)",
           [$wpUserId],
           "Error getting user information, error reg-a-dog_person-1.");
+        $personIdPerf = new SQL_Perf($db);
 
         $dogId = $db->execAndReturnInt("CALL sp_NewDog (:dogName, :dogAge, :dogOwnerId)",
           ['dogName' => $dogname, 'dogAge' => $dogage, 'dogOwnerId' => $personId],
           "An error ocured saving the dogs information, error reg-a-dog_dog-1");
+        $newDogPerf = new SQL_Perf($db);
 
-          $db->execSql("CALL sp_addDogToTeam(:dogId, :teamId)", 
+        $db->execSql("CALL sp_addDogToTeam(:dogId, :teamId)", 
             ['dogId' => $dogId, 'teamId' => $teamId]);
+        $addDogToTeamPerf = new SQL_Perf($db);
+
         } catch (\Exception $e) {
           return User_Visible_Exception_Thrower::getUserMessage($e);
         }
 
-        return $dogname . " is now on the team.<br>";
+        $dogname .= " is now on the team.<br>" . Strings::NEXT_STEPS . "<br>";
+        
+        if (true == MEASURE_PERF) {
+          $dogname .= $constructorPerf->returnStats("Constructor");
+          $dogname .= $personIdPerf->returnStats("PersonId");
+          $dogname .= $newDogPerf->returnStats("New dog");
+          $dogname .= $addDogToTeamPerf->returnStats("Add dog to team");
+        }
+
+        return $dogname;
       }
 
       return null;

@@ -62,28 +62,7 @@
             return $result;
         }
 
-                // @param $errorCore The "core" of the error message to display.
-        // @returns -> the column from the database
-        public function execAndReturnColumn(string $statement, 
-            array $params,
-            string $errorCore) {
-
-            $stmt = $this->execSql($statement, $params);
-
-            if (is_null($stmt)) {
-                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 0);
-            }
-
-            $column = $stmt->fetchAll(\PDO::FETCH_NUM);
-            $stmt->closeCursor();
-
-            if (is_null($column)) {
-                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 2);
-            }
-
-            return $column;
-        }
-
+        // Converts miles to points based on how the run went
         function milesToPoints(
             int $miles, 
             int $race_class_idx_arg, 
@@ -102,6 +81,7 @@
         }
 
         // param: $params - > WooCommerce Order Id
+        // return: HTML string -> table
         function makeListItemHTML(array $params) {
             //$wc_order_id = $params[0];
 
@@ -112,8 +92,9 @@
                 return Strings::CONTACT_SUPPORT . Strings::ERROR . 'race-results_connect-1.';
             }
 
+            // Loop throug all of the orders
             try {
-                $stmt = $db->query("CALL sp_getAllWCOrders()");
+                $stmt = $db->execSql("CALL sp_getAllWCOrders()");
                 $all_wc_orders = $stmt->fetchAll(\PDO::FETCH_NUM);
                 $stmt->closeCursor();
 
@@ -169,9 +150,8 @@
 
                 
             }
-            catch(User_Visible_Exception_Thrower $e) { 
-                statement_log(__FUNCTION__ , __LINE__ , ': produced exception' . var_debug($e));
-                return $e->userHTMLMessage;
+            catch(\Exception $e) { 
+                return User_Visible_Exception_Thrower::getUserMessage($e);
             }
 
             $args = new ScoreCard_CallBack_Args($this->wc_rest);

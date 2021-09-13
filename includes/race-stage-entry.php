@@ -128,18 +128,18 @@
 
         // IN: GET -> <product id> <QUERY_ARG_SEPERATOR> <order id>
         function makeHTMLRaceStageEntryForm() {
-            $wpProductId;
-            $wpOrderId;
+            $wcProductId;
+            $wcOrderId;
 
             try {
                 $wc_pair_args = test_input($_GET[WC_PAIR_ARGS]);
                 $pieces = explode(QUERY_ARG_SEPERATOR, $wc_pair_args);
-                $wpProductId = $pieces[0];
-                if ($wpProductId < 1) {
+                $wcProductId = $pieces[0];
+                if ($wcProductId < 1) {
                     return "Invalid product id supplied.";
                 }
-                $wpOrderId = $pieces[1];
-                if ($wpOrderId < 1) {
+                $wcOrderId = $pieces[1];
+                if ($wcOrderId < 1) {
                     return "Invalid order id supplied.";
                 }
             } catch (\Exception $e) {
@@ -164,12 +164,12 @@
                 // Fully populate TRSEs in TRSE.php
 
                 $cur_ri_info = $mush_db->execAndReturnColumn('CALL sp_getAllRaceInstanceInfo(?)',
-                    [$wpProductId],
+                    [$wcProductId],
                     "Race Instance Info is not set up.");
                 $cur_ri_info = $cur_ri_info[0]; // Should only have 1 match from the query
 
                 if (is_null($cur_ri_info)) {
-                    return "The information about race {$wpProductId} is not set up.";
+                    return "The information about race {$wcProductId} is not set up.";
                 }
 
                 $race_start_date_time = date_create($cur_ri_info[TRSE::RI_START_DATE_TIME]);
@@ -181,11 +181,14 @@
                     "Unfortunately the number of race stages could not be retrieved.");
 
                 $trse_params = $mush_db->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
-                    ['wc_order_id' => $wpOrderId],
+                    ['wc_order_id' => $wcOrderId],
                     "Internal error race-stage-entry-1. Please contact support or file a bug.");
+
+                $next_steps = Strings::NEXT_STEPS;
                 
                 if (empty($trse_params)) {
                     return <<<SELECT_A_TEAM
+                        <p>$next_steps</p>
                         <p>No team selected.</p>
                         <a href="/team-registration">Enter a team in a race.</a><br>
                         <a href="/register-a-new-team">Create a new team.</a>
@@ -304,8 +307,14 @@
 
                 $wc_pair_args = sanitize_text_field($_GET[WC_PAIR_ARGS]);
                 $wc_pairs = explode(QUERY_ARG_SEPERATOR, $wc_pair_args);
+                $wc_product_id_handle_with_care = $wc_pairs[0];
+                $wc_product_id = test_number($wc_product_id_handle_with_care);
                 $wc_order_id_handle_with_care = $wc_pairs[1];
                 $wc_order_id = test_number($wc_order_id_handle_with_care);
+
+                if ($wc_product_id < 1) {
+                    return "Invalid product ID supplied";
+                }
 
                 if ($wc_order_id < 1) {
                     return "Invalid order ID supplied";
@@ -335,22 +344,40 @@
             }
 
             $race_elapsed_time = sprintf("%02d:%02d:%05.2F", $hours, $minutes, $seconds);
+            $date_created = date("Y-m-d H:i:s");
 
-            $modified_columns = $db->execAndReturnColumn(
-                "call sp_updateTRSEForRSE(:wcOrderId, :mileage, :outcome, :raceElapsedTime, :raceStage, :dateCreated, :runClassId)",
-                ['wcOrderId' => $wc_order_id, 
-                'mileage' => $mileage, 
-                'outcome' => $outcome, 
-                'raceElapsedTime' => $race_elapsed_time, 
-                'raceStage' => $race_stage, 
-                'dateCreated' => date("Y-m-d H:i:s"),
-                'runClassId' => $run_class_id],
-                "A failure occured writing this team race stage entry.");
+            if (is_wp_debug()) {
+                echo "wcOrderId={$wc_order_id}, mileage={$mileage}, outcome={$outcome}<br>";
+                echo "raceElapsedTime={$race_elapsed_time}, wcProductId={$wc_product_id}, raceStage={$race_stage}<br>";
+                echo "dateCreated={$date_created}, runClassId={$run_class_id}<br>";
+            }
 
-            unset($_GET);
-            unset($_POST);
+            try {
+                $modified_columns = $db->execSql(
+                    "call sp_updateTRSEForRSE(
+                        :wcOrderId, 
+                        :mileage, 
+                        :outcome, 
+                        :raceElapsedTime, 
+                        :raceStage, 
+                        :dateCreated, 
+                        :runClassId)",
+                    ['wcOrderId' => $wc_order_id, 
+                    'mileage' => $mileage, 
+                    'outcome' => $outcome, 
+                    'raceElapsedTime' => $race_elapsed_time,
+                    'raceStage' => $race_stage, 
+                    'dateCreated' => $date_created,
+                    'runClassId' => $run_class_id],
+                    "A failure occured writing this team race stage entry.");
 
-            $user_return_msg = (empty($modified_columns)) ?  "Failed to write" : "Successfully wrote";
+                unset($_GET);
+                unset($_POST);
+
+                $user_return_msg = (empty($modified_columns)) ?  "Failed to write" : "Successfully wrote";
+            } catch (\Exception $e) {
+                return User_Visible_Exception_Thrower::getUserMessage($e);
+            }
                  
             return "{$user_return_msg} race stage <strong>{$race_stage}</strong> to the server.";
         }

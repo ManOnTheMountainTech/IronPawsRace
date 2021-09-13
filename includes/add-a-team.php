@@ -56,9 +56,8 @@
                         array('team_tn_id' => $teamName_id, 'person_id' => $person_id, 'team_class_id' => $race_class_id),
                         "Failed to set the team. Please try again.");
 
-                } catch(User_Visible_Exception_Thrower $e) { 
-                    statement_log(__FUNCTION__, __LINE__, "exception " . print_r($e));
-                    return $e->userHTMLMessage;
+                } catch(\Exception $e) { 
+                    return User_Visible_Exception_Thrower::getUserMessage($e);
                 }
      
                 $strippedTeamName = stripslashes($teamName);

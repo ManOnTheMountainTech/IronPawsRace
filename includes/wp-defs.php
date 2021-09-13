@@ -46,5 +46,7 @@
      const WC_CUSTOMER_ID = 'wc_customer_id';
      const WC_ORDER_ID = 'wc_order_id'; // The Woo Commerce order ID
      const WC_PRODUCT_ID = 'wc_product_id';
+
+     // Product Id <delim> Order Id
      const WC_PAIR_ARGS = 'wc_pair_args';
 ?>

@@ -15,7 +15,7 @@
       $teams_path = plugins_url("fetch-teams", __FILE__);
 
       if (!is_null($order)) {
-        $wc_order_arg = $order->get_order_number();
+        $wc_order_arg = $order->id;
         if ($wc_order_arg > 0) {
           $wc_order_id = WC_ORDER_ID;
           $teams_path .= "?{$wc_order_id}={$wc_order_arg}";
@@ -30,7 +30,10 @@
       $icon_abs_path = plugin_dir_url('ironpaws/img/icons/dogs/sleds/' . $icon);
       $icon_abs_path = $icon_abs_path . $icon;
 
+      $next_steps = Strings::NEXT_STEPS;
+
       echo <<<ASK_LOCATION_REGISTRATION
+      <p>$next_steps</p>
       <a href="$teams_path" class="img-a">
         <img 
           src="{$icon_abs_path}" 

@@ -108,15 +108,14 @@
           $mushers_teams_failed = true;  
         }
       }
-      catch(User_Visible_Exception_Thrower $e) {
-        statement_log(__FUNCTION__, __LINE__, "Unable to create db object " . var_debug($e));
-        return $e->userHTMLMessage;
-      }
       catch(Race_Registration_Exception $e) {         
         $error = $e->processRaceAccessCase();
         if (!is_null($error)) {return $error;}
-      } catch(Exception $e) {
+      } catch(\Exception $e) {
           write_log(makeHTMLErrorMessage($e->getMessage())); 
+      }
+      catch(\Exception $e) {
+        return User_Visible_Exception_Thrower::getUserMessage($e);
       }
 
       if ($mushers_teams_failed) {
@@ -129,9 +128,11 @@
     function htmlNoDogTeamsFound() {
       $icon = plugins_url('ironpaws/img/icons/dogs/sleds/noun_hard_work_1154847.svg');
       $link = plugins_url('ironpaws/register-a-new-team');
+      $next_steps = Strings::NEXT_STEPS;
 
       return 
         <<<ONLY_REGISTER
+          <p>$next_steps</p>
           <p>No dog teams found for {$this->wp_user->get('display_name')} ('{$this->wp_user->get('user_login')}').</p>
           <a href="$link" class="img-a">
           <img 
@@ -185,6 +186,10 @@
         throw new Race_Registration_Exception(
           'The database returned an error while finding teams for dogs.');
       }
+      catch(\Exception $e) {
+        throw new Race_Registration_Exception(
+          User_Visible_Exception_Thrower::getUserMessage($e));
+      }
 
       if (!$foundATeam) {
         return null;
@@ -214,9 +219,9 @@
         <select id="{$race_class_id}" name="{$race_class_id}"><br>
       ADD_TEAM_PRE;
       
-      $teams_selections_html .= self::makeRaceStageHTML();
+      $teams_selections_html .= $this->makeRaceStageHTML();
             
-      return $teams_selections_html . makeFormCloseHTML();
+      return $teams_selections_html . $this->makeFormCloseHTML();
     }
 
     static function makeRaceStageHTML() {   
@@ -232,8 +237,6 @@
 
     static function makeRunRaceClassesHTML(int $registered_race_class) {   
       $retHTML = "";
-
-      $num_run_race_classes_for_race_class;
 
       $num_run_race_classes_for_race_class = (in_array($registered_race_class, 
         self::RUN_CLASSES_FATBIKEJOR_IDXS)) ? self::MAX_RUN_RACE_CLASSES : self::MAX_NON_FATBIKEJOR_CLASSES;

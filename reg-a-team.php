@@ -50,21 +50,20 @@
   } // end do_shortcode_reg_team
     
   function get_dogTeamAssignments(\PDO $db, $team_names) { 
-    $execSql = "CALL sp_getCurrentDogTeamAssignment (:teams)";
+    $sql = "CALL sp_getCurrentDogTeamAssignment (:teams)";
     $dog_team_info = "<table>";
     
     try { 
-      $stmt = $db->prepare($execSql);
-      $stmt->execute([ 'teams' => $team_names ]);
+      $stmt = $db->execSql($sql, [ 'teams' => $team_names ]);
   
-      while ($row = $stmt->fetch(\PDO::FETCH_NUM, PDO::FETCH_ORI_NEXT)) {
+      while ($row = $stmt->fetch(\PDO::FETCH_NUM, \PDO::FETCH_ORI_NEXT)) {
         $dog_team_info .= '<tr><td>' . $row[0] . "<td>" . $row[1] . "<td>" . $row[2] . "</tr>";
       }
 
       $stmt = null; 
     }
-    catch(\PDOException $e) { 
-      return ( 'The database returned an error while finding teams for dogs.');
+    catch(\Exception $e) { 
+      return User_Visible_Exception_Thrower::getUserMessage($e);
       write_log(__FUNCTION__ . ': produced exception {$e}');
     }
     finally {

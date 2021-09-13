@@ -3,13 +3,16 @@
     
     defined( 'ABSPATH' ) || exit;
 
+    static $error_instance = 0;
+    const MEASURE_PERF = true;
+
     function is_wp_debug() {
         return (defined('WP_DEBUG') && true === WP_DEBUG);
     }
 
     function var_debug($var) {
         if (is_wp_debug()) {
-            var_dump($var);
+            \var_dump($var);
         }
     }
 
@@ -28,7 +31,7 @@
             $log = \print_r($log, true);
         }
 
-        \error_log(sprintf("%s:%s %s:%s", $function, $line, $message, $log));
+        \error_log(\sprintf("%s:%s %s:%s", $function, $line, $message, $log));
     }
 
     function object_to_html($log) {

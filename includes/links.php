@@ -12,12 +12,15 @@
     // @param-> A wordpress page slug
     // @return -> string: HTML
     static function make_icon_then_link(string $icon, string $wp_page_slug) {
-      $url_path = get_permalink( wc_get_page_id( $wp_page_slug ));
+      $url_path = get_permalink( \wc_get_page_id( $wp_page_slug ));
+
+      $next_steps = Strings::NEXT_STEPS;
 
       // IE6/7 - non tables way:
       // 
       // <a href="$teams_path" style="display:inline-flex;flex-direction:row;aligns-items:center;vertical-align:center;line-height:5rem;height:5rem;">
       return <<<LINK
+      <p>$next_steps</p>
       <a href="$url_path" class="img-a">
         <img 
           src="{$icon}" 

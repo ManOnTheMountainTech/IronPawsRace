@@ -27,8 +27,10 @@
         error_log( "payment complete for order $order_id", 0 );
 
         $wc_order_id = WC_ORDER_ID;
+        $next_steps = Strings::NEXT_STEPS;
 
         return  <<<ASK_LOCATION_REGISTRATION
+            <p>$next_steps</p>
             Ready to race? Register your team!
             <a href="team-registration">Team registration?$wc_order_id=$order_id</a>
         ASK_LOCATION_REGISTRATION;

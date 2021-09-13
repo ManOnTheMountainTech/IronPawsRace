@@ -60,7 +60,6 @@
                     $totalusers_dup = array_merge($users,$users2);
 
                     $totalusers = array_unique($totalusers_dup, SORT_REGULAR);
-                    var_debug($totalusers);
 
                     return $totalusers;
                 }

@@ -11,8 +11,9 @@
 
   use Automattic\WooCommerce\Client;
   use Automattic\WooCommerce\HttpClient\HttpClientException;
+  use SplDoublyLinkedList;
 
-  // Team Race Stage Entry
+// Team Race Stage Entry
   class TRSE extends Teams {
     const PRODUCT_ID_IDX = 0;
     const ORDER_ID_IDX = 1;
@@ -25,6 +26,12 @@
 
     const RI_START_DATE_TIME = 3;
     const RI_RACE_DEFS_FK = 2;
+
+    // The returned html is the first part of a form. The </select> and </form>
+    // tags need to be supplied.
+    const STATUS_TRY_NEXT = 0;
+    // The returned html closed html. No closing HTML tags need to be supplied.
+    const STATUS_DONE = 1;
 
     static function do_shortcode() {
       $logon_form = ensure_loggedon();
@@ -40,9 +47,10 @@
           return $html;
         }
 
-        $html = $trse->showProductSelectionForm();
-        if (!is_null($html)) {
-          return $html;
+        $ret = $trse->showProductSelectionForm();
+
+        if (self::STATUS_DONE == $ret->status) {
+          return $ret->html;
         }
 
         $html = $trse->makeDogTeamSelectionForm(TEAM_REGISTRATION);
@@ -97,7 +105,7 @@
         }
 
         try {
-          $error_message;
+          $error_message = '';
 
           try {
             $db = new Mush_DB();
@@ -109,19 +117,22 @@
             write_log("wc_product_id=$wc_product_id\n");
           }
 
+          // Since all races have at least 1 stage, see if we get any results back from sf_getRSDIndexByWCAndStage($wc_order_id, 1)
+
+          // TODO
           $num_race_stages = $db->execAndReturnInt(
             "CALL sp_getRaceStagesFromWC(?)", [$wc_product_id],
             "Failure in getting the number of race stages.");
   
           if (is_wp_debug()) {
-            echo "wc_order_id =$wc_order_id | team_id=$team_id | num_race_stages=$num_race_stages | wc_product_id=$wc_product_id\n";}
+            echo "wc_order_id =$wc_order_id | team_id=$team_id | num_race_stages=$num_race_stages";}
 
           // Preallocate the race stage entries. Better to fail while signing
           // up than during the race.
           for ($race_stage = 1; $race_stage <= $num_race_stages; ++$race_stage) {
-            $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :wc_product_id, :team_fk, :race_stage)", 
+            $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :wcProdId, :team_fk, :race_stage)", 
               ['wc_order_id' => $wc_order_id, 
-              'wc_product_id' => $wc_product_id,
+              'wcProdId' => $wc_product_id,
               'team_fk' => $team_id,
               'race_stage' => $race_stage],
               "Writing the team race stage entry failed for stage {$race_stage}. Please try again. If this continues, contact support or file a bug.");
@@ -129,16 +140,15 @@
 
           if (0 == $trse_id) {
             if (isset($error_message)) {
-              $error_message = "Team race stage entry {$race_stage} could not be recorded.";
+              $error_message .= "Team race stage entry {$race_stage} could not be recorded.";
             }
             else {
               $error_message .= "Team race stage entry {$race_stage} could not be recorded.";
             }
           }
         }
-        catch(User_Visible_Exception_Thrower $e) { 
-          statement_log(__FUNCTION__ , __LINE__ , ': produced exception' . var_debug($e));
-          return $e->userHTMLMessage;
+        catch(\Exception $e) { 
+          return User_Visible_Exception_Thrower::getUserMessage(($e));
         }
 
         unset($_GET);
@@ -185,74 +195,127 @@
     }
 
     // Previous state: makeOpeningHTML
-    function showProductSelectionForm() {
+    // If possible, ultimately produces a string that contains the product 
+    // selection form and all tags closed. 
+    // Next, Any teams that are assigned to a product are then shown.
+    // @return: $->status -> STATUS_TRY_NEXT -> Drop through to next step
+    //                    -> STATUS_DONE-> Do not drop through, return
+    //          $->html   -> the html to show, if any.
+    function showProductSelectionForm(): HTML_And_Status {
+      $ret = new HTML_And_Status();
+
       if (array_key_exists(TEAM_ARGS, $_GET)) {
         $team_id = 0;
         $team_name_id = 0;
 
         $error = self::decodeUnsafeTeamArgs($team_id, $team_name_id);
         if (!is_null($error)) {
-          return $error;
+          $ret->html = $error;
+          return $ret;
         }
 
         $team_name_id_arg = TEAM_NAME_ID;
         $race_class_id_arg = RACE_CLASS_ID;
         $wc_product_id = WC_PRODUCT_ID;
   
-        $i = 0;
+        $num_unbound_orders = 0;
+        $previously_bound_orders_count = 0;
         $cur_user = \wp_get_current_user();
   
         $wc_rest_api = new WC_Rest();
         $orders = $wc_rest_api->getOrdersByCustomerId($cur_user->ID);
 
         if (is_null($orders) || (empty($orders))) {
-          return "No orders found. Have you purchased a race?";
+          // TODO: Guide users to a race
+          $ret->html = "No orders found. Have you purchased a race?";
+          return $ret;
         }
 
-        $method = POST;
-      
-        $form_html = <<<RACE_PRE
-          <form method="{$method}" action="">
-        RACE_PRE;
-  
-        $race_select = RACE_SELECT;
-        $race_params = RACE_PARAMS;
-  
-        // Get the products from the orders, then let the customer choose which
-        // product (race) they want to go with.
-        $message = "Please choose a race for your team.";
+        $previously_bound_orders = new SplDoublyLinkedList();
+        $previously_bound_orders->setIteratorMode(SplDoublyLinkedList::IT_MODE_DELETE);
 
-        $form_html .= <<<GET_RACES
-            <label for="{$race_select}">{$message}</label>
-            <select name="{$race_params}" id="{$race_select}">
-        GET_RACES;
+        $ret->html = '';
+        $select_html = '';
   
-        foreach($orders as $order) {
-          if ($wc_rest_api->checkRaceEditable_noThrow($order)) {
-            foreach ($order->line_items as $line_item) {
-              $form_html .= makeHTMLOptionString(
-                $line_item->product_id . QUERY_ARG_SEPERATOR . 
-                $order->id . QUERY_ARG_SEPERATOR .  
-                $team_id, 
-                $line_item->name);
+        try {
+          $db = new Mush_DB();
+
+        // Process the orders into unassigned and assigned (bound) orders
+          foreach($orders as $order) {
+            if ($wc_rest_api->checkRaceEditable_noThrow($order)) {
+              foreach ($order->line_items as $line_item) {
+                $rsd = $db->execAndFetchAll("call sp_doesOrderHaveATeam(:wc_orderId)", 
+                  ['wc_orderId' => $order->id], "");
+
+                // No team for this order?
+                if (is_null($rsd)) {
+                  $select_html .= makeHTMLOptionString(
+                    $line_item->product_id . QUERY_ARG_SEPERATOR . 
+                    $order->id . QUERY_ARG_SEPERATOR .  
+                    $team_id, 
+                    $line_item->name);
+
+                    // We could just check for null HTML, but it's in flux.
+                  ++$num_unbound_orders;
+                } else {
+                  $previously_bound_orders->push($line_item->name);
+                  ++$previously_bound_orders_count;
+                }
+              } // end: foreach(line_items...)
             }
-          }
-  
-          ++$i;
+          } // end: foreach($orders...)
+        }
+        catch(\Exception $e) {
+          return User_Visible_Exception_Thrower::getUserMessage($e);
         }
   
-        $form_html .= "</select><br>\n";
-        $form_html .= '<button type="submit" value="' . WC_PRODUCT_ID . '">Select</button>';
-        $form_html .= "</form>\n";
-  
-        if (0 == $i) {
-          $form_html = "<em>No races can be entered into..";
+        $ret->status = self::STATUS_DONE;
+
+        // If we don't have any orders to show, then don't show any
+        if (0 == $num_unbound_orders) {
+          // TODO: Show the status of the users races, if they ask
+          if (0 == $previously_bound_orders_count) {
+            $ret->html = "<em>No races can be entered into.";
+            return $ret;
+          } 
+          // Otherwise, show the orders, since we have at least one.
+        } else {
+          $method = POST;
+    
+          $ret->html = <<<RACE_PRE
+            <form method="{$method}" action="">
+          RACE_PRE;
+    
+          $race_select = RACE_SELECT;
+          $race_params = RACE_PARAMS;
+    
+          // Get the products from the orders, then let the customer choose which
+          // product (race) they want to go with.
+          $message = "Please choose a race for your team. Only races that do not have a team are shown.<br>";
+
+          $ret->html .= <<<GET_RACES
+              <label for="{$race_select}">{$message}</label>
+              <select name="{$race_params}" id="{$race_select}">
+          GET_RACES;
+          $ret->html .= $select_html;
+          $ret->html .= "</select><br>\n";
+          $ret->html .= '<button type="submit" value="' . WC_PRODUCT_ID . '">Select</button>';
+          $ret->html .= "</form>\n";
         }
 
-        return $form_html;
+        // If we have any orders assigned to teams, show them.
+        if ($previously_bound_orders_count > 0) {
+          $ret->html .= '<h4>You have races in the following teams:</h4>';
+
+          for ($previously_bound_orders->rewind(); $previously_bound_orders->valid(); $previously_bound_orders->next()) {
+            $ret->html .= $previously_bound_orders->current() . '<br>';
+          }
+        }
+
+        $ret->html .= Strings::NEXT_STEPS . "<br>";
       }
 
-      return null;
+      return $ret;
     } // end: showProductSelectionForm
 
     // Teams::get
