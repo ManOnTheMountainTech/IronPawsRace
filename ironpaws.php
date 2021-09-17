@@ -5,7 +5,7 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.2.5
+ * Version: 0.2.6
  */
 
 /* Place custom code below this line. */
@@ -32,7 +32,7 @@ set_exception_handler('IronPaws\def_exception_handler');
 function def_exception_handler(\Error $er) {
     echo "Oh no! The harness broke! code={$er->getCode()}";
     var_debug($er);
-    error_log(print_r($er));
+    write_log($er);
 }
 
 function register_shortcodes() {

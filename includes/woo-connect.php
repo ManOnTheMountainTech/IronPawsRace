@@ -21,9 +21,9 @@
 
         static function throwPaymentNotCompleted($wc_rest_result_orders) {
             throw new WCRaceRegistrationException(
-                sprintf(PAYMENT_NOT_COMPLETED_MSG, 
+                sprintf(self::PAYMENT_NOT_COMPLETED_MSG, 
                     $wc_rest_result_orders),
-                PAYMENT_NOT_COMPLETED_ERROR);
+                    self::PAYMENT_NOT_COMPLETED_ERROR);
         }
     }
 

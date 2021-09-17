@@ -187,13 +187,6 @@
         }
 
         $dogname .= " is now on the team.<br>" . Strings::NEXT_STEPS . "<br>";
-        
-        if (true == MEASURE_PERF) {
-          $dogname .= $constructorPerf->returnStats("Constructor");
-          $dogname .= $personIdPerf->returnStats("PersonId");
-          $dogname .= $newDogPerf->returnStats("New dog");
-          $dogname .= $addDogToTeamPerf->returnStats("Add dog to team");
-        }
 
         return $dogname;
       }

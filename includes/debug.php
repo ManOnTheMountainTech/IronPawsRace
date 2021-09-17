@@ -26,6 +26,16 @@
         }
     }
 
+    if (!function_exists('echo_r')) {
+        function echo_r($message, $log = "") {
+            if (\is_array($log) || \is_object($log)) {
+                \error_log($message . print_r($log, true));
+            } else {
+                \error_log($message . $log);
+            }
+        }
+    }
+
     function statement_log($function, $line, $message, $log = "") {
         if (\is_array($log) || \is_object($log)) {
             $log = \print_r($log, true);

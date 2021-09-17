@@ -20,7 +20,9 @@
         }
         
         static public function getUserMessage(\Exception $e) {
-            error_log(print_r($e));
+            echo __FUNCTION__;
+            var_debug($e);
+            write_log($e);
 
             return (property_exists($e, "userHTMLMessage")) ?
                 $e->userHTMLMessage . " {" . $e->instance . '}':

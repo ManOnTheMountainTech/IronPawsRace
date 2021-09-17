@@ -7,6 +7,7 @@
     require_once 'debug.php';
     require plugin_dir_path(__FILE__) . '../settings/wc-rest-creator.php';
     require plugin_dir_path(__FILE__) . '../vendor/autoload.php';
+    require_once 'autoloader.php';
 
     use Automattic\WooCommerce\Client;
     use Automattic\WooCommerce\HttpClient\HttpClientException;
@@ -14,10 +15,19 @@
     class WC_Rest {
         protected $woocommerce;
 
+        public $perf;
+
         const CUSTOMERS = "customers/";
 
         public function __construct() {
+            if (MEASURE_PERF) {
+                $this->perf = new Perf();
+                $this->perf->startTiming();
+            }
             $this->woocommerce = WC_Rest_Creator::create_wc();
+
+            if (!is_null($this->perf)) {
+                echo $this->perf->returnStats("WC_Rest::construct"); }
         }
 
         function query_race_is_editable(int $wc_order_id) {
@@ -61,11 +71,18 @@
 
         // @return-> an array of orders that are raceable (PROCESSING)
         function getAllOrders() {
+            if (!is_null($this->perf)) {
+                $this->perf->startTiming();}
+
             // Validate the order id
             $results = $this->woocommerce->get(
                 ORDERS);
             if (NULL == $results) {
                 return "Unable to talk to WooCommerce while getting customer information";
+            }
+
+            if (!is_null($this->perf)) {
+                echo $this->perf->returnStats("WC_Rest::getAllOrders");
             }
 
             return $results;
@@ -92,32 +109,34 @@
             return $results;
         }
 
+        function getOrderFromOrderId(int $wc_order_id) {
+            return $this->woocommerce->get(ORDERS . '/' . $wc_order_id);
+            //return $this->woocommerce->get(ORDERS,  ['id' => $wc_order_id]);
+        }
+
+        // TODO: Consider for removal
         function getProductIdsFromOrderId(int $wc_order_id) {
+            
             // Validate the order id
-            $results = $this->woocommerce->get(ORDERS . $wc_order_id);
+            $results = $this->woocommerce->get(ORDERS . '/' . $wc_order_id);
             if (NULL == $results) {
                 return "Unable to talk to WooCommerce while getting customer information";
             }
 
             // TODO: process orders in a loop. Make checkRaceEditable check if paying customer.
+            if (!$this->checkRaceEditable_noThrow($results)) {return false;};
 
-            try {
-                checkRaceEditable($results);
-            }
-            catch(WCRaceRegistrationException $e) {
-                $error = $e->processRaceAccessCase();
-                if (!is_null($error)) {return $error;}
-            }
+            var_debug($results);
 
             $line_items = $results->line_items;
 
             if (isset($line_items)) {
-                $product_ids = [$line_items.count];
-
                 $count = count($line_items);
 
+                $product_ids = [$line_items->count];
+
                 for($i = 0; $i < $count; ++$i) {
-                    $product_ids[$i] = $line_item->product_id;
+                    $product_ids[$i] = $line_items->product_id;
                 }
 
                 return $product_ids;

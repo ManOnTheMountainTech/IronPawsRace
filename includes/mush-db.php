@@ -22,20 +22,25 @@
 
         protected $conn = null;
 
-        public $nanoTimeStart = 0;
-        public $nanoTimeStop = 0;
+        public $perf;
+
+        public function __construct() {
+            if (MEASURE_PERF) {
+                $this->perf = new Perf();
+            } else {
+                $this->perf = null;
+            }   
+        }
 
         public function disconnect() {
             $this->conn = null;
         }
 
         public function connect() {
-            $this->nanoTimeStart = hrtime(true);
             $this->conn = new \PDO("mysql:host=" . DB::SERVERNAME . ";dbname=" . DB::DBNAME, 
                 DB::USERNAME, DB::PASSWORD);
             $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             $this->conn->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
-            $this->nanoTimeStop = hrtime(true);
         }
 
         // @param $errorCore The "core" of the error message to display.
@@ -105,30 +110,38 @@
         }
 
         // Discourge calling these without the protection of he auto-retry loop.
-        protected function preparedExec(string $statement, array $params = []) {
+        // @param: sqlWithPlaceholders
+        // @param: A 1-dimensional array of the values for the placeholders.
+        // @return: PDOStatement on success, null on failure.
+        protected function preparedExec(string $sqlWithPlaceholders, array $params = []) {
             // Turn off the display of errors so we don't see packets
             // out of order. We allready deal with that.
-            @$prepared = $this->conn->prepare($statement);
-            if (@$prepared->execute($params)) {
-                return $prepared;
+            @$stmt = $this->conn->prepare($sqlWithPlaceholders);
+            if (@$stmt->execute($params)) {
+                return $stmt;
             }
             else {
                 return null;
             }
         }
 
-        protected function query(string $statement) {
-            return @$this->conn->query($statement);
+        // @return: an array of the values from the query.
+        protected function query(string $sql) {
+            return @$this->conn->query($sql);
         }
         
+        // Generic sql executor, but in an auto-retry loop. The operation will
+        // tried up to $this->maxRecconectTries
         // based off of:
         // https://www.tobymackenzie.com/blog/2020/08/18/automatic-reconnect-pdo-connection-time-out/
         // @return-> Result set of database operation on success
         // @throws: Exception with userHTMLMessage set.
+        // @return: params supplied: Returns a PDOStatement.
+        //          params not supplied-> Returns a result set (array)
         public function execSql(string $statement, array $params = []) { // TODO: See if we really need an empty array.
-            $this->reconnectTries = 0;
-            $this->nanoTimeStart = hrtime(true);
-
+            if (!is_null($this->perf)) {
+                $this->perf->startTiming();
+            }
             while($this->reconnectTries < $this->maxReconnectTries) {    
                 try{
                     // allows for retries based on connection errors
@@ -136,7 +149,8 @@
                         $this->connect();
                     }
                     $result_set = (is_null($params) || empty($params)) ? $this->query($statement) : $this->preparedExec($statement, $params);
-                    $this->nanoTimeStop = hrtime(true);
+                    if (!is_null($this->perf)) {
+                        echo $this->perf->returnStats($statement . ' ' . print_r($params)); }
                     return $result_set;
                 }   // Retry case
                 // higher-level exception handlers will catch more specific exceptions.

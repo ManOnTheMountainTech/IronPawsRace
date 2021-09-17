@@ -1,4 +1,6 @@
 <?php
+    namespace IronPaws;
+
     defined( 'ABSPATH' ) || exit;
 
     require_once 'wp-defs.php';
@@ -9,7 +11,7 @@
     use Automattic\WooCommerce\Client;
     use Automattic\WooCommerce\HttpClient\HttpClientException;
 
-    class WCRaceRegistrationException extends Exception {
+    class WCRaceRegistrationException extends \Exception {
         const RACE_CLOSED_MSG = "The race is closed. No changes can be made";
         const RACE_CLOSED_ERROR = -1;
         const PAYMENT_NOT_COMPLETED_MSG = "The payment for the race has not been completed. It's current status is %s";
@@ -22,17 +24,17 @@
 
         static function throwPaymentNotCompleted($wc_rest_result_orders) {
             throw new WCRaceRegistrationException(
-                sprintf(PAYMENT_NOT_COMPLETED_MSG, 
+                sprintf(self::PAYMENT_NOT_COMPLETED_MSG, 
                     $wc_rest_result_orders),
-                PAYMENT_NOT_COMPLETED_ERROR);
+                self::PAYMENT_NOT_COMPLETED_ERROR);
         }
 
         function processRaceAccessCase() {
             switch($this->getCode()) {
-                case RACE_CLOSED_ERROR:
-                    return '<p>' . RACE_CLOSED_MSG . '</p>';
+                case self::RACE_CLOSED_ERROR:
+                    return '<p>' . self::RACE_CLOSED_MSG . '</p>';
         
-                case PAYMENT_NOT_COMPLETED_ERROR:
+                case self::PAYMENT_NOT_COMPLETED_ERROR:
                     return '<p>' . $this->getMesssage() . '</p>';
             }
         }

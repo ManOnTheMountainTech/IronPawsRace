@@ -134,10 +134,12 @@
             try {
                 $wc_pair_args = test_input($_GET[WC_PAIR_ARGS]);
                 $pieces = explode(QUERY_ARG_SEPERATOR, $wc_pair_args);
+
                 $wcProductId = $pieces[0];
                 if ($wcProductId < 1) {
                     return "Invalid product id supplied.";
                 }
+                
                 $wcOrderId = $pieces[1];
                 if ($wcOrderId < 1) {
                     return "Invalid order id supplied.";
@@ -155,31 +157,15 @@
             }
 
             // Don't penalize the racer for our slowness in processing.
-            $cur_date_time = date_create();
-            $trse_params;
+
+            $trse_params = null;
 
             try {
                 // TODO: 
                 // Select the TRSEs that are currentelly active for the date.
                 // Fully populate TRSEs in TRSE.php
-
-                $cur_ri_info = $mush_db->execAndReturnColumn('CALL sp_getAllRaceInstanceInfo(?)',
-                    [$wcProductId],
-                    "Race Instance Info is not set up.");
-                $cur_ri_info = $cur_ri_info[0]; // Should only have 1 match from the query
-
-                if (is_null($cur_ri_info)) {
-                    return "The information about race {$wcProductId} is not set up.";
-                }
-
-                $race_start_date_time = date_create($cur_ri_info[TRSE::RI_START_DATE_TIME]);
-                $ri_race_defs_fk = $cur_ri_info[TRSE::RI_RACE_DEFS_FK];
-
-                $num_race_stages = $mush_db->execAndReturnInt(
-                    'CALL sp_getNumRaceStagesByRD (?)',
-                    [$ri_race_defs_fk],
-                    "Unfortunately the number of race stages could not be retrieved.");
-
+                $some_info = new Some_Race_Info($mush_db, $wcProductId);
+                
                 $trse_params = $mush_db->execAndReturnColumn("CALL sp_getTRSEScoreValues(:wc_order_id)", 
                     ['wc_order_id' => $wcOrderId],
                     "Internal error race-stage-entry-1. Please contact support or file a bug.");
@@ -201,10 +187,9 @@
                 return User_Visible_Exception_Thrower::getUserMessage($e);
             }
 
-            $elapsed_race_days = ($cur_date_time->diff($race_start_date_time))->days;
-            $race_stage = intdiv($elapsed_race_days, 7) + 1;
+            $race_stage = $some_info->calcCurRaceStage();
 
-            if ($race_stage > $num_race_stages) {
+            if ($race_stage > $some_info->num_race_stages) {
                 return "This race is over.";
             } else if ($race_stage < 1) {
                 return "This race has not started.";

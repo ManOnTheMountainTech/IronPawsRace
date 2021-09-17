@@ -5,9 +5,11 @@
 
     class Rest_API_Exception extends \Exception {
         static public function throwErrorCoreException(string $errorCore, int $instance) {
-            $this->message = "Creating the $errorCore was unsuccessful[{$instance}]";
-            $this->code = 0;
-            throw $this;
+            $that = new Rest_API_Exception($errorCore, $instance);
+
+            $that->message = "Creating the $errorCore was unsuccessful[{$instance}]";
+            $that->code = 0;
+            throw $that;
         }
     }
 ?>

@@ -11,8 +11,9 @@
 
     use Automattic\WooCommerce\Client;
     use Automattic\WooCommerce\HttpClient\HttpClientException;
-    
-    class Race_Results implements Container_HTML_Pattern {
+use stdClass;
+
+class Race_Results implements Container_HTML_Pattern {
         const BIB_NUMBER_IDX = 0;
         const TEAM_NAME_IDX = 5;
         const WC_CUSTOMER_ID_IDX = 6;
@@ -31,6 +32,7 @@
             $result = $this->makeOpeningHTML();
             $result .= $this->makeListItemHTML([]);
             $result .= $this->makeClosingHTML();
+            write_log($result);
             return $result;
         }
 
@@ -83,8 +85,6 @@
         // param: $params - > WooCommerce Order Id
         // return: HTML string -> table
         function makeListItemHTML(array $params) {
-            //$wc_order_id = $params[0];
-
             $db;
             try {
                 $db = new Mush_DB();
@@ -92,22 +92,20 @@
                 return Strings::CONTACT_SUPPORT . Strings::ERROR . 'race-results_connect-1.';
             }
 
-            // Loop throug all of the orders
+            $product_ids = [];
+
+            // Loop through all of the orders
             try {
-                $stmt = $db->execSql("CALL sp_getAllWCOrders()");
-                $all_wc_orders = $stmt->fetchAll(\PDO::FETCH_NUM);
-                $stmt->closeCursor();
+                $all_wc_orders = $this->wc_rest->getAllOrders();
 
                 $race_data = new BinaryTree();
                 $data_holder = new ScoreCardByScoreAndClass();
 
-                foreach($all_wc_orders as $wc_order) {
-                    $error_message;
-        
+                foreach($all_wc_orders as $wc_order) {   
                     $result = "";
 
                     $stmt = $db->execSql("CALL sp_getTRSEScoreValues(:wc_order_id)", 
-                        ['wc_order_id' => $wc_order[0]]);
+                        ['wc_order_id' => $wc_order->id]);
 
                     if (is_null($stmt)) {
                         User_Visible_Exception_Thrower::throwErrorCoreException("Internal error race-results-1. Please contact support or file a bug.", 0);
@@ -117,10 +115,9 @@
                     // If it is tracked, see if it is applicable to the race.
                     // Insert a new scorecard if not tracked for a race
                     // Otherwise, update the score.
-
-                    while ($row = $stmt->fetch(\PDO::FETCH_NUM, \PDO::FETCH_ORI_NEXT)) {
-                        $cur_musher;
-
+                    $trse_table = $stmt->fetchAll(\PDO::FETCH_NUM);
+                    $stmt->closeCursor();
+                    foreach($trse_table as $row) {
                         $bib_number = $row[self::BIB_NUMBER_IDX];
                         
                         // bib not assigned yet
@@ -128,27 +125,45 @@
                             continue;
                         }
 
-                        $data_holder->bib_number = $bib_number;
-                        $data_holder->run_details = $row;
+                        $line_items = $wc_order->line_items;
 
-                        $cur_node = $race_data->insertOrFetch($data_holder);
-                        if (-1 == $cur_node->data->score) { // new insert?
-                            $cur_node->data = new ScoreCardByScoreAndClass($bib_number, $row, 0); // don't use placeholder
-                        }
+                        foreach ($line_items as $line_item) {
+
+                            // If we don't have some of the information, add it,
+                            // using the product id as the key.
+                            $some_info = null;
+
+                            if (array_key_exists($line_item->product_id, $product_ids)) {
+                                $some_info = $product_ids[$line_item->product_id];
+                            } else {
+                                $some_info = new Some_Race_Info($db, $line_item->product_id); 
+                                $product_ids[$line_item->product_id] = $some_info;
+                            }
+
+                            if ($some_info->calcCurRaceStage() <= $some_info->num_race_stages) {
+                                continue;
+                            }
+
+                            $data_holder->bib_number = $bib_number;
+                            $data_holder->run_details = $row;
+
+                            $cur_node = $race_data->insertOrFetch($data_holder);
+                            if (-1 == $cur_node->data->score) { // new insert?
+                                $cur_node->data = new ScoreCardByScoreAndClass($bib_number, $row, 0); // don't use placeholder
+                            }
                         
-                        $cur_scorecard = $cur_node->data;
-                        $race_class_idx = $row[TRSE::TRSE_RACE_CLASSES_IDX];
+                            $cur_scorecard = $cur_node->data;
+                            $race_class_idx = $row[TRSE::TRSE_RACE_CLASSES_IDX];
 
-                        $cur_scorecard->score += $this->milesToPoints(
-                            $row[TRSE::TRSE_MILES_IDX], 
-                            $race_class_idx, 
-                            $row[TRSE::RUN_RACE_CLASS_ID_IDX],
-                            $row[TRSE::TRSE_OUTCOME_IDX]);
-                    }
-                    $stmt->closeCursor();
-                }
+                            $cur_scorecard->score += $this->milesToPoints(
+                                $row[TRSE::TRSE_MILES_IDX], 
+                                $race_class_idx, 
+                                $row[TRSE::RUN_RACE_CLASS_ID_IDX],
+                                $row[TRSE::TRSE_OUTCOME_IDX]);
+                        }
 
-                
+                    } // end: while
+                } // end: foreach 
             }
             catch(\Exception $e) { 
                 return User_Visible_Exception_Thrower::getUserMessage($e);
@@ -169,7 +184,6 @@
 
             $this_customers_info = "";
             $args->rank++;
-            $bib_number_idx = self::BIB_NUMBER_IDX;
             $team_name_idx = self::TEAM_NAME_IDX;
 
             // rank | bib | team name | mushers' name | class | score
