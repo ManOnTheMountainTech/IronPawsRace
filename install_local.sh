@@ -1,25 +1,26 @@
 #!/bin/sh
 ironpaws_dir='/usr/share/wordpress/wp-content/plugins/ironpaws'
+ironpaws_src_dir="~/Documents/ironpaws"
 read -p "Press any key to proceed with deleting live folders"
 rm -R "$ironpaws_dir/css"
-rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/includes
-rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/vendor
-rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/tests
-rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/img
-rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/tests
-rm /home/bryan/public_html/wp-content/plugins/ironpaws/*
+rm -R "$ironpaws_dir/includes"
+rm -R "$ironpaws_dir/vendor"
+rm -R "$ironpaws_dir/tests"
+rm -R "$ironpaws_dir/img"
+rm -R "$ironpaws_dir/tests"
+rm /*
 
-mkdir /home/bryan/public_html/wp-content/plugins/ironpaws/css
-mkdir /home/bryan/public_html/wp-content/plugins/ironpaws/includes
-mkdir /home/bryan/public_html/wp-content/plugins/ironpaws/vendor
-mkdir /home/bryan/public_html/wp-content/plugins/ironpaws/settings
-mkdir /home/bryan/public_html/wp-content/plugins/ironpaws/img
-mkdir /home/bryan/public_html/wp-content/plugins/ironpaws/tests
+mkdir /css
+mkdir /includes
+mkdir /vendor
+mkdir /settings
+mkdir /img
+mkdir /tests
 
-cp *.php /home/bryan/public_html/wp-content/plugins/ironpaws/
-cp *.html /home/bryan/public_html/wp-content/plugins/ironpaws/
-cp -R css/* /home/bryan/public_html/wp-content/plugins/ironpaws/css/
-cp -R -v includes/ /home/bryan/public_html/wp-content/plugins/ironpaws/
-cp -R vendor/* /home/bryan/public_html/wp-content/plugins/ironpaws/vendor/
-cp -R img/* /home/bryan/public_html/wp-content/plugins/ironpaws/img/
-cp -R tests/* /home/bryan/public_html/wp-content/plugins/ironpaws/tests/
+cp *.php $ironpaws_src_dir
+cp *.html $ironpaws_src_dir
+cp -R css/* $ironpaws_src_dir/css/
+cp -R -v includes/ $ironpaws_src_dir/includes/
+cp -R vendor/* $ironpaws_src_dir/vendor/
+cp -R img/* $ironpaws_src_dir/img/
+cp -R tests/* $ironpaws_src_dir/tests/
