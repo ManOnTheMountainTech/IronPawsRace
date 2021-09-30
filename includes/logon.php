@@ -11,7 +11,7 @@
           if (function_exists('woocommerce_login_form') &&
             function_exists('woocommerce_output_all_notices')) {
               ob_start();
-              echo "Welcome to Iron Paws. Please login.";
+              _e("Welcome to Iron Paws. Please login.", "ironpaws");
               woocommerce_output_all_notices();
               woocommerce_login_form();
               return ob_get_clean();

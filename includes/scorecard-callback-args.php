@@ -3,15 +3,21 @@
 
     defined( 'ABSPATH' ) || exit;
 
+    require_once plugin_dir_path(__FILE__) . 'autoloader.php';
+
     class ScoreCard_CallBack_Args {
+        use ScoreCard;
+
         function __construct() {
             $this->result = "";
-            //$this->wc_rest = $wc_rest;
         }
 
         public int $rank = 0;
 
-        public string $result;
-        //public WC_Rest $wc_rest;
+        public string $result = "";
+
+        public $race_class_filter = 0;
+
+        public $race_scores = null;
     }
 ?>

@@ -18,7 +18,7 @@
 
 
     function ironpaws_woocommerce_payment_complete_order_status( $order_id ) {
-        echo 'woocommerce_payment_complete_order_status';
+        _e('woocommerce_payment_complete_order_status', "ironpaws");
         error_log( "Status of payment complete for order $order_id", 0 );
     }
 

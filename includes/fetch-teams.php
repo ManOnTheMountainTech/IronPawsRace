@@ -15,16 +15,16 @@
       return (new Fetch_Teams())->get('fetch-teams');
     }
 
-    function makeOpeningHTML() {
+    function makeOpeningHTML(?array $params = null) {
       $team_name_id = TEAM_NAME_ID;
       return "<h3>Below are your teams:</h3>";
     }
 
-    function makeListItemHTML(array $params) {
+    function makeListItemHTML(?array $params = null) {
       return '<em>' . $params[Teams::TEAM_NAME_ID] . '<br>';
     }
 
-    function makeClosingHTML() {
+    function makeClosingHTML(?array $params = null) {
       return "<p>";
     }
   }

@@ -37,14 +37,14 @@
       if ($_SERVER["REQUEST_METHOD"] == "GET") {
         if (array_key_exists(TEAM_ARGS, $_GET)) {
           $retHTML .= $this->makeOpeningHTML();
-          $retHTML .= $this->makeListItemHTML(['reg-a-dog']);
+          $retHTML .= $this->makeListItemHTML(['reg-a-dog']); // TODO: Consider making empty
           $retHTML .= $this->makeClosingHTML();
         } else {
           // else, ask for the team
           try {
             $retHTML .= (new TRSE())->get('reg-a-dog');
             if (is_null($retHTML)) {
-              return "Unable to get any teams for this musher.";
+              return _e("Unable to get any teams for this musher.", "ironpaws");
             }
 
             $retHTML .= '</select><br><br><button type="submit" value="' . 
@@ -61,7 +61,7 @@
       return $retHTML;
     }
 
-    function makeOpeningHTML() {
+    function makeOpeningHTML(?array $params = null) {
       $dogName = DogDefs::NAME;
       $dogAge = DogDefs::AGE;
       $dogForm = DogDefs::FORM_ID;
@@ -81,11 +81,11 @@
 
     }
 
-    function makeListItemHTML(array $params) {
+    function makeListItemHTML(?array $params = null) {
 
     }
     
-    function makeClosingHTML() {
+    function makeClosingHTML(?array $params = null) {
 
     }
 
@@ -155,7 +155,6 @@
           }
         }*/
 
-        $db;
         $wpUserId = \get_current_user_id();
 
         try {
@@ -164,23 +163,19 @@
         catch(\PDOException $e) {
           return Strings::CONTACT_SUPPORT . Strings::ERROR . 'reg-a-dog_connect.';
         }
-        $constructorPerf = new Sql_Perf($db);
 
         try {
         $personId = $db->execAndReturnInt(
           "CALL sp_getPersonIdFromWPUserId(:wpUserId)",
           [$wpUserId],
           "Error getting user information, error reg-a-dog_person-1.");
-        $personIdPerf = new SQL_Perf($db);
 
         $dogId = $db->execAndReturnInt("CALL sp_NewDog (:dogName, :dogAge, :dogOwnerId)",
           ['dogName' => $dogname, 'dogAge' => $dogage, 'dogOwnerId' => $personId],
           "An error ocured saving the dogs information, error reg-a-dog_dog-1");
-        $newDogPerf = new SQL_Perf($db);
 
         $db->execSql("CALL sp_addDogToTeam(:dogId, :teamId)", 
             ['dogId' => $dogId, 'teamId' => $teamId]);
-        $addDogToTeamPerf = new SQL_Perf($db);
 
         } catch (\Exception $e) {
           return User_Visible_Exception_Thrower::getUserMessage($e);

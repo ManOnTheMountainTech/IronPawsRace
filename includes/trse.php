@@ -19,10 +19,13 @@
     const ORDER_ID_IDX = 1;
     const TEAM_IDX = 2;
 
-    const TRSE_MILES_IDX = 1;
-    const TRSE_OUTCOME_IDX = 2;
-    const TRSE_RACE_CLASSES_IDX = 4;
-    const RUN_RACE_CLASS_ID_IDX = 7;
+    const TEAM_BIB_NUMBER = 0;
+    const MILES_TRSE = 1;
+    const OUTCOME_TRSE = 2;
+    const WC_CUSTOMER_ID = 3;
+    const TEAM_CLASS_ID = 4;
+    const NAME_TN = 5;
+    const RUN_CLASS_ID = 6;
 
     const RI_START_DATE_TIME = 3;
     const RI_RACE_DEFS_FK = 2;
@@ -32,6 +35,9 @@
     const STATUS_TRY_NEXT = 0;
     // The returned html closed html. No closing HTML tags need to be supplied.
     const STATUS_DONE = 1;
+
+    const COMPLETED = 'completed';
+    const UNTIMED = 'untimed';
 
     static function do_shortcode() {
       $logon_form = ensure_loggedon();
@@ -325,7 +331,7 @@
     // @see: decodeUnsafeTeamArgs() -> Decodes TEAM_ARGS
     //function get(string $form_action) {}
 
-    function makeOpeningHTML() {
+    function makeOpeningHTML(?array $params = null) {
       $team_args = TEAM_ARGS;
       $team_name_id = TEAM_NAME_ID;
       return <<<GET_TEAMS
@@ -334,12 +340,12 @@
       GET_TEAMS;
     }
 
-    function makeListItemHTML(array $team_idxs) {
+    function makeListItemHTML(?array $team_idxs = null) {
       return '<option value="' . $team_idxs[TEAMS::TEAM_IDX] . QUERY_ARG_SEPERATOR . 
         $team_idxs[TEAMS::TEAM_TN_FK] . '">' . $team_idxs[TEAMS::TEAM_NAME_ID] . '</option>';
     }
 
-    function makeClosingHTML() {
+    function makeClosingHTML(?array $params = null) {
       return "</select><br>";
     }
   }

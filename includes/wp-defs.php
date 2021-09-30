@@ -19,10 +19,10 @@
      
      const EMAIL = 'email';
      const FIRST_NAME = 'first_name';
-     const GENERIC_INVALID_PARAMETER_MSG = "Invalid query string were supplied.";
+
      const GET = 'GET';
      const FORM_INCOMPLETE_ERROR = -1;
-     const FORM_INCOMPLETE_MSG = "Not enough information entered.";
+
      const HIDDEN = "hidden";
      const KEY_ARG = 'key';
      const LANGUAGE = 'language';
@@ -34,6 +34,7 @@
      const PRODUCT_ID = 'product_id';
      const RACE_CLASS_ID = 'race_class_id';
      const RACE_PARAMS = 'race_params';
+     const RACE_RESULTS_DIR = 'race_results';
      const RACE_SELECT = 'race_select';
      const SALUTATION = 'salutation';
      const QUERY_ARG_SEPERATOR = '_';
@@ -49,4 +50,10 @@
 
      // Product Id <delim> Order Id
      const WC_PAIR_ARGS = 'wc_pair_args';
+
+     class WP_Defs {
+          // TODO: See if still relevant, since no text search hits.
+          const GENERIC_INVALID_PARAMETER_MSG = "An invalid query string were supplied.";
+          const FORM_INCOMPLETE_MSG = "Not enough information entered.";
+     }
 ?>

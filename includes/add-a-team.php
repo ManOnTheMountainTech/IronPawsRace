@@ -21,11 +21,12 @@
         if (array_key_exists(TEAM_NAME, $_GET) || array_key_exists(RACE_CLASS_ID, $_GET)) {
             $teamName = sanitize_text_field($_GET[TEAM_NAME]);
             if (is_null($teamName)) {
-                $add_team_html .= "The provided team name is not usable.<br>";
+                $add_team_html .= __("The provided team name is not usable.<br>", "ironpaws");
             }
             else
                 if (is_team_name_taken()) {
-                    $add_team_html .= "Team {$teamName} is allready taken. Please choose another.<br>";
+                    $add_team_html .= __("Team {$teamName} is allready taken. Please choose another.<br>", 
+                    "ironpaws");
                 } 
 
             $race_class_id = test_number($_GET[RACE_CLASS_ID]);

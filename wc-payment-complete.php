@@ -32,15 +32,17 @@
 
       $next_steps = Strings::NEXT_STEPS;
 
+      $alt_text=esc_html(__("A musher pulling their dog on a sled", "ironpaws"));
+      $msg=__("Lookup the teams that are assigned to this race", "ironpaws");
+
       echo <<<ASK_LOCATION_REGISTRATION
       <p>$next_steps</p>
       <a href="$teams_path" class="img-a">
         <img 
           src="{$icon_abs_path}" 
-          alt="A musher pulling their dog on a sled">
-        <p class="p-aligned">Lookup the teams that are assigned to this race</p>
+          alt="{$alt_text}">
+        <p class="p-aligned">{$msg}</p>
       </a>
-  
       ASK_LOCATION_REGISTRATION;
     }
   ?>

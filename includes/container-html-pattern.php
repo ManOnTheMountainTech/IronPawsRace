@@ -4,8 +4,8 @@
     defined( 'ABSPATH' ) || exit;
 
     interface Container_HTML_Pattern {
-        function makeOpeningHTML();
-        function makeListItemHTML(array $params);
-        function makeClosingHTML();
+        function makeOpeningHTML(?array $params = null);
+        function makeListItemHTML(?array $params = null);
+        function makeClosingHTML(?array $params = null);
     }
 ?>

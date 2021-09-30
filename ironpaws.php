@@ -5,7 +5,9 @@
  * Description: This extends WordPress for dog mushing.
  * Author: Bryan Young
  * Author URI: https://supermooseapps.com
- * Version: 0.2.6
+ * Text Domain: ironpaws
+ * Domain Path: /languages
+ * Version: 0.2.7
  */
 
 /* Place custom code below this line. */
@@ -29,8 +31,8 @@ register_shortcodes();
 register_wc_hooks();
 set_exception_handler('IronPaws\def_exception_handler');
 
-function def_exception_handler(\Error $er) {
-    echo "Oh no! The harness broke! code={$er->getCode()}";
+function def_exception_handler($er) {
+    echo _e("Oh no! The harness broke! code={$er->getCode()}");
     var_debug($er);
     write_log($er);
 }
@@ -70,6 +72,8 @@ function register_wp_hooks() {
     add_action( 'shutdown', function() {
         while ( @ob_end_flush() );
     } );
+    add_filter( 'load_textdomain_mofile', ['IronPaws\\WP_Hooks', 'load_my_own_textdomain'], 10, 2 );
+    add_action( 'init', ['IronPaws\\WP_Hooks', 'init'] );
 }
 
 /*
@@ -81,7 +85,7 @@ add_action( 'rest_api_init', function () {
 } );
 
 function init($request) {
-    echo 'IronPaws initd';
+    _e('IronPaws initd');
 }
 */
 //add_action( 'woocommerce_order_status_completed', 'ironpaws_woocommerce_order_status_completed');

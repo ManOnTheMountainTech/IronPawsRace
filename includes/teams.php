@@ -79,7 +79,7 @@
         return $logon_form;
       }
 
-      $mush_db;
+      $mush_db = null;
 
       try {
         $mush_db = new Mush_DB();
@@ -100,7 +100,7 @@
 
     function makeTeamsSelectHTML(Mush_DB $mush_db) {
       $mushers_teams_failed = false;
-      $teams;
+      $teams = null;
 
       try {
         $teams = $this->get_mushers_teams($mush_db);
@@ -149,7 +149,7 @@
     function get_mushers_teams(Mush_DB $db) { 
       $team_name_id = TEAM_NAME_ID;
 
-      //$container_html = $this->makeOpeningHTML();
+      //$container_html = $this->makeOpeningHTML(?array $params = null);
 
       // TODO: Handle both add a team and modify a team.
       $teams_selections_html = $this->makeOpeningHTML();
@@ -168,7 +168,7 @@
         $stmt = $db->execSql("CALL sp_getAllTeamInfoAndTNByPersonId(?)", [$people_id]);
         $foundATeam = false;
       } catch(\Exception $e) {
-        return $e->userHTMLMessage;
+        return User_Visible_Exception_Thrower::getUserMessage($e);
       }
 
       try {

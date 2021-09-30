@@ -332,9 +332,10 @@
             $date_created = date("Y-m-d H:i:s");
 
             if (is_wp_debug()) {
-                echo "wcOrderId={$wc_order_id}, mileage={$mileage}, outcome={$outcome}<br>";
-                echo "raceElapsedTime={$race_elapsed_time}, wcProductId={$wc_product_id}, raceStage={$race_stage}<br>";
-                echo "dateCreated={$date_created}, runClassId={$run_class_id}<br>";
+                // TODO: Kilometrage?
+                "wcOrderId={$wc_order_id}, mileage={$mileage}, outcome={$outcome}<br>";
+                "raceElapsedTime={$race_elapsed_time}, wcProductId={$wc_product_id}, raceStage={$race_stage}<br>";
+                "dateCreated={$date_created}, runClassId={$run_class_id}<br>";
             }
 
             try {

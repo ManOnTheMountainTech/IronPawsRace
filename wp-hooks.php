@@ -38,7 +38,8 @@
     }
 
     function ironpaws_wp_delete_user_form(\WP_User $current_user) {
-        echo "WARNING: All awards, positions, teams, and dogs associated with this user will be destroyed.";
+        _e("WARNING: All awards, positions, teams, and dogs associated with this user will be destroyed.", 
+            "ironpaws");
     }
 
     function ironpaws_add_loginout_link(string $items, \stdClass $args ) {
@@ -61,9 +62,27 @@
             plugins_url('/css/a_href.css', __FILE__));
     }
 
-    class IronPaws_WP_Hooks {
+    class WP_Hooks {
         static function install() {
-            echo "Installing IronPaws plugin";
+            echo _e("Installing IronPaws plugin", "ironpaws");
+
+            if (file_exists(RACE_RESULTS_DIR)) {
+                return;
+            }
+
+            mkdir(RACE_RESULTS_DIR, 0644);
+        }
+
+        static function init() {
+            load_plugin_textdomain( 'wpdocs_textdomain', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+        }
+
+        static function load_my_own_textdomain( $mofile, $domain ) {
+            if ( 'my-domain' === $domain && false !== strpos( $mofile, WP_LANG_DIR . '/plugins/' ) ) {
+                $locale = apply_filters( 'plugin_locale', determine_locale(), $domain );
+                $mofile = WP_PLUGIN_DIR . '/' . dirname( plugin_basename( __FILE__ ) ) . '/languages/' . $domain . '-' . $locale . '.mo';
+            }
+            return $mofile;
         }
     }
 ?>

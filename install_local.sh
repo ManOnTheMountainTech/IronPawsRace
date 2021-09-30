@@ -1,7 +1,7 @@
 #!/bin/sh
-liveserver='/home/bryan/public_html/wp-content/plugins/ironpaws'
+ironpaws_dir='/usr/share/wordpress/wp-content/plugins/ironpaws'
 read -p "Press any key to proceed with deleting live folders"
-rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/css
+rm -R "$ironpaws_dir/css"
 rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/includes
 rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/vendor
 rm -R /home/bryan/public_html/wp-content/plugins/ironpaws/tests

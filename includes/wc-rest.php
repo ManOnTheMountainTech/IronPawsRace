@@ -12,6 +12,9 @@
     use Automattic\WooCommerce\Client;
     use Automattic\WooCommerce\HttpClient\HttpClientException;
 
+    // To create a key programatically: WC_Auth::Create_Keys(), around line 209
+    // Might consider WC_API_Client() in the future.
+
     class WC_Rest {
         protected $woocommerce;
 

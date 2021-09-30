@@ -6,6 +6,13 @@
  * Class for creating the binary tree
  */
 namespace Algorithms {
+
+  defined( 'ABSPATH' ) || exit;
+
+  require_once plugin_dir_path(__FILE__) . '../comparable.php';
+
+  use IronPaws\Comparable;
+
   class BinaryTree { 
 
       private $root = null;
@@ -22,10 +29,15 @@ namespace Algorithms {
       }
 
       /**
-       * Method to insert elements in to the binary tree
+       * Inserts a node into the tree, calling the Comparable->compareTo operator
+       *  If compareTo returns < 0,the node will be added on the left
+       *  If compareTo returns 0, the visited node will be retuned
+       *  If compareTo returns > 0, the node will be added on the right
+       * To have duplicates, don't return 0 on compare
+       * @param-> data: The data to store. It must implement Comparable.
        * @return-> BinaryNode: The new node in the tree, or the exisiting node
        */
-      public function insertOrFetch($data) {
+      public function insertOrFetch(Comparable $data) {
           $node = new BinaryNode($data);
           if ($this->isEmpty()) { // this is the root node
               $this->root = $node;
@@ -67,6 +79,7 @@ namespace Algorithms {
                       return $this->insertOrFetchNode($node, $current);
                       }
               } else {
+                  // case 1: found the node.
                   $added = $current;
                   break;
               }
@@ -81,12 +94,13 @@ namespace Algorithms {
           if ($this->isEmpty()) { // this is the root node
               return false;
           }
-              if ($node->data === $this->root->data) {             
-                return $this->root;
-              } else {
-                $current = $this->root;
-                return $this->retrieveNode($node, $current);        
-              }
+
+          if ($node->data === $this->root->data) {             
+            return $this->root;
+          } else {
+            $current = $this->root;
+            return $this->retrieveNode($node, $current);        
+          }
       }
 
       /**
@@ -120,7 +134,7 @@ namespace Algorithms {
                 } else {
                   $current = $current->right;
                   return $this->retrieveNode($node, $current);
-                  }
+                }
               }
           }
           return $exists;
@@ -152,8 +166,6 @@ namespace Algorithms {
           }
           return $parent;
       }
-    
-        
     
       /**
        * Method to remove an element from the binary tree
@@ -218,6 +230,7 @@ namespace Algorithms {
 
       // @return-> true = success, false = failure
       public function walk($callable, $arg): bool {
+        assert(!is_null($callable));
         if ($this->isEmpty()) {
           return false;
         }

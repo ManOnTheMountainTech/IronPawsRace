@@ -34,17 +34,19 @@ namespace Algorithms {
           if ($this->left !== null) {
               $this->left->dump();
           }
-          var_dump($this->data);
           if ($this->right !== null) {
               $this->right->dump();
           }
       }
 
       public function walk($function, $arg) {
+        //call from root of tree to leaves
+        call_user_func($function, $this->data, $arg);
+
         if ($this->left !== null) {
             $this->left->walk($function, $arg);
         }
-        call_user_func($function, $this->data, $arg);
+
         if ($this->right !== null) {
             $this->right->walk($function, $arg);
         }
