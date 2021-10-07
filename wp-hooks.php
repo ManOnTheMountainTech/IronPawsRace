@@ -15,7 +15,8 @@
             $db->execSql("CALL sp_newPersonUsingWCOrderID(:salutation, :wp_user_id)", 
                 ['salutation' => null, 'wp_user_id' => $user_id ]);
         } catch(\Exception $e) {
-            return User_Visible_Exception_Thrower::getUserMessage($e) . ' :shortcode-usr_register.';
+            return User_Visible_Exception_Thrower::throwErrorCoreException(
+                __("Racer information could not be created."), 0, $e);
         }
 
         return null;
@@ -30,8 +31,8 @@
             $db = new Mush_DB();
             $db->execSql("CALL sp_deletePerson(:wp_user_id)", ['wp_user_id' => $id]);
         } catch(\Exception $e) {
-            return User_Visible_Exception_Thrower::getUserMessage($e) . 
-                ' :shortcode-delete_user.';
+            return User_Visible_Exception_Thrower::throwErrorCoreException(
+                __("Error in deleting racer information."), 0, $e);
         }
 
         return null;

@@ -128,8 +128,8 @@
 
         // IN: GET -> <product id> <QUERY_ARG_SEPERATOR> <order id>
         function makeHTMLRaceStageEntryForm() {
-            $wcProductId;
-            $wcOrderId;
+            $wcProductId = 0;
+            $wcOrderId = 0;
 
             try {
                 $wc_pair_args = test_input($_GET[WC_PAIR_ARGS]);
@@ -148,7 +148,7 @@
                 return "Invalid parameters specified.";
             }
 
-            $mush_db;
+            $mush_db = null;
 
             try {
                 $mush_db = new Mush_DB();
@@ -184,7 +184,8 @@
                 $trse_params = $trse_params[0];
             }
             catch(\Exception $e) {
-                return User_Visible_Exception_Thrower::getUserMessage($e);
+                return User_Visible_Exception_Thrower::throwErrorCoreException(
+                    "Error in determining what stage is active.", 0, $e);
             }
 
             $race_stage = $some_info->calcCurRaceStage();
@@ -319,7 +320,7 @@
                 }
 
             } catch(\Exception $e) {
-                return GENERIC_INVALID_PARAMETER_MSG;
+                return WP_Defs::GENERIC_INVALID_PARAMETER_MSG;
             }
 
             try {
@@ -362,7 +363,8 @@
 
                 $user_return_msg = (empty($modified_columns)) ?  "Failed to write" : "Successfully wrote";
             } catch (\Exception $e) {
-                return User_Visible_Exception_Thrower::getUserMessage($e);
+                return User_Visible_Exception_Thrower::throwErrorCoreException(
+                    "Unable to write the race stage information.", 0, $e);
             }
                  
             return "{$user_return_msg} race stage <strong>{$race_stage}</strong> to the server.";

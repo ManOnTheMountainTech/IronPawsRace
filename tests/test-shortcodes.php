@@ -3,6 +3,8 @@
   namespace IronPaws;
 
   defined( 'ABSPATH' ) || exit;
+
+  use Automattic\WooCommerce\HttpClient\HttpClientException;
   
   require_once plugin_dir_path(__FILE__) . '../includes/wp-defs.php';
   require_once plugin_dir_path(__FILE__) . '../includes/debug.php';

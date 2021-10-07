@@ -132,14 +132,14 @@
 
       return 
         <<<ONLY_REGISTER
-          <p>$next_steps</p>
           <p>No dog teams found for {$this->wp_user->get('display_name')} ('{$this->wp_user->get('user_login')}').</p>
+          <p>$next_steps</p>
           <a href="$link" class="img-a">
-          <img 
-            src="{$icon}" 
-            alt="A musher pulling their dog on a sled">
-          <p class="p-aligned">Register a new team</p>
-        </a>
+            <img 
+              src="{$icon}" 
+              alt="A musher pulling their dog on a sled">
+            <p class="p-aligned">Register a new team</p>
+          </a>
       ONLY_REGISTER;
     }
   

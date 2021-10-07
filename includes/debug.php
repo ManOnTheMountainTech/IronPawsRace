@@ -4,7 +4,7 @@
     defined( 'ABSPATH' ) || exit;
 
     static $error_instance = 0;
-    const MEASURE_PERF = false;
+    const MEASURE_PERF = true;
 
     function is_wp_debug() {
         return (defined('WP_DEBUG') && true === WP_DEBUG);

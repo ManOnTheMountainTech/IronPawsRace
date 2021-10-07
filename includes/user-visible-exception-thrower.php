@@ -9,13 +9,16 @@
         //  in the log file.
         // @param: $e -> Previous exception to use.
         // @throws: User_Visible_Exception_Thrower
-        static public function throwErrorCoreException(string $errorCore, int $instance = 0, \Exception $e = null) {
-            if (is_null($e)) {
-                $e = new \IronPaws\User_Visible_Exception_Thrower();
+        static public function throwErrorCoreException(string $errorCore, int $code = 0, \Throwable $previous = null) {
+            $e_ref = bin2hex(openssl_random_pseudo_bytes(16));
+
+            // No previous exception? Let's make one!
+            if (is_null($previous)) {
+                $e = new \IronPaws\User_Visible_Exception_Thrower($errorCore, $code);
             }
 
-            $e->{"userHTMLMessage"} = "$errorCore [{$instance}]";
-            $e->{"instance"} = $instance;
+            $e->{"userHTMLMessage"} = $errorCore;
+            $e->{"instance"} = $e_ref;
             throw $e;
         }
         

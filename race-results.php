@@ -87,7 +87,8 @@ class Race_Results implements Container_HTML_Pattern {
                         ['wc_order_id' => $wc_order->id]);
 
                     if (is_null($stmt)) {
-                        User_Visible_Exception_Thrower::throwErrorCoreException("Internal error race-results-1. Please contact support or file a bug.", 0);
+                        User_Visible_Exception_Thrower::throwErrorCoreException(
+                            __("Internal error race-results-1. Please contact support or file a bug.", 0));
                     }
 
                     // See if the scorecard is tracked.
@@ -145,7 +146,7 @@ class Race_Results implements Container_HTML_Pattern {
                 } // end: foreach 
             }
             catch(\Exception $e) { 
-                return User_Visible_Exception_Thrower::getUserMessage($e);
+                return User_Visible_Exception_Thrower::throwErrorCoreException(__("Error in getting all the score values."));
             }
 
             $args = new ScoreCard_CallBack_Args();
@@ -166,7 +167,10 @@ class Race_Results implements Container_HTML_Pattern {
                 $result .= $this->makeOpeningHTML([$args->race_class_filter]);
                 $race_score->walk(array($this, 'nodeToHTML'), $args);
                 //error_log(print_r($args->result, true));
-                $result .= $args->result;
+                
+                $result .= (empty($args->result)) ?
+                    __("<em>Race results are hidden until complete.<br>") :
+                    $args->result;
                 $args->result = "";
                 ++$args->race_class_filter;
                 $result .= $this->makeClosingHTML();

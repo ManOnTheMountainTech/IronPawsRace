@@ -170,15 +170,11 @@
           [$wpUserId],
           "Error getting user information, error reg-a-dog_person-1.");
 
-        $dogId = $db->execAndReturnInt("CALL sp_NewDog (:dogName, :dogAge, :dogOwnerId)",
-          ['dogName' => $dogname, 'dogAge' => $dogage, 'dogOwnerId' => $personId],
+        $db->execAndReturnInt("CALL sp_addNewDogToTeam (:dogName, :dogAge, :dogOwnerId, :teamId)",
+          ['dogName' => $dogname, 'dogAge' => $dogage, 'dogOwnerId' => $personId, 'teamId' => $teamId],
           "An error ocured saving the dogs information, error reg-a-dog_dog-1");
-
-        $db->execSql("CALL sp_addDogToTeam(:dogId, :teamId)", 
-            ['dogId' => $dogId, 'teamId' => $teamId]);
-
         } catch (\Exception $e) {
-          return User_Visible_Exception_Thrower::getUserMessage($e);
+          return User_Visible_Exception_Thrower::throwErrorCoreException(__("Error in adding a dog to a team.", 0, $e));
         }
 
         $dogname .= " is now on the team.<br>" . Strings::NEXT_STEPS . "<br>";

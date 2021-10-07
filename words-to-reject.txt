@@ -1,0 +1,9 @@
+_e() -> echo
+__() -> return
+
+-how get themes template path
+
+POT files: 
+https://poedit.net/download
+
+https://privatebin.support-tools.com/?7befffd7439d0702#MQyn+iBC5V0U8ff+sKfkXZJy0A+DqEMhIcRc+5rQvHY=

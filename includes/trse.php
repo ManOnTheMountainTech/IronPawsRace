@@ -128,7 +128,7 @@
           // TODO
           $num_race_stages = $db->execAndReturnInt(
             "CALL sp_getRaceStagesFromWC(?)", [$wc_product_id],
-            "Failure in getting the number of race stages.");
+            "Failure in getting the number of race stages, or the race instance is not set up.");
   
           if (is_wp_debug()) {
             echo "wc_order_id =$wc_order_id | team_id=$team_id | num_race_stages=$num_race_stages";}
@@ -154,7 +154,8 @@
           }
         }
         catch(\Exception $e) { 
-          return User_Visible_Exception_Thrower::getUserMessage(($e));
+          return User_Visible_Exception_Thrower::throwErrorCoreException(
+            'Unable to setup the Team Race Stage Entry', 0, $e);
         }
 
         unset($_GET);
@@ -272,7 +273,8 @@
           } // end: foreach($orders...)
         }
         catch(\Exception $e) {
-          return User_Visible_Exception_Thrower::getUserMessage($e);
+          return User_Visible_Exception_Thrower::throwErrorCoreException(
+            'Error determining if orders have a team.', 0, $e);
         }
   
         $ret->status = self::STATUS_DONE;
