@@ -1,0 +1,25 @@
+Akismet
+All-in-one WP
+Coming soon
+Debug bat
+Elementor
+Elementor Pro
+FileBird Lite
+Formidable Forms
+Import and export users and cusotmers
+Iron Paws
+Loginizer
+Order / Coupon / Subscription Export Import
+Query Monitor
+Show User ID
+SVG Support
+TranslatePress
+UpdraftPlus
+User Role Editor
+Woocommerce
+Woocommerce Payment
+Woocommerce Sequential Order Numbers
+WP Content Filter
+WP Crontrol
+WP Mail SMTP
+WP Staging

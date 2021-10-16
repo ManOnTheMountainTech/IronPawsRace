@@ -23,13 +23,14 @@
         }
         
         static public function getUserMessage(\Exception $e) {
-            echo __FUNCTION__;
+            $message = (property_exists($e, "userHTMLMessage")) ?
+                $e->userHTMLMessage . " {" . $e->instance . '}':
+                "An error occured.";
+            
             var_debug($e);
             write_log($e);
 
-            return (property_exists($e, "userHTMLMessage")) ?
-                $e->userHTMLMessage . " {" . $e->instance . '}':
-                "An error occured.";
-            }
+            return $message;     
         }
+    }
 ?>

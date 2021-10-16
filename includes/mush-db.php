@@ -27,8 +27,6 @@ defined( 'ABSPATH' ) || exit;
             return $this->reconnectTries;
         }
 
-        protected $reconnectDelay = 1; // in ms
-
         protected $conn = null;
 
         public $perf;
@@ -197,7 +195,6 @@ defined( 'ABSPATH' ) || exit;
                     if (isset($e->errorInfo) && 
                         (in_array($e->errorInfo[1], MySql::$reconnectErrors))) {
                             $this->conn = null;
-                            usleep($this->reconnectDelay * 1000);
                             ++$this->reconnectTries;
                             continue; 
                     

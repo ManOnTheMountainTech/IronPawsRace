@@ -84,9 +84,9 @@
     function createFromFinalParams() {
       if (array_key_exists(RACE_PARAMS, $_POST)) {
         $params_handle_with_care = $_POST[RACE_PARAMS];
-        $wc_product_id;
-        $wc_order_id;
-        $team_id;
+        $wc_product_id = 0;
+        $wc_order_id = 0;
+        $team_id = 0;
 
         try {
           $params = sanitize_text_field($params_handle_with_care);

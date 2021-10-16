@@ -1,9 +1,8 @@
-_e() -> echo
-__() -> return
-
--how get themes template path
-
-POT files: 
-https://poedit.net/download
-
-https://privatebin.support-tools.com/?7befffd7439d0702#MQyn+iBC5V0U8ff+sKfkXZJy0A+DqEMhIcRc+5rQvHY=
+fuck,shit,bullshit,piss off,dick,dick head,ass,asshole,son of a bitch,bastard,damn,cunt,bollocks,bugger,bloody hell,choad,crikey,rubbish,shag,wanker,talking the piss,twat,bloody oath,root,get stuffed,bugger me,fair suck of the sav,putain,merde,bordel,putain de merde,bordel de merde,putain de bordel de merde,nom de dieu,nom de dieu de merde,ostie,tabarnak,crisse,calisse,sacrament,connerie,conneries,con,conne,connard,
+saloperie,salaud,salopard,salope,pute,garce,Traînée,Pouffiasse,Pouffe,chatte,
+plotte,Tas de merde,gros tas,Trou du cul,Lèche-cul,Téteux,Fils de pute,Couilles,
+Casse-couilles,Casser les couilles,Péter les couilles,Enculer,Enculé,Enculée,
+Branler,Branleur,Branleuse,Emmerder,Emmerdeur,Emmerdeuse,Chier,Chieur,
+Chieuse,Chiant,Chiante,Bite,Tête de nœud,Queutard,Metteux,Ferme ta gueule,
+Va te faire foutre,Va te crosser,Niquer,Nique ta mère,Ta mère la pute,
+Sa mère la pute
