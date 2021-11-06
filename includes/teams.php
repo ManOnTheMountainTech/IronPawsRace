@@ -61,13 +61,16 @@
     const RUN_CLASSES_FATBIKEJOR_IDXS = [8, 9];
 
     const TEAM_IDX = 0;
-    const TEAM_BIB_NUMBER = 1;
+    const TRSE_BIB_NUMBER_IDX = 1;
     const TEAM_TN_FK = 2;
-    const TEAM_CLASS_ID = 3;
+    const TRSE_CLASS_ID_IDX = 3;
     const TEAM_NAME_ID = 4;
+
+    public Strings $strings;
       
     public function __construct() {
       $this->wp_user = wp_get_current_user();
+      $this->strings = new Strings();
     }
 
     // Outer envolope of a teams selection form.
@@ -84,7 +87,7 @@
       try {
         $mush_db = new Mush_DB();
       } catch (\PDOException $e) {
-        return Strings::CONTACT_SUPPORT . Strings::ERROR . 'teams-connect.';
+        return Strings::$CONTACT_SUPPORT . Strings::$ERROR . 'teams-connect.';
       }
       //$teams_path = plugins_url('modify_teams.php', __FILE__);
 
@@ -128,7 +131,7 @@
     function htmlNoDogTeamsFound() {
       $icon = plugins_url('ironpaws/img/icons/dogs/sleds/noun_hard_work_1154847.svg');
       $link = plugins_url('ironpaws/register-a-new-team');
-      $next_steps = Strings::NEXT_STEPS;
+      $next_steps = Strings::$NEXT_STEPS;
 
       return 
         <<<ONLY_REGISTER

@@ -15,7 +15,7 @@
       $teams_path = plugins_url("fetch-teams", __FILE__);
 
       if (!is_null($order)) {
-        $wc_order_arg = $order->id;
+        $wc_order_arg = $order->get_order_number();
         if ($wc_order_arg > 0) {
           $wc_order_id = WC_ORDER_ID;
           $teams_path .= "?{$wc_order_id}={$wc_order_arg}";
@@ -30,7 +30,7 @@
       $icon_abs_path = plugin_dir_url('ironpaws/img/icons/dogs/sleds/' . $icon);
       $icon_abs_path = $icon_abs_path . $icon;
 
-      $next_steps = Strings::NEXT_STEPS;
+      $next_steps = (new Strings)->NEXT_STEPS;
 
       $alt_text=esc_html(__("A musher pulling their dog on a sled", "ironpaws"));
       $msg=__("Lookup the teams that are assigned to this race", "ironpaws");

@@ -17,6 +17,11 @@ defined( 'ABSPATH' ) || exit;
         public const OP_COMMIT = 2;
         public const OP_ROLLBACK = 3;
 
+        public const EXEC_EXCEPTION_NULL = 1;
+        public const EXEC_EXCEPTION_ZERO = 2;
+        public const EXEC_EXCEPTION_EMPTY = 3;
+        public const EXEC_EXCEPTION_COLUMNS_MISMATCH = 4;
+
         protected $maxReconnectTries = 100;
 
         protected $reconnectTries = 0;
@@ -52,25 +57,33 @@ defined( 'ABSPATH' ) || exit;
 
         // @param $errorCore The "core" of the error message to display.
         // @returns -> the column from the database
-        public function execAndReturnColumn(string $statement, 
+        public function execAndReturnRow(string $statement, 
             array $params = [],
-            string $errorCore) {
+            string $errorCore,
+            int $numExpectedColumns) {
 
             $stmt = $this->execSql($statement, $params);
 
             if (is_null($stmt)) {
                 global $error_instance;
-                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 0);
+                User_Visible_Exception_Thrower::throwErrorCoreException(
+                    $errorCore, self::EXEC_EXCEPTION_NULL);
             }
 
-            $column = $stmt->fetchAll(\PDO::FETCH_NUM);
+            $row = $stmt->fetchAll(\PDO::FETCH_NUM);
             $stmt->closeCursor();
 
-            if (is_null($column)) {
-                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 1);
+            if (empty($row)) {
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_EMPTY);
             }
 
-            return $column;
+            $row = $row[0];
+
+            if (count($row) != $numExpectedColumns) {
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_COLUMNS_MISMATCH);
+            }
+
+            return $row;
         }
 
         public function execAndFetchAll(string $statement, 
@@ -79,7 +92,7 @@ defined( 'ABSPATH' ) || exit;
                 $stmt = $this->execSql($statement, $params);
 
                 if (is_null($stmt)) {
-                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 2);
+                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_NULL);
                 }
     
                 // PDO::lastInsertId() may have issues with stored procedures
@@ -88,11 +101,41 @@ defined( 'ABSPATH' ) || exit;
                 $stmt->closeCursor();
 
                 if (0 == $rawId) {
-                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 3);
+                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_ZERO);
                 }
     
                 if (empty($rawId)) {
-                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 4);     
+                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_EMPTY);     
+                }
+
+                // Result always comes back in the array of the array for single object returns.
+                $id = $rawId[0][0];
+
+                return $id;
+            }
+
+        
+            // Returns null when empty on return
+            public function execAndFetchAllOrNull(string $statement, 
+            array $params = [],
+            string $errorCore) {
+                $stmt = $this->execSql($statement, $params);
+
+                if (is_null($stmt)) {
+                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_NULL);
+                }
+    
+                // PDO::lastInsertId() may have issues with stored procedures
+                // https://stackoverflow.com/questions/15562478/php-mysql-pdo-lastinsertid-is-returning-0-when-using-a-procedure-to-insert-rows
+                $rawId = $stmt->fetchAll(\PDO::FETCH_NUM);
+                $stmt->closeCursor();
+
+                if (0 == $rawId) {
+                    User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_ZERO);
+                }
+    
+                if (empty($rawId)) {
+                    return null;
                 }
 
                 // Result always comes back in the array of the array for single object returns.
@@ -103,6 +146,7 @@ defined( 'ABSPATH' ) || exit;
 
         // @param $errorCore The "core" of the error message to display.
         // @returns -> the returned id
+        // @throws -> Enhanced exception if nothing returned
         public function execAndReturnInt(string $statement, 
             array $params = [],
             string $errorCore) {
@@ -110,11 +154,32 @@ defined( 'ABSPATH' ) || exit;
             $id = $this->execAndFetchAll($statement, $params, $errorCore);
 
             if (0 == $id) {
-                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, 5);
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_ZERO);
             }
 
             return $id;
         }
+
+        // Retrieves a nullable int
+        // @param $errorCore The "core" of the error message to display.
+        // @returns -> the returned id
+        public function execAndReturnIntOrNull(string $statement, 
+            array $params = [],
+            string $errorCore) {
+
+            $id = $this->execAndFetchAllOrNull($statement, $params, $errorCore);
+
+            if (is_null($id)) {
+                return $id;
+            }
+
+            if (0 == $id) {
+                User_Visible_Exception_Thrower::throwErrorCoreException($errorCore, self::EXEC_EXCEPTION_ZERO);
+            }
+
+            return $id;
+        }
+
 
         // Discourge calling these without the protection of he auto-retry loop.
         // @param: sqlWithPlaceholders
@@ -204,8 +269,10 @@ defined( 'ABSPATH' ) || exit;
                         statement_log(__FUNCTION__, __LINE__, "Caught exception {$error_instance}", $e);
                         statement_log(__FUNCTION__, __LINE__, "prepare:", $statement);
                         statement_log(__FUNCTION__, __LINE__, "execute:", $params);
+                        var_debug($e);
                         
-                        throw $e;
+                        User_Visible_Exception_Thrower::throwErrorCoreException(
+                            __("Something bad happened while talking to the database.", 7, $e));
                     }
                 }   
             }

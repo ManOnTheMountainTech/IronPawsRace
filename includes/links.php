@@ -14,7 +14,7 @@
     static function make_icon_then_link(string $icon, string $wp_page_slug) {
       $url_path = get_permalink( \wc_get_page_id( $wp_page_slug ));
 
-      $next_steps = Strings::NEXT_STEPS;
+      $next_steps = (new Strings)->NEXT_STEPS;
 
       // IE6/7 - non tables way:
       // 

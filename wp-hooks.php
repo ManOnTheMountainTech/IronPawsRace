@@ -75,7 +75,19 @@
         }
 
         static function init() {
+            if (PHP_SESSION_ACTIVE !== session_status()) {
+                session_start();
+            }
+            
             load_plugin_textdomain( 'wpdocs_textdomain', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+        }
+
+        static function login() {
+            session_destroy ();
+        }
+
+        static function logout() {
+            session_destroy ();
         }
 
         static function load_my_own_textdomain( $mofile, $domain ) {

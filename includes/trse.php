@@ -19,16 +19,22 @@
     const ORDER_ID_IDX = 1;
     const TEAM_IDX = 2;
 
-    const TEAM_BIB_NUMBER = 0;
-    const MILES_TRSE = 1;
-    const OUTCOME_TRSE = 2;
-    const WC_CUSTOMER_ID = 3;
-    const TEAM_CLASS_ID = 4;
-    const NAME_TN = 5;
-    const RUN_CLASS_ID = 6;
+    const TRSE_BIB_NUMBER_IDX = 0;
+    const TRSE_MILES_TIMESTAMP_IDX = 1;
+    const TRSE_OUTCOME_IDX = 2;
+    const TRSE_WC_CUSTOMER_ID = 3;
+    const TRSE_CLASS_ID_IDX = 4;
+    const TRSE_NAME_TN_IDX = 5;
+    const TRSE_RUN_CLASS_IDX = 6;
 
     const RI_START_DATE_TIME = 3;
     const RI_RACE_DEFS_FK = 2;
+
+    const RD_CORE_STAGES = 0;
+    const RD_CORE_MASTER_NUM_DAYS_PER_STAGE = 1;
+    const RD_CORE_RACE_TYPE = 2;
+    const TIMED = 'timed';
+    const MILES = 'miles';
 
     // The returned html is the first part of a form. The </select> and </form>
     // tags need to be supplied.
@@ -116,51 +122,64 @@
           try {
             $db = new Mush_DB();
           } catch(\PDOException $e) {
-              return Strings::CONTACT_SUPPORT . Strings::ERROR . 'trse-connect.';
+              return Strings::$CONTACT_SUPPORT . Strings::$ERROR . 'trse-connect.';
           }
 
           if (is_wp_debug()) {
             write_log("wc_product_id=$wc_product_id\n");
           }
 
-          // Since all races have at least 1 stage, see if we get any results back from sf_getRSDIndexByWCAndStage($wc_order_id, 1)
+          // Prevent cardinality violations by enforcing 1 entry per order
+          if (is_null($db->execAndReturnIntOrNull("call sp_isOrderInTRSE(?)", 
+          [$wc_order_id], 
+          1, ("Unable to determine team status.")))) {
 
-          // TODO
-          $num_race_stages = $db->execAndReturnInt(
-            "CALL sp_getRaceStagesFromWC(?)", [$wc_product_id],
-            "Failure in getting the number of race stages, or the race instance is not set up.");
-  
-          if (is_wp_debug()) {
-            echo "wc_order_id =$wc_order_id | team_id=$team_id | num_race_stages=$num_race_stages";}
+            // TODO
+            $num_race_stages = $db->execAndReturnIntOrNull(
+              "CALL sp_getRaceStagesFromWC(?)", [$wc_product_id],
+              "Failure in getting the number of race stages, or the race instance is not set up.");
+    
+            if (is_wp_debug()) {
+              echo "wc_order_id =$wc_order_id | team_id=$team_id | num_race_stages=$num_race_stages<br>";}
 
-          // Preallocate the race stage entries. Better to fail while signing
-          // up than during the race.
-          for ($race_stage = 1; $race_stage <= $num_race_stages; ++$race_stage) {
-            $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :wcProdId, :team_fk, :race_stage)", 
-              ['wc_order_id' => $wc_order_id, 
-              'wcProdId' => $wc_product_id,
-              'team_fk' => $team_id,
-              'race_stage' => $race_stage],
-              "Writing the team race stage entry failed for stage {$race_stage}. Please try again. If this continues, contact support or file a bug.");
-          }
-
-          if (0 == $trse_id) {
-            if (isset($error_message)) {
-              $error_message .= "Team race stage entry {$race_stage} could not be recorded.";
+            // Preallocate the race stage entries. Better to fail while signing
+            // up than during the race.
+            if (is_null($num_race_stages)) {
+              User_Visible_Exception_Thrower::throwErrorCoreException(__("Can't determine number of race stages."), 1, $e);
             }
-            else {
-              $error_message .= "Team race stage entry {$race_stage} could not be recorded.";
+
+            for ($race_stage = 1; $race_stage <= $num_race_stages; ++$race_stage) {
+              $trse_id = $db->execAndReturnInt("CALL sp_initTRSE(:wc_order_id, :wcProdId, :team_fk, :race_stage)", 
+                ['wc_order_id' => $wc_order_id, 
+                'wcProdId' => $wc_product_id,
+                'team_fk' => $team_id,
+                'race_stage' => $race_stage],
+                "Writing the team race stage entry failed for stage {$race_stage}. Please try again. If this continues, contact support or file a bug.");
+            }
+
+            if (0 == $trse_id) {
+              // Translator: $race_stage - the stage of the race, basically 1 day in a multi-day race.
+              $error = __("Team race stage entry {$race_stage} could not be recorded.");
+
+              if (isset($error_message)) {
+                $error_message .= $error;
+              }
+              else {
+                $error_message = $error;
+              }
             }
           }
         }
         catch(\Exception $e) { 
-          return User_Visible_Exception_Thrower::throwErrorCoreException(
-            'Unable to setup the Team Race Stage Entry', 0, $e);
+          var_debug($e);
+          return __("Unable to set up the team race stage entry. Is everything set up properly?");
         }
-
+  
         unset($_GET);
         unset($_POST);
-        return "Team successfully registered.";
+        $retHTML = __("Team successfully registered.") . '<br>';
+        //$retHTML .= '<button type="button">' . __('Continue') . '</button>';
+        return $retHTML;
       }
 
       return null;
@@ -173,29 +192,33 @@
     // @return: null -> success, otherwise an error message
     static function decodeUnsafeTeamArgs(int &$teamId, int &$teamNameId) {
       try {
-        $team_args_danger_will_robertson = $_GET[TEAM_ARGS];
-        $team_args = \sanitize_text_field($team_args_danger_will_robertson);
+        if (array_key_exists(TEAM_ARGS, $_GET)) {
+          $team_args_danger_will_robertson = $_GET[TEAM_ARGS];
+          $team_args = \sanitize_text_field($team_args_danger_will_robertson);
 
-        $team_params_unsafe = explode(QUERY_ARG_SEPERATOR, $team_args);
-        $team_params_size = count($team_params_unsafe);
-        if (2 != $team_params_size) {
-          return "Invalid number of team params passed in";
-        }
+          $team_params_unsafe = explode(QUERY_ARG_SEPERATOR, $team_args);
+          $team_params_size = count($team_params_unsafe);
+          if (2 != $team_params_size) {
+            return "Invalid number of team params passed in";
+          }
 
-        $teamId = test_number($team_params_unsafe[0]);
-        if ($teamId < 1) {
-          return "Bad team id passed in.";
-        }
+          $teamId = test_number($team_params_unsafe[0]);
+          if ($teamId < 1) {
+            return "Bad team id passed in.";
+          }
 
-        $teamNameId = test_number($team_params_unsafe[1]);
-        if ($teamNameId < 1) {
-          return "Bad team name passed in.";
+          $teamNameId = test_number($team_params_unsafe[1]);
+          if ($teamNameId < 1) {
+            return "Bad team name passed in.";
+          }
+        } else {
+          return __("Bad ") . TEAM_ARGS;
         }
       } catch (\Exception $e) {
         if (is_wp_debug()) {
           var_dump($e);
         }
-        return "Bad parameters passed in.";
+        return __("Bad ") . TEAM_ARGS . __(" parameters passed in.");
       }
 
       return null;
@@ -285,7 +308,7 @@
           if (0 == $previously_bound_orders_count) {
             $ret->html = "<em>No races can be entered into.";
             return $ret;
-          } 
+          }
           // Otherwise, show the orders, since we have at least one.
         } else {
           $method = POST;
@@ -319,8 +342,8 @@
             $ret->html .= $previously_bound_orders->current() . '<br>';
           }
         }
-
-        $ret->html .= Strings::NEXT_STEPS . "<br>";
+          
+        $ret->html .= Strings::$NEXT_STEPS . "<br>";
       }
 
       return $ret;
@@ -331,8 +354,7 @@
     // @return: GET: TEAM_ARGS -> The ids of the team and team name upon
     // form completion.
     // @see: decodeUnsafeTeamArgs() -> Decodes TEAM_ARGS
-    //function get(string $form_action) {}
-
+    //  function get(string $form_action) {}
     function makeOpeningHTML(?array $params = null) {
       $team_args = TEAM_ARGS;
       $team_name_id = TEAM_NAME_ID;

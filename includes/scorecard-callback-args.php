@@ -6,11 +6,13 @@
     require_once plugin_dir_path(__FILE__) . 'autoloader.php';
 
     class ScoreCard_CallBack_Args {
-        use ScoreCard;
 
-        function __construct() {
+        function __construct(Container_HTML_Pattern $HTMLGeneratorArg) {
             $this->result = "";
+            $this->HTMLGenerator = $HTMLGeneratorArg;
         }
+
+        public $callback;
 
         public int $rank = 0;
 
@@ -18,6 +20,8 @@
 
         public $race_class_filter = 0;
 
-        public $race_scores = null;
+        public $per_class_race_scores = null;
+
+        public Container_HTML_Pattern $HTMLGenerator;
     }
 ?>

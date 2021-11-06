@@ -27,7 +27,7 @@
         error_log( "payment complete for order $order_id", 0 );
 
         $wc_order_id = WC_ORDER_ID;
-        $next_steps = Strings::NEXT_STEPS;
+        $next_steps = (new Strings)->NEXT_STEPS;
 
         return  <<<ASK_LOCATION_REGISTRATION
             <p>$next_steps</p>

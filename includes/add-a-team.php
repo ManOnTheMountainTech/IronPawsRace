@@ -23,67 +23,72 @@ defined( 'ABSPATH' ) || exit;
         $add_team_html = null;
 
         while(true) {
-            if (array_key_exists(TEAM_NAME, $_GET) || array_key_exists(RACE_CLASS_ID, $_GET)) {
-                $teamName = sanitize_text_field($_GET[TEAM_NAME]);
-                if (is_null($teamName)) {
-                    $add_team_html .= __("The provided team name is not usable.<br>", "ironpaws");
-                }
-
-                $race_class_id = test_number($_GET[RACE_CLASS_ID]);
-                if (!isset(Teams::RACE_CLASSES[$race_class_id][0])) {
-                    $add_team_html .= __("Invalid race_class passed in. Please choose again.<br>");
-                }
-
-                if (is_null($add_team_html)) { 
-                    $db = null;
-
-                    try {
-                        $db = new Mush_DB();
-                    } catch(\PDOException $e) {
-                        return Strings::CONTACT_SUPPORT . Strings::ERROR . 'add-a-team-connect.';
+            try {
+                if (array_key_exists(TEAM_NAME, $_GET) && array_key_exists(RACE_CLASS_ID, $_GET)) {
+                    $teamName = sanitize_text_field($_GET[TEAM_NAME]);
+                    if (is_null($teamName)) {
+                        $add_team_html .= __("The provided team name is not usable.<br>", "ironpaws");
                     }
-                        
-                    try {                         
-                        $person_id = $db->execAndReturnInt(
-                            'CALL sp_getPersonIdFromWPUserId (?)',
-                            [$user->ID],
-                            __("Unfortunately the user id could not be retrieved."));
-     
-                        $db->execSql("CALL sp_createNewTeam (:team_name, :person_id, :team_class_id)",
-                            array('team_name' => $teamName, 'person_id' => $person_id, 'team_class_id' => $race_class_id),
-                            "Failed to set the team. Please try again.");
 
-                    } catch(\Exception $e) { 
-                        if (MySQL::DUPLICATE_ENTRY == $e->getCode()) {
-                            unset($_GET[RACE_CLASS_ID]);
-                            unset($_GET[TEAM_NAME]);
+                    $race_class_id = test_number($_GET[RACE_CLASS_ID]);
+                    if (!isset(Teams::RACE_CLASSES[$race_class_id][0])) {
+                        $add_team_html .= __("Invalid race_class passed in. Please choose again.<br>");
+                    }
 
-                            global $error_msg;
-                            $error_msg = <<<HTML
-                                <strong>"$teamName" is taken. Please choose another one.</strong>;
-                            HTML;
+                    if (is_null($add_team_html)) { 
+                        $db = null;
 
-                            continue;
+                        try {
+                            $db = new Mush_DB();
+                        } catch(\PDOException $e) {
+                            $strings = new Strings();
+                            return $strings->CONTACT_SUPPORT . $strings->ERROR . 'add-a-team-connect.';
                         }
+                            
+                        try {                         
+                            $person_id = $db->execAndReturnInt(
+                                'CALL sp_getPersonIdFromWPUserId (?)',
+                                [$user->ID],
+                                __("Unfortunately the user id could not be retrieved."));
+        
+                            $db->execSql("CALL sp_createNewTeam (:team_name, :person_id, :TRSE_CLASS_ID_IDX)",
+                                array('team_name' => $teamName, 'person_id' => $person_id, 'TRSE_CLASS_ID_IDX' => $race_class_id),
+                                "Failed to set the team. Please try again.");
 
-                        return User_Visible_Exception_Thrower::getUserMessage($e);
+                        } catch(\Exception $e) { 
+                            if (MySQL::DUPLICATE_ENTRY == $e->getCode()) {
+                                unset($_GET[RACE_CLASS_ID]);
+                                unset($_GET[TEAM_NAME]);
+
+                                global $error_msg;
+                                $error_msg = <<<HTML
+                                    <strong>"$teamName" is taken. Please choose another one.</strong>;
+                                HTML;
+
+                                continue;
+                            }
+
+                            return User_Visible_Exception_Thrower::getUserMessage($e);
+                        }
+        
+                        $strippedTeamName = stripslashes($teamName);
+
+                        $reg_a_team = TEAM_REGISTRATION;
+                        
+                        // <a href="{$reg_a_team}">Register a team</a>
+                        $add_team_html .= <<<SUCCESS_MSG
+                            <p>
+                                Team <strong>$strippedTeamName</strong> added to the database.<br>
+                            </p>
+                        SUCCESS_MSG;
+
+                        return $add_team_html;
                     }
-     
-                    $strippedTeamName = stripslashes($teamName);
-
-                    $reg_a_team = TEAM_REGISTRATION;
-                    
-                    // <a href="{$reg_a_team}">Register a team</a>
-                    $add_team_html .= <<<SUCCESS_MSG
-                        <p>
-                            Team <strong>$strippedTeamName</strong> added to the database.<br>
-                        </p>
-                    SUCCESS_MSG;
-
-                    return $add_team_html;
+                
+                // Fall through, and show the error above the form.
                 }
-            
-            // Fall through, and show the error above the form.
+            } catch(\Exception $e) {
+                return __("Bad parameters passed in to ") . "add-a-team";
             }
 
             $team_name = TEAM_NAME;
@@ -119,26 +124,4 @@ defined( 'ABSPATH' ) || exit;
             return $add_team_html;
         }
     }
-
-     function write_team_to_db() {
-  
-        $wc = new WC_Rest();
-
-        if (array_key_exists(TEAM_NAME, $_GET) && array_key_exists(RACE_CLASS_ID, $_GET)) {
-            $teamName_id= 0;
-            $team_id = 0;
-            $person_id = 0;
-            $race_class_id = 0;
-            $wc_order_id = 0;
-
-            // Verify that they have at least one order
- 
-            if (array_key_exists(SALUTATION, $_SESSION)) {
-                $salutation = $_SESSION[SALUTATION]; 
-            }
-            else {
-                $salutation = null;
-            }
-        }
-     }
 ?>

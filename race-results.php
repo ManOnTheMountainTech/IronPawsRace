@@ -5,7 +5,9 @@
 
     require_once plugin_dir_path(__FILE__) . 'includes/container-html-pattern.php';
     require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/scoreable.php';
     require_once plugin_dir_path(__FILE__) . 'includes/strings.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/util.php';
 
     use Algorithms\BinaryTree;
     use Algorithms\BinaryNode;
@@ -14,7 +16,7 @@
     use Automattic\WooCommerce\HttpClient\HttpClientException;
     use stdClass;
 
-class Race_Results implements Container_HTML_Pattern {
+    class Race_Results implements Container_HTML_Pattern   {
         protected $rank;
         protected $bib_number;
         protected $team_name;
@@ -25,12 +27,15 @@ class Race_Results implements Container_HTML_Pattern {
 
         protected WC_Rest $wc_rest;
 
+        public Strings $strings;
+
         static function do_shortcode() {
             return (new Race_Results())->get();    
         }
 
         public function __construct() {
             $this->wc_rest = new WC_Rest();
+            
             $this->rank = \__("Rank", "ironpaws");
             // translators: The bib goes over the neck and hangs down in front.
             // It will have a number on it identifying the musher.
@@ -41,16 +46,7 @@ class Race_Results implements Container_HTML_Pattern {
             $this->total_score = \__("Total score", "ironpaws");
             $this->unknown = \__("Unknown", "ironpaws");
             $this->left_race = \__("Left race", "ironpaws");
-        }
-
-        function makeRaceDatas() {;
-            $bin_trees = [Teams::MAX_RACE_CLASSES];
-
-            for ($i = 0; $i < Teams::MAX_RACE_CLASSES; ++$i) {
-                $bin_trees[$i] = new BinaryTree();
-            }
-
-            return $bin_trees;
+            $this->strings = new Strings();
         }
 
         function get() {
@@ -65,22 +61,22 @@ class Race_Results implements Container_HTML_Pattern {
             try {
                 $db = new Mush_DB();
             } catch (\PDOException $e) {
-                return Strings::CONTACT_SUPPORT . Strings::ERROR . 'race-results_connect-1.';
+                return Strings::$CONTACT_SUPPORT . Strings::$ERROR . 'race-results_connect-1.';
             }
 
-            $product_ids = [];
+            $race_controllers_by_product_id = [];
 
             // -Loop through all of the orders
+            // -Sort by bib number
             // -Store all of the results in an array of trees.
-            // -Compare by mileage.
             // -Walk the array
             //      -walk the trees, calling the callback.
+            //      -Compare by mileage(score) or time.
+            //      -Insert into the tree, by mileage or time.
             try {
                 $all_wc_orders = $this->wc_rest->getAllOrders();
 
-                // Initialize the race data structure
-                $race_datas = $this->makeRaceDatas();
-                $data_holder = new ScoreCardByBibNumber();
+                $race_details_searcher = new Race_Details();
 
                 foreach($all_wc_orders as $wc_order) {   
                     $stmt = $db->execSql("CALL sp_getTRSEScoreValues(:wc_order_id)", 
@@ -100,10 +96,9 @@ class Race_Results implements Container_HTML_Pattern {
 
                     // For each order, loop through by class, selecting only items that match tath class
                     foreach($trse_table as $row) {
-                        $bib_number = $row[TRSE::TEAM_BIB_NUMBER];
-                        
-                        // bib not assigned yet
-                        if (is_null($bib_number)) {
+                        $bib_number = $row[TRSE::TRSE_BIB_NUMBER_IDX];
+
+                        if ('completed' != $row[TRSE::TRSE_OUTCOME_IDX]) {
                             continue;
                         }
 
@@ -112,76 +107,140 @@ class Race_Results implements Container_HTML_Pattern {
                         foreach ($line_items as $line_item) {
                             // If we don't have some of the information, add it,
                             // using the product id as the key.
-                            $some_info = null;
+                            $raceController = null;
 
-                            if (array_key_exists($line_item->product_id, $product_ids)) {
-                                $some_info = $product_ids[$line_item->product_id];
+                            // Associate race info with product ids
+                            if (array_key_exists($line_item->product_id, $race_controllers_by_product_id)) {
+                                $raceController = $race_controllers_by_product_id[$line_item->product_id];
                             } else {
-                                $some_info = new Some_Race_Info($db, $line_item->product_id); 
-                                $product_ids[$line_item->product_id] = $some_info;
+                                $raceController = new Race_Controller($db, $line_item); 
+                                $race_controllers_by_product_id[$line_item->product_id] = $raceController;
                             }
 
-                            if ($some_info->calcCurRaceStage() <= $some_info->num_race_stages) {
-                                continue;
+                            if ($raceController->calcCurRaceStage() <= 
+                                $raceController->cur_rd_core_info[TRSE::RD_CORE_STAGES]) {
+                                    continue;
+                            } 
+
+                            $race_details_searcher->bib_number = $bib_number;
+                            $race_details_searcher->details = $row;
+                            $what_to_add_to_score = $race_details_searcher;
+                            
+                            $race_class_idx = $row[TRSE::TRSE_RUN_CLASS_IDX];
+                            $cur_node = $race_controllers_by_product_id[$line_item->product_id]->all_classes_race_datas[$race_class_idx]->insertOrFetch($race_details_searcher);
+                            $cur_race_details = $cur_node->data;
+                            if (is_null($cur_race_details->scorecard)) { // new insert?
+                                $cur_race_details->scorecard = $raceController->createAScore_Card($cur_race_details);
+                                $race_details_searcher = new Race_Details(); // Prime for next
                             }
 
-                            $data_holder->bib_number = $bib_number;
-                            $data_holder->run_details = $row;
-                            $race_class_idx = $row[TRSE::TEAM_CLASS_ID];
-
-                            $cur_node = $race_datas[$race_class_idx]->insertOrFetch($data_holder);
-                            $cur_scorecard = $cur_node->data;
-                            if (-1 == $cur_scorecard->score) { // new insert?
-                                $cur_scorecard->score = 0; // don't use placeholder
-                                $data_holder = new ScoreCardByBibNumber(); // release reference
-                            }
-                    
-                            $cur_scorecard->score += $this->milesToPoints(
-                                $row[TRSE::MILES_TRSE], 
-                                $race_class_idx, 
-                                $row[TRSE::RUN_CLASS_ID],
-                                $row[TRSE::OUTCOME_TRSE]);
+                            $cur_race_details->scorecard->addToScore($what_to_add_to_score);
                         }
                     } // end: while
                 } // end: foreach 
             }
             catch(\Exception $e) { 
-                return User_Visible_Exception_Thrower::throwErrorCoreException(__("Error in getting all the score values."));
+                return User_Visible_Exception_Thrower::throwErrorCoreException(__("Error in getting all the score values."), 0, $e);
             }
 
-            $args = new ScoreCard_CallBack_Args();
+            $args = new ScoreCard_CallBack_Args($this);
             $result = "";
-            $args->race_scores = $race_scores = $this->makeRaceDatas();
+
+            $args->callback = array($this, 'bibNumberToScoreBuilder');
 
             // Generate the scores. Sort by bib number so we can update the
             // score each time we get a new score.
-            foreach($race_datas as $race_data) {
-                $race_data->walk(array($this, 'bibNumberToScoreBuilder'), $args);
-                ++$args->race_class_filter;
-            }
+ 
+            foreach ($race_controllers_by_product_id as $race_controller) {
+                $args->race_class_filter = 0;
+                $race_controller->applyToAllNodes($args);
+            } 
+            
+            $args->callback = array($this, 'nodeToHTML');
 
-            $args->race_class_filter = 0;
-
-            // Now walk the tree, and build a new new tree of the results.
-            foreach($race_scores as $race_score) {
-                $result .= $this->makeOpeningHTML([$args->race_class_filter]);
-                $race_score->walk(array($this, 'nodeToHTML'), $args);
-                //error_log(print_r($args->result, true));
-                
-                $result .= (empty($args->result)) ?
-                    __("<em>Race results are hidden until complete.<br>") :
-                    $args->result;
-                $args->result = "";
-                ++$args->race_class_filter;
-                $result .= $this->makeClosingHTML();
-            }
-
-            //$result .= $this->makeListItemHTML([]);
+            foreach ($race_controllers_by_product_id as $race_controller) {
+                $args->race_class_filter = 0;
+                $result .= $race_controller->genHTMLAsString($args);
+            } 
 
             write_log($result);
             return $result;
         }
+        
+        // Take the supplied tree and build a tree according to the sort rule supplied in ->data
+        function bibNumberToScoreBuilder(Race_Details $race_details, ScoreCard_CallBack_Args $args = null) {
+            $args->per_class_race_scores->insertOrFetch($race_details->scorecard);
+        }
 
+        function nodeToHTML(Scoreable $scorecard, ScoreCard_CallBack_Args $args) {
+            $raceDetails = $scorecard->getDetails();
+            $row = $raceDetails->details;
+
+            $this_customers_info = "";
+            $args->rank++;
+            $team_name_idx = TRSE::TRSE_NAME_TN_IDX;
+
+            // rank | bib | team name | mushers' name | class | score
+
+            try {
+                $this_customers_info = $this->wc_rest->getCustomerDetailsByCustomerId($row[TRSE::TRSE_WC_CUSTOMER_ID]);
+                if (is_null($this_customers_info)) {
+                    $args->result .= "This musher no longer exists.";
+                }
+            } catch (HttpClientException $e) {
+                $responseBody = json_decode($e->getResponse()->getBody());
+
+                if ("woocommerce_rest_invalid_id" == $responseBody) {
+                    $args->result .= "Musher id {$row[TRSE::TRSE_WC_CUSTOMER_ID]} no longer exists";
+                }
+                $args->result .= <<<RACE_RESULTS_ROW
+                    <div class="Row">  
+                        <div class="Cell"> 
+                            {$args->rank} 
+                        </div>  
+                        <div class="Cell">    
+                            {$this->unknown} 
+                        </div>  
+                        <div class="Cell">  
+                            {$this->left_race}
+                        </div> 
+                        <div class="Cell">  
+                            {$this->unknown}
+                        </div>  
+                        <div class="Cell">
+                            {$scorecard->getFormattedScore()}
+                        </div>
+                    </div> 
+                RACE_RESULTS_ROW;
+
+            return;
+            }
+
+            $this_customers_info = $this_customers_info->billing;
+            $customer_flname = $this_customers_info->first_name . ' ' . $this_customers_info->last_name;
+
+            $args->result .= <<<RACE_RESULTS_ROW
+                <div class="Row">  
+                    <div class="Cell"> 
+                        {$args->rank} 
+                    </div>  
+                    <div class="Cell">    
+                        {$raceDetails->bib_number}  
+                    </div>  
+                    <div class="Cell">  
+                        {$row[$team_name_idx]}
+                    </div> 
+                    <div class="Cell">  
+                        {$customer_flname}
+                    </div>  
+                    <div class="Cell">
+                        {$scorecard->getFormattedScore()}
+                    </div>
+                </div> 
+            RACE_RESULTS_ROW;
+            write_log($args->result);
+        }
+        
         function makeOpeningHTML(?array $params = null) {
             $race_class_name = Teams::RACE_CLASSES[$params[0]][0];
 
@@ -210,112 +269,11 @@ class Race_Results implements Container_HTML_Pattern {
             return $result;
         }
 
-        // Converts miles to points based on how the run went
-        function milesToPoints(
-            int $miles, 
-            int $race_class_idx_arg, 
-            int $run_class_idx_arg, 
-            string $run_outcome_arg) {
-            
-            if ($run_class_idx_arg < 0) {
-                return 0;
-            }
-
-            if (!(TRSE::COMPLETED == $run_outcome_arg) || 
-                (TRSE::UNTIMED == $run_outcome_arg)) {
-                return 0;
-            }
-
-            return $miles * Teams::RACE_CLASSES[$race_class_idx_arg][$run_class_idx_arg + 1];
-        }
-
         // param: $params - > WooCommerce Order Id
         // return: HTML string -> table
         function makeListItemHTML(?array $params = null) {
-        }   
-        
-        // Take the supplied tree and build a tree according to the sort rule supplied in ->data
-        function bibNumberToScoreBuilder(ScoreCardByBibNumber $scorecard, ScoreCard_CallBack_Args $args = null) {
-            $race_class_idx = $scorecard->run_details[TRSE::TEAM_CLASS_ID];
-
-            $newScorecard = new ScoreCardByScore($scorecard);
-
-            $cur_node = ($args->race_scores[$race_class_idx])->insertOrFetch($newScorecard);;
-            if (-1 == $cur_node->data->hostScoreCard->score) { // new insert?
-                User_Visible_Exception_Thrower::throwErrorCoreException(__("Error: ") 
-                    . 'race-result-1' . __(' Please contact support.'));
-            }
-        }
-
-        function nodeToHTML(ScoreCardByScore $scorecard, ScoreCard_CallBack_Args $args) {
-            $host_score_card = $scorecard->hostScoreCard;
-            $row = $host_score_card->run_details;
-
-            $this_customers_info = "";
-            $args->rank++;
-            $team_name_idx = TRSE::NAME_TN;
-
-            // rank | bib | team name | mushers' name | class | score
-
-            try {
-                $this_customers_info = $this->wc_rest->getCustomerDetailsByCustomerId($row[TRSE::WC_CUSTOMER_ID]);
-                if (is_null($this_customers_info)) {
-                    $args->result .= "This musher no longer exists.";
-                }
-            } catch (HttpClientException $e) {
-                $responseBody = json_decode($e->getResponse()->getBody());
-
-                if ("woocommerce_rest_invalid_id" == $responseBody) {
-                    $args->result .= "Musher id {$row[TRSE::WC_CUSTOMER_ID]} no longer exists";
-                }
-                $args->result .= <<<RACE_RESULTS_ROW
-                    <div class="Row">  
-                        <div class="Cell"> 
-                            {$args->rank} 
-                        </div>  
-                        <div class="Cell">    
-                            {$this->unknown} 
-                        </div>  
-                        <div class="Cell">  
-                            {$this->left_race}
-                        </div> 
-                        <div class="Cell">  
-                            {$this->unknown}
-                        </div>  
-                        <div class="Cell">
-                            {$host_score_card->score}
-                        </div>
-                    </div> 
-                RACE_RESULTS_ROW;
-
-            return;
-            }
-
-            $this_customers_info = $this_customers_info->billing;
-            $customer_flname = $this_customers_info->first_name . ' ' . $this_customers_info->last_name;
-
-            $args->result .= <<<RACE_RESULTS_ROW
-                <div class="Row">  
-                    <div class="Cell"> 
-                        {$args->rank} 
-                    </div>  
-                    <div class="Cell">    
-                        {$host_score_card->bib_number}  
-                    </div>  
-                    <div class="Cell">  
-                        {$row[$team_name_idx]}
-                    </div> 
-                    <div class="Cell">  
-                        {$customer_flname}
-                    </div>  
-                    <div class="Cell">
-                        {$host_score_card->score}
-                    </div>
-                </div> 
-            RACE_RESULTS_ROW;
-            error_log($args->result);
-        }   
-        
+        }  
+           
         function makeClosingHTML(?array $params = null) {
             return "</div>\n";
         }

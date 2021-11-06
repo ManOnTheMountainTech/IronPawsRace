@@ -45,16 +45,37 @@
       $last_name = $_SESSION[LAST_NAME] = sanitize_text_field($_GET[LAST_NAME]);
 
       if (('' == $first_name) || ('' == $last_name)) {
-        throw new Exception(FORM_INCOMPLETE_MSG, FORM_INCOMPLETE_ERROR);
+        throw new \Exception(WP_Defs::$FORM_INCOMPLETE_MSG, FORM_INCOMPLETE_ERROR);
       }
 
       $params = array('first_name' => $first_name, 
       'last_name' => $last_name, 
         'role' => 'all');
     } else {
-      throw new Exception(FORM_INCOMPLETE_MSG, FORM_INCOMPLETE_ERROR);
+      throw new \Exception(WP_Defs::$FORM_INCOMPLETE_MSG, FORM_INCOMPLETE_ERROR);
     }
 
     return $params;
+  }
+
+  function dateTimeToMillis($dateTime): int {
+    return $dateTime->format('H') * 60 * 60 * 1000 +  // milliseconds in an hour
+      $dateTime->format('i')      * 60 * 1000 +  // milliseconds in a minute
+      $dateTime->format('s')           * 1000 +  // milliseconds in a second
+      $dateTime->format('u')           / 1000;   // microseconds in a millisecond
+  }
+
+  function milliSecondsToString(int $milliseconds) {
+  
+  }
+
+  function hoursMinutesSecondsToSecondsF(int $hours, int $minutes, float $seconds): float {
+    $secondsInMinutes = $minutes * 60;
+    $secondsInHours = $hours * 3600;  
+    return (float)($secondsInMinutes + $secondsInHours) + $seconds; 
+  }
+
+  function secondsFToHMS(float $seconds): string {
+    return gmdate("H:i:s.u", $seconds);  
   }
 ?>

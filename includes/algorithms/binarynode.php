@@ -39,16 +39,16 @@ namespace Algorithms {
           }
       }
 
-      public function walk($function, $arg) {
+      public function walk($arg) {
         //call from root of tree to leaves
-        call_user_func($function, $this->data, $arg);
+        call_user_func($arg->callback, $this->data, $arg);
 
         if ($this->left !== null) {
-            $this->left->walk($function, $arg);
+            $this->left->walk($arg);
         }
 
         if ($this->right !== null) {
-            $this->right->walk($function, $arg);
+            $this->right->walk($arg);
         }
     }
   }

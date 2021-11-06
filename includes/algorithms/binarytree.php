@@ -11,9 +11,10 @@ namespace Algorithms {
 
   require_once plugin_dir_path(__FILE__) . '../comparable.php';
 
-  use IronPaws\Comparable;
+    use IronPaws\Comparable;
+    use IronPaws\Race_Details;
 
-  class BinaryTree { 
+class BinaryTree { 
 
       private $root = null;
 
@@ -229,13 +230,13 @@ namespace Algorithms {
       }
 
       // @return-> true = success, false = failure
-      public function walk($callable, $arg): bool {
-        assert(!is_null($callable));
+      public function walk($arg): bool {
+        assert(!is_null($arg->callback));
         if ($this->isEmpty()) {
           return false;
         }
 
-        $this->root->walk($callable, $arg);
+        $this->root->walk($arg);
 
         return true;
       }

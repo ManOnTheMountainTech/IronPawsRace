@@ -9,6 +9,12 @@
   require_once plugin_dir_path(__FILE__) . 'includes/verify.php';
 
   class Reg_A_Dog {
+    public Strings $strings;
+
+    function __construct()
+    {
+      $this->strings = new Strings();  
+    }
 
     static function do_shortcode() {
       /*$logon_form = ensure_loggedon();
@@ -98,16 +104,16 @@
       if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try{
           if (!array_key_exists(DogDefs::NAME, $_POST)) {
-            return null;
+            return DogDefs::NAME . __(" is not present.");
           }
 
           if (!array_key_exists(DogDefs::AGE, $_POST)) {
-            return null;
+            return DogDefs::AGE . __(" is not present.");
           }
 
           $dogname = \sanitize_text_field($_POST[DogDefs::NAME]);
           if (empty($dogname)) {
-            return ($dogname . "is not a valid name.");
+            return ($dogname . " is not a valid name.");
           }
 
           $dogage = test_input($_POST[DogDefs::AGE]);
@@ -161,7 +167,7 @@
           $db = new Mush_DB();
         }
         catch(\PDOException $e) {
-          return Strings::CONTACT_SUPPORT . Strings::ERROR . 'reg-a-dog_connect.';
+          return Strings::$CONTACT_SUPPORT . Strings::$ERROR . 'reg-a-dog_connect.';
         }
 
         try {
@@ -177,7 +183,7 @@
           return User_Visible_Exception_Thrower::throwErrorCoreException(__("Error in adding a dog to a team.", 0, $e));
         }
 
-        $dogname .= " is now on the team.<br>" . Strings::NEXT_STEPS . "<br>";
+        $dogname .= " is now on the team.<br>" . Strings::$NEXT_STEPS . "<br>";
 
         return $dogname;
       }

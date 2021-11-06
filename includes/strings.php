@@ -3,9 +3,15 @@
     
     defined( 'ABSPATH' ) || exit;
 
-    class Strings {
-        CONST CONTACT_SUPPORT = "Please contact support or file a bug. ";
-        CONST ERROR = "Error ";
-        CONST NEXT_STEPS = 'Next steps:';
+    class Strings { 
+        public static $NEXT_STEPS;
+        public static $CONTACT_SUPPORT;
+        public static $ERROR;
+
+        function __construct() {
+            self::$CONTACT_SUPPORT = __("Please contact support or file a bug. ");
+            self::$ERROR = __("Error ");
+            self::$NEXT_STEPS = '<strong>' . __('Next steps') . '</strong>';
+        }
     }
 ?>

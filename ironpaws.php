@@ -7,7 +7,7 @@
  * Author URI: https://supermooseapps.com
  * Text Domain: ironpaws
  * Domain Path: /languages
- * Version: 0.2.8
+ * Version: 0.2.9
  */
 
 /* Place custom code below this line. */
@@ -31,8 +31,9 @@ register_shortcodes();
 register_wc_hooks();
 set_exception_handler('IronPaws\def_exception_handler');
 
-function def_exception_handler($er) {
-    echo _e("Oh no! The harness broke! code={$er->getCode()}");
+function def_exception_handler(\Throwable $er) {
+    echo _e("Oh no! The harness broke! code={$er->getCode()}<br>");
+    User_Visible_Exception_Thrower::getUserMessage($er);    
     var_debug($er);
     write_log($er);
 }
@@ -74,6 +75,8 @@ function register_wp_hooks() {
     } );
     add_filter( 'load_textdomain_mofile', ['IronPaws\\WP_Hooks', 'load_my_own_textdomain'], 10, 2 );
     add_action( 'init', ['IronPaws\\WP_Hooks', 'init'] );
+    add_action('wp_logout',  ['IronPaws\\WP_Hooks', 'login']);
+    add_action('wp_login',  ['IronPaws\\WP_Hooks', 'logout']);
 }
 
 /*

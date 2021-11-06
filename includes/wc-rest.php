@@ -33,6 +33,19 @@
                 echo $this->perf->returnStats("WC_Rest::construct"); }
         }
 
+        // -Given a product id, get the product id object from the WooCommerce API.
+        // @arg: product_id: int -> the product id
+        // @return mixed->Returns the product object if found, otherwise null.
+        // @throws-> HttpClientException: If the request fails.
+        function get_product_by_id($product_id) {
+            $product = $this->woocommerce->get("products/$product_id");
+            if (empty($product_id)) {
+                return null;
+            }
+
+            return $product;
+        }
+
         function query_race_is_editable(int $wc_order_id) {
             // We might be called directly, so don't assume set
             // cases to handle:
@@ -64,10 +77,10 @@
         // Return an array of orders that are raceable (PROCESSING)
         // https://github.com/woocommerce/wc-api-php/issues/156
         // @return: => Order(s), if there are any orders, else empty array
-        function getOrdersByCustomerId(int $wc_customer_id) {
+        function getOrdersByCustomerId(int $TRSE_WC_CUSTOMER_ID) {
             // Validate the order id
             $results = $this->woocommerce->get(
-                ORDERS, ['customer' => $wc_customer_id]);
+                ORDERS, ['customer' => $TRSE_WC_CUSTOMER_ID]);
 
             return $results;
         }
@@ -104,10 +117,10 @@
         }
 
         // @return: a JSON'ized WC_CUSTOMER
-        function getCustomerDetailsByCustomerId(int $wc_customer_id) {
+        function getCustomerDetailsByCustomerId(int $TRSE_WC_CUSTOMER_ID) {
             // Validate the order id
             $results = $this->woocommerce->get(
-                self::CUSTOMERS . $wc_customer_id);
+                self::CUSTOMERS . $TRSE_WC_CUSTOMER_ID);
 
             return $results;
         }
@@ -154,7 +167,7 @@
          * @throws: WCRaceRegistrationException
          */
         function throwGetCustomersFromWoo($params) {
-            $results;
+            $results = null;
 
             try {
             $results = $this->woocommerce->get(CUSTOMERS, $params);
@@ -206,7 +219,7 @@
         }
 
         static function checkRaceReadble($wc_rest_result_order) {
-            switch ($wc_rest_result_orders->status) {
+            switch ($wc_rest_result_order->status) {
                 case 'processing':
                     return;
                 case 'completed':
@@ -218,7 +231,7 @@
         }
 
         function getResponseBody($response) {
-            return $this->$woocommerce->http->getResponse()->getBody();
+            return $this->woocommerce->http->getResponse()->getBody();
         }
 
         // @function processResponse
@@ -245,7 +258,7 @@
             return $result;
         }
 
-        static function handleHttpClientException(HttpClientException $ehce) {
+        static function handleHttpClientException(HttpClientException $e) {
             write_log(__FUNCTION__ . __LINE__ . "Caught. Message:", $e->getMessage() ); // Error message.
             write_log(" Request:", $e->getRequest() ); // Last request data.
             write_log(" Response:", $e->getResponse() ); // Last response data.

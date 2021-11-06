@@ -44,7 +44,7 @@
      const TEAM_ARGS = 'team_args';
      const TEAM_REGISTRATION = 'team-registration';
      const URI_PREFIX = "https://ironpawsllc.com/";
-     const WC_CUSTOMER_ID = 'wc_customer_id';
+     const TRSE_WC_CUSTOMER_ID = 'TRSE_WC_CUSTOMER_ID';
      const WC_ORDER_ID = 'wc_order_id'; // The Woo Commerce order ID
      const WC_PRODUCT_ID = 'wc_product_id';
 
@@ -52,8 +52,13 @@
      const WC_PAIR_ARGS = 'wc_pair_args';
 
      class WP_Defs {
-          // TODO: See if still relevant, since no text search hits.
-          const GENERIC_INVALID_PARAMETER_MSG = "An invalid query string were supplied.";
-          const FORM_INCOMPLETE_MSG = "Not enough information entered.";
+          public static $GENERIC_INVALID_PARAMETER_MSG;
+          public static $FORM_INCOMPLETE_MSG;
+
+          function __construct()
+          {
+               self::$GENERIC_INVALID_PARAMETER_MSG = __("An invalid query string were supplied.");  
+               self::$FORM_INCOMPLETE_MSG = __("Not enough information entered.");
+          }
      }
 ?>
