@@ -9,12 +9,6 @@
   require_once plugin_dir_path(__FILE__) . 'includes/verify.php';
 
   class Reg_A_Dog {
-    public Strings $strings;
-
-    function __construct()
-    {
-      $this->strings = new Strings();  
-    }
 
     static function do_shortcode() {
       /*$logon_form = ensure_loggedon();

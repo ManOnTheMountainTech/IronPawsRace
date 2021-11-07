@@ -23,12 +23,20 @@
         
         public ?string $race_name = null;
 
+        // Works with both line item and product
         function __construct($mushDBArg, $line_item) {
             $this->race_name = $line_item->name;
-            $product_id = $line_item->product_id;
+
+            if (isset($line_item->product_id)) {
+                $product_id = $line_item->product_id;
+            }
+            else
+                if (isset($line_item->id)) {
+                    $product_id = $line_item->id;
+                }
 
             $this->cur_ri_info = $mushDBArg->execAndReturnRow('CALL sp_getAllRaceInstanceInfo(?)',
-            [$line_item->product_id],
+            [$product_id],
             __("The race information about race {$this->race_name}, id ({$product_id}) is not set up."),
             4);
 

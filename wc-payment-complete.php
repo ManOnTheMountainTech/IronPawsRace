@@ -30,7 +30,7 @@
       $icon_abs_path = plugin_dir_url('ironpaws/img/icons/dogs/sleds/' . $icon);
       $icon_abs_path = $icon_abs_path . $icon;
 
-      $next_steps = (new Strings)->NEXT_STEPS;
+      $next_steps = Strings::$NEXT_STEPS;
 
       $alt_text=esc_html(__("A musher pulling their dog on a sled", "ironpaws"));
       $msg=__("Lookup the teams that are assigned to this race", "ironpaws");

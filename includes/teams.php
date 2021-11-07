@@ -65,12 +65,9 @@
     const TEAM_TN_FK = 2;
     const TRSE_CLASS_ID_IDX = 3;
     const TEAM_NAME_ID = 4;
-
-    public Strings $strings;
       
     public function __construct() {
       $this->wp_user = wp_get_current_user();
-      $this->strings = new Strings();
     }
 
     // Outer envolope of a teams selection form.

@@ -27,8 +27,6 @@
 
         protected WC_Rest $wc_rest;
 
-        public Strings $strings;
-
         static function do_shortcode() {
             return (new Race_Results())->get();    
         }
@@ -46,7 +44,6 @@
             $this->total_score = \__("Total score", "ironpaws");
             $this->unknown = \__("Unknown", "ironpaws");
             $this->left_race = \__("Left race", "ironpaws");
-            $this->strings = new Strings();
         }
 
         function get() {

@@ -76,6 +76,10 @@
   }
 
   function secondsFToHMS(float $seconds): string {
-    return gmdate("H:i:s.u", $seconds);  
+    $hours = floor($seconds / 3600);
+    $seconds -= $hours * 3600;
+    $minutes = floor($seconds / 60);
+    $seconds -= $minutes * 60;
+    return $hours . ':' . sprintf('%02d', $minutes) . ':' . sprintf('%02d', $seconds);
   }
 ?>

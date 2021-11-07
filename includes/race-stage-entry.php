@@ -1,7 +1,9 @@
 <?php
     namespace IronPaws;
 
-    defined( 'ABSPATH' ) || exit;
+use WP_Query;
+
+defined( 'ABSPATH' ) || exit;
     define("FORM_NAME", "RSE_Form");
 
     require_once 'autoloader.php';
@@ -14,14 +16,11 @@
     class Race_Stage_Entry { 
         protected \WP_User $cur_user;
 
-        public Strings $strings;
-
         const BIB_NUMBER_ID = 'bib_number_id';
 
-                    // __construct()
+        // __construct()
         public function __construct() {
             $this->cur_user = wp_get_current_user();
-            $this->strings = new Strings();
         }
 
         static function do_shortcode() {
@@ -171,11 +170,21 @@
             // Don't penalize the racer for our slowness in processing.
 
             $trse_params = null;
+            $wc_rest_api = null;
+
+            try {
+                $wc_rest_api = new WC_Rest();
+                $line_item = $wc_rest_api->get_product_by_id($wcProductId);
+            } catch(User_Visible_Exception_Thrower $e) {
+                return User_Visible_Exception_Thrower::getUserMessage($e);
+            } catch (\Exception $e) {
+                return Strings::$CONTACT_SUPPORT . Strings::$ERROR . ' race-stage-entry-5';
+            }
 
             // TODO: 
             // Select the TRSEs that are currentelly active for the date.
             // Fully populate TRSEs in TRSE.php
-            $race_controller = new Race_Controller($mush_db, $wcProductId);
+            $race_controller = new Race_Controller($mush_db, $line_item);
                 
             try {
                 $trse_params = $mush_db->execAndReturnRow("CALL sp_getTRSEScoreValues(:wc_order_id)", 
@@ -186,11 +195,14 @@
                 if (Mush_DB::EXEC_EXCEPTION_EMPTY == $e->getCode()) {
                     $next_steps = Strings::$NEXT_STEPS;
 
+                    $team_registration_url = home_url('/team-registration/');
+                    $register_new_team_url = home_url('/register-a-new-team/');
+
                     return <<<SELECT_A_TEAM
                         <p>No team selected.</p>
                         <p>$next_steps</p>
-                        <a href="/team-registration">Enter a team in a race.</a><br>
-                        <a href="/register-a-new-team">Create a new team.</a>
+                        <a href="{$team_registration_url}">Enter a team in a race.</a><br>
+                        <a href="{$register_new_team_url}">Create a new team.</a>
                     SELECT_A_TEAM;
                 } else {
                     throw $e;

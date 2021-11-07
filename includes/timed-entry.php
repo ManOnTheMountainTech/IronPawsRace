@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
         }
 
         function addToScore(Race_Details $rd) {
-            $this->millis += $rd->details[TRSE::TRSE_MILES_TIMESTAMP_IDX];;
+            $this->millis += $rd->details[TRSE::TRSE_MILES_TIMESTAMP_IDX];
         }
     }
 ?>

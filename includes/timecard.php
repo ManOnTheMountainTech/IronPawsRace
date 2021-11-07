@@ -13,10 +13,7 @@
         }
 
         function getFormattedScore() {
-            $hms = secondsFToHMS($this->millis);
-            $len = strlen($hms);
-            $hms = substr($hms, 0, ($len - 5));
-            return $hms;
+            return secondsFToHMS($this->millis);;
         }
 
         function getScore() {

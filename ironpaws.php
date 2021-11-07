@@ -33,9 +33,7 @@ set_exception_handler('IronPaws\def_exception_handler');
 
 function def_exception_handler(\Throwable $er) {
     echo _e("Oh no! The harness broke! code={$er->getCode()}<br>");
-    User_Visible_Exception_Thrower::getUserMessage($er);    
-    var_debug($er);
-    write_log($er);
+    echo User_Visible_Exception_Thrower::getUserMessage($er);    
 }
 
 function register_shortcodes() {

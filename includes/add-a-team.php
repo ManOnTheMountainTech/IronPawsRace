@@ -41,8 +41,7 @@ defined( 'ABSPATH' ) || exit;
                         try {
                             $db = new Mush_DB();
                         } catch(\PDOException $e) {
-                            $strings = new Strings();
-                            return $strings->CONTACT_SUPPORT . $strings->ERROR . 'add-a-team-connect.';
+                            return Strings::$CONTACT_SUPPORT . Strings::$ERROR . 'add-a-team-connect.';
                         }
                             
                         try {                         

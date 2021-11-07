@@ -5,6 +5,7 @@
 
     class User_Visible_Exception_Thrower extends \Exception {
         const USER_HTML_MESSAGE = "userHTMLMessage";
+        const INSTANCE = "instance";
 
         static function makeId() {
             return bin2hex(openssl_random_pseudo_bytes(16));
@@ -29,12 +30,27 @@
         }
         
         static public function getUserMessage(\Throwable $e) {
-            $message = (property_exists($e, self::USER_HTML_MESSAGE))? 
-                $e->userHTMLMessage . " {" . $e->instance . '}' : 
-                "An error occured. Id=" . self::makeId();
+            $message = "";
+
+            if (property_exists($e, self::USER_HTML_MESSAGE)) 
+                $message .= $e->userHTMLMessage . "<br>";
+            
+            if (property_exists($e, self::INSTANCE)) {
+                $message .= " (Instance: " . $e->instance . ")";
+            }
+    
+            if (empty($message)) {
+                $message .= "An error occured. Id=" . self::makeId();
+            }
             
             var_debug($e);
             write_log($message . '\n' . print_r($e));
+
+            while(!is_null($e->getPrevious())) {
+                $e = $e->getPrevious();
+                var_debug($e);
+                write_log($message . '\n' . print_r($e));
+            }
 
             return $message;     
         }
