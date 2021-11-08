@@ -53,7 +53,8 @@
     }
 
     function html_walker($arg): string {
-        foreach ($arr as $key=>$val){
+            $retStr = ""; 
+        foreach ($arg as $key=>$val){
             if (\is_array($val)  || \is_object($val)) {
                 $retStr .= '<li>' . $key . ' => ' . pp($val) . '</li>';
             }else{
@@ -82,8 +83,8 @@
 
         if (\is_object($arg)) {
             $retStr = html_walker((array)$arg);
-        } else if (is_array) {
-            $arr = html_walker($arg);
+        } else if (\is_array($arg)) {
+            $arg = html_walker($arg);
         }
 
         $retStr .= '</ul>';

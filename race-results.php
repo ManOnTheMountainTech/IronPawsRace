@@ -160,6 +160,9 @@
                 $result .= $race_controller->genHTMLAsString($args);
             } 
 
+            if (empty($result)) {
+                echo __("No results yet. Please check later.");
+            }
             write_log($result);
             return $result;
         }
