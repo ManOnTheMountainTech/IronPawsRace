@@ -80,6 +80,6 @@
     $seconds -= $hours * 3600;
     $minutes = floor($seconds / 60);
     $seconds -= $minutes * 60;
-    return $hours . ':' . sprintf('%02d', $minutes) . ':' . sprintf('%02d', $seconds);
+    return $hours . ':' . sprintf('%02d', $minutes) . ':' . sprintf('%02.1f', $seconds);
   }
 ?>
