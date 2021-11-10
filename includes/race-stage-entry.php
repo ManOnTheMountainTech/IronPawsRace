@@ -193,7 +193,7 @@
                 $trse_params = $mush_db->execAndReturnRow("CALL sp_getTRSEScoreValues(:wc_order_id)", 
                     ['wc_order_id' => $wcOrderId],
                     "Internal error race-stage-entry-1. Please contact support or file a bug.",
-                    7);
+                    8);
             } catch (User_Visible_Exception_Thrower $e) {
                 if (Mush_DB::EXEC_EXCEPTION_EMPTY == $e->getCode()) {
                     $next_steps = Strings::$NEXT_STEPS;
