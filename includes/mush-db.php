@@ -26,8 +26,6 @@ defined( 'ABSPATH' ) || exit;
 
         protected $reconnectTries = 0;
 
-        protected $message = "";
-
         public function getReconnectTries() {
             return $this->reconnectTries;
         }
@@ -246,23 +244,22 @@ defined( 'ABSPATH' ) || exit;
 
                     if (!is_null($this->perf)) {
                         echo $this->perf->returnStats($statement . ' ' . print_r($params)); }
-                    echo $this->message;
                     $this->reconnectTries = 0;
                     return $result_set;
                 }   // Retry case
                 // higher-level exception handlers will catch more specific exceptions.
                 // So catch here so that the retry case works.
                 catch(\PDOException | \Exception $e) {
-                    if (isset($e->errorInfo) && is_wp_debug()) {
-                        $this->message .= "PDO: Error {$e->errorInfo[1]}<br>";
-                    }
+                    if (isset($e->errorInfo)) {
+                        if (TRACE_SQL_RETRIES) {
+                            echo "PDO: Error {$e->errorInfo[1]}<br>";
+                        }
 
-                    if (isset($e->errorInfo) && 
-                        (in_array($e->errorInfo[1], MySql::$reconnectErrors))) {
-                            $this->conn = null;
-                            ++$this->reconnectTries;
-                            continue; 
-                    
+                        if (in_array($e->errorInfo[1], MySql::$reconnectErrors)) {
+                                $this->conn = null;
+                                ++$this->reconnectTries;
+                                continue; 
+                        } 
                     } else {
                         global $error_instance;
                         ++$error_instance;

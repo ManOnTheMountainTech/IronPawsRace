@@ -28,6 +28,14 @@
             $e->{"instance"} = $e_ref;
             throw $e;
         }
+        // Returns the instance of the exception.
+        static public function getInstance(\Throwable $e) {
+            if (property_exists($e, self::INSTANCE)) {
+                return $e->{"instance"};
+            }
+
+            return null;
+        }
         
         static public function getUserMessage(\Throwable $e) {
             $message = "";

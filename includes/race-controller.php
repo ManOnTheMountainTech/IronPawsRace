@@ -92,6 +92,7 @@
         function applyToAllNodes(ScoreCard_CallBack_Args $args) {
             for ($i = 0; $i < Teams::MAX_RACE_CLASSES; ++$i) {
                 $args->per_class_race_scores = $this->all_classes_race_scores[$i];
+
                 $this->all_classes_race_datas[$i]->walk($args);
                 ++$args->race_class_filter;
             }
@@ -103,10 +104,10 @@
             $result = "<H3>" . $this->race_name . "</H3>\n";
             foreach($this->all_classes_race_scores as $race_score) {
                 $result .= $args->HTMLGenerator->makeOpeningHTML([$args->race_class_filter]);
-
+                $args->rank = 0;
                 $args->result = "";
                 $race_score->walk($args);
-                //error_log(print_r($args->result, true));
+                $race_score = null;
                 
                 $result .= (empty($args->result)) ?
                     __("<em>Race results are hidden until complete.<br>") :

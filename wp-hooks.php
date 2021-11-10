@@ -69,7 +69,7 @@
                 session_start();
             }
             
-            load_plugin_textdomain( 'wpdocs_textdomain', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+            load_plugin_textdomain(WP_Defs::IRONPAWS_TEXTDOMAIN, false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
         }
 
         static function login() {
@@ -81,7 +81,7 @@
         }
 
         static function load_my_own_textdomain( $mofile, $domain ) {
-            if ( 'my-domain' === $domain && false !== strpos( $mofile, WP_LANG_DIR . '/plugins/' ) ) {
+            if ( 'ironpaws' === $domain && false !== strpos( $mofile, WP_LANG_DIR . '/plugins/' ) ) {
                 $locale = apply_filters( 'plugin_locale', determine_locale(), $domain );
                 $mofile = WP_PLUGIN_DIR . '/' . dirname( plugin_basename( __FILE__ ) ) . '/languages/' . $domain . '-' . $locale . '.mo';
             }

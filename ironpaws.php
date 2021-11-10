@@ -23,7 +23,6 @@ require_once plugin_dir_path(__FILE__) . 'reg-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'reg-a-dog.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-complete.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-hooks.php';
-require_once plugin_dir_path(__FILE__) . 'wc-login-hooks.php';
 require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
 //require_once 'includes/autoloader.php';
 
@@ -33,7 +32,11 @@ register_wc_hooks();
 set_exception_handler('IronPaws\def_exception_handler');
 
 function def_exception_handler(\Throwable $er) {
-    echo _e("Oh no! The harness broke! code={$er->getCode()}<br>");
+    $instance = User_Visible_Exception_Thrower::getInstance($er);
+    if (!is_null($instance)) {
+        $instance = ", instance=$instance";
+    }
+    _e("Oh no! The harness broke! code={$er->getCode()}{$instance}<br>");
     echo User_Visible_Exception_Thrower::getUserMessage($er);    
 }
 

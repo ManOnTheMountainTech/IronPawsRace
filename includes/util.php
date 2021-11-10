@@ -45,6 +45,7 @@
       $last_name = $_SESSION[LAST_NAME] = sanitize_text_field($_GET[LAST_NAME]);
 
       if (('' == $first_name) || ('' == $last_name)) {
+        WP_Defs::init();
         throw new \Exception(WP_Defs::$FORM_INCOMPLETE_MSG, FORM_INCOMPLETE_ERROR);
       }
 

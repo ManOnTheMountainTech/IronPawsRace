@@ -1,9 +1,9 @@
 <?php
     namespace IronPaws;
 
-use WP_Query;
+    use WP_Query;
 
-defined( 'ABSPATH' ) || exit;
+    defined( 'ABSPATH' ) || exit;
     define("FORM_NAME", "RSE_Form");
 
     require_once 'autoloader.php';

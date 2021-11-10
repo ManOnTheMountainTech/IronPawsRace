@@ -52,10 +52,12 @@
      const WC_PAIR_ARGS = 'wc_pair_args';
 
      class WP_Defs {
+          const IRONPAWS_TEXTDOMAIN = 'ironpaws';
+
           public static $GENERIC_INVALID_PARAMETER_MSG;
           public static $FORM_INCOMPLETE_MSG;
 
-          function __construct()
+          static function init()
           {
                self::$GENERIC_INVALID_PARAMETER_MSG = __("An invalid query string were supplied.");  
                self::$FORM_INCOMPLETE_MSG = __("Not enough information entered.");
