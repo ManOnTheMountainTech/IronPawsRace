@@ -4,23 +4,10 @@
     defined( 'ABSPATH' ) || exit;
 
     require_once plugin_dir_path(__FILE__) . 'includes/wp-defs.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/units.php';
     //require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
 
-    /** @param: int $user_id -> Id of the user to add
-     */ 
-    function ironpaws_user_register(int $user_id) {;
-        try {
-            $db = new Mush_DB();
-            // TODO: form for Mr. Field.
-            $db->execSql("CALL sp_newPersonUsingWCOrderID(:salutation, :wp_user_id)", 
-                ['salutation' => null, 'wp_user_id' => $user_id ]);
-        } catch(\Exception $e) {
-            return User_Visible_Exception_Thrower::throwErrorCoreException(
-                __("Racer information could not be created."), 0, $e);
-        }
 
-        return null;
-    }
 
     /** @param: $id -> Id of the user to delete
     * @param: $reassign -> id of the user to reassign posts to
@@ -64,6 +51,9 @@
     }
 
     class WP_Hooks {
+        const DISTANCE_UNIT = "distance_unit";
+        const DISTANCE_UNIT_LABEL = 'select_unit_label';
+
         static function install() {
             echo _e("Installing IronPaws plugin", "ironpaws");
 
@@ -96,6 +86,53 @@
                 $mofile = WP_PLUGIN_DIR . '/' . dirname( plugin_basename( __FILE__ ) ) . '/languages/' . $domain . '-' . $locale . '.mo';
             }
             return $mofile;
+        }
+
+        // TODO: https://codex.wordpress.org/Customizing_the_Registration_Form
+        // Creates an entry that asks for a distancce unit.
+        static function registration_form() {
+            Units::init();
+
+            $distance_unit = self::DISTANCE_UNIT;
+            $distance_unit_user = __("Distance unit:");
+            $miles = Units::MILES;
+            $kilometers = Units::KILOMETERS;
+            $miles_user = Units::$MILES_USER;
+            $kilometers_user = Units::$KILOMETERS_USER;
+
+            echo <<<REGISTRATION_FORM
+            <p>
+            <label for="{$distance_unit}">{$distance_unit_user}</label>
+                <select name="{$distance_unit}" id="{$distance_unit}">
+                    <option value="{$miles}">{$miles_user}</option>
+                    <option value="{$kilometers}">{$kilometers_user}</option>
+                </select>
+             </p>
+            REGISTRATION_FORM;
+        }
+
+        /** @param: int $user_id -> Id of the user to add
+         * @param: array $userData - > array data that was passed in to wp_insert_user
+         */ 
+        static function user_register(int $user_id) {
+            try {
+                $distance_unit = self::DISTANCE_UNIT;
+                $selected_unit = null;
+
+                if (array_key_exists($distance_unit, $_POST)) {
+                    $selected_unit = sanitize_text_field($_POST[$distance_unit]);
+                }
+
+                $db = new Mush_DB();
+
+                $db->execSql("CALL sp_newPersonUsingWCOrderID(:salutation, :wp_user_id, :distance_unit)", 
+                    ['salutation' => null, 'wp_user_id' => $user_id, 'distance_unit' => $selected_unit]);
+            } catch(\Exception $e) {
+                return User_Visible_Exception_Thrower::throwErrorCoreException(
+                    __("Racer information could not be created."), 0, $e);
+            }
+
+            return null;
         }
     }
 ?>

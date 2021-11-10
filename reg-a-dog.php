@@ -16,6 +16,7 @@
         return $logon_form;
       }*/
 
+      Strings::init();
       $regADog = new Reg_A_Dog();
 
       $html = "";

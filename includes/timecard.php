@@ -27,7 +27,7 @@
         // We want duplicates. To do this, never return 0. Thus, the node with
         // the same score will never be found.
         function compareTo(Comparable $other): int {
-            $comparison = $this->millis <=> $other->scorecard->millis;
+            $comparison = $this->millis <=> $other->millis;
             return (0 == $comparison) ? 1 : $comparison;
         }
     }

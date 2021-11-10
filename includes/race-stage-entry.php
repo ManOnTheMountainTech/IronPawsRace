@@ -29,11 +29,12 @@ defined( 'ABSPATH' ) || exit;
                 return $logon_form;
             }
 
+            Strings::init();
+
             return (new Race_Stage_Entry())->makeHTMLRaceStageEntry();
         }
 
         const HOURS = 'hours';
-        const MILEAGE = 'mileage';
         const MINUTES = 'minutes';
         const SECONDS = 'seconds';
         const OUTCOME = 'outcome';
@@ -42,6 +43,8 @@ defined( 'ABSPATH' ) || exit;
 
         const RACE_STAGE_ENTRY = 'race_stage_entry';
         const RACE_STAGE_ARG = 'race_stage_arg';
+        const DISTANCE_UNIT = 'distance_unit';
+        const DISTANCE_TRAVELED = 'distance_traveled';
 
         const RAN_CLASS = 'ran_class';
 
@@ -210,7 +213,7 @@ defined( 'ABSPATH' ) || exit;
             }
 
             $class_ran_in = __("Class ran in:");
-            $ran_classes = Teams::makeRunRaceClassesHTML($trse_params[4]);
+            $ran_classes = Teams::makeRunRaceClassesHTML($trse_params[TRSE::TRSE_CLASS_ID_IDX]);
             $ran_class = self::RAN_CLASS;
 
             $trse_selections_html = <<<FORM_HEADER
@@ -224,14 +227,16 @@ defined( 'ABSPATH' ) || exit;
             FORM_HEADER;
 
             $race_stage = $race_controller->calcCurRaceStage();
-            if ($race_stage > $race_controller->cur_rd_core_info[TRSE::RD_CORE_STAGES]) {
+            $cur_rd_core_info = $race_controller->cur_rd_core_info;
+
+            if ($race_stage > $cur_rd_core_info[Race_Definition::CORE_STAGES]) {
                 return __("This race is over.");
             } else if ($race_stage < 1) {
                 return __("This race has not started.");
             }
 
             // Timed race?
-            if (TRSE::TIMED == $race_controller->cur_rd_core_info[TRSE::RD_CORE_RACE_TYPE]) {
+            if (Race_Definition::TIMED == $cur_rd_core_info[Race_Definition::CORE_RACE_TYPE]) {
                 // Make sure that the race is still running
                 $hours = __("Hours:");
                 $minutes = __("Minutes:");
@@ -272,16 +277,19 @@ defined( 'ABSPATH' ) || exit;
                     name="{$wc_product_id_arg}" value="{$wcProductId}">\n
                 FORM_BODY;
             } else {
-                $mileage_visible = __("Mileage:");
+
+                $useKilometers = $trse_params[TRSE::TRSE_PEOPLE_DISTANCE_UNIT] == Units::KILOMETERS;
+                $distance_unit_visible = ($useKilometers) ? __("Mileage:") : __("Kilometerage:");
 
                 $wc_order_id_arg = WC_ORDER_ID;
+                $distance_traveled_label = Race_Stage_Entry::DISTANCE_TRAVELED;
 
                 $trse_selections_html .= <<<FORM_BODY
                     Race Stage: <strong>{$race_stage}</strong><br><br>\n
                     <div class="border">\n
                         <div class="hide-overflow disp-flex">\n
                             <div class="hide-overflow def-pad">\n
-                                <label for="mileage">{$mileage_visible}</label>\n
+                                <label for="{$distance_traveled_label}">{$distance_unit_visible}</label>\n
                                 <input required type="number" id="mileage" name="mileage" min="0" step="0.1">\n
                             </div>\n
                         </div>\n
@@ -292,11 +300,13 @@ defined( 'ABSPATH' ) || exit;
             }
 
             $race_stage_arg = Race_Stage_Entry::RACE_STAGE_ARG;
+            $distance_unit_arg = Race_Stage_Entry::DISTANCE_UNIT;
 
             $trse_selections_html .= <<<HIDDEN_PART
                 <input type="hidden" id="{$race_stage_arg}" 
-                name="{$race_stage_arg}" value="{$race_stage}">\n
-
+                    name="{$race_stage_arg}" value="{$race_stage}">\n
+                <input type="hidden" id="{$distance_unit_arg}"
+                    name="{$distance_unit_arg}" id="{$distance_unit_arg}"
             HIDDEN_PART;
 
             $trse_selections_html .= $this->makeHTMLSelectableOutcomes();
@@ -325,12 +335,15 @@ defined( 'ABSPATH' ) || exit;
                 $hours = -1;
                 $minutes = -1;
                 $seconds = -1.0;
-                $mileage_time = -1;
+                $travel_time_or_distance = -1;
                 $bib_number = 0;
                 $wc_order_id = 0;
                 $wc_product_id = 0;
                 $outcome = null;
+                $distance_unit = null;
 
+                // timed path
+                // Requires: hours, minutes, seconds, bib_number, wc_product id
                 if (array_key_exists(Race_Stage_Entry::HOURS, $_POST)) {
                     $hours = (int)test_number($_POST[Race_Stage_Entry::HOURS]);  
 
@@ -352,7 +365,7 @@ defined( 'ABSPATH' ) || exit;
                             
                             $seconds = round($seconds, 1, PHP_ROUND_HALF_DOWN);
 
-                            $mileage_time = hoursMinutesSecondsToSecondsF($hours,$minutes,$seconds);
+                            $travel_time_or_distance = hoursMinutesSecondsToSecondsF($hours,$minutes,$seconds);
 
                             if (array_key_exists(Race_Stage_Entry::BIB_NUMBER_ID, $_POST)) {
                                 $bib_number = (int)test_number($_POST[Race_Stage_Entry::BIB_NUMBER_ID]);
@@ -371,18 +384,27 @@ defined( 'ABSPATH' ) || exit;
                     }
                 }
 
-                if (array_key_exists(Race_Stage_Entry::MILEAGE, $_POST)) {
-                    $mileage = test_number($_POST[Race_Stage_Entry::MILEAGE]);
-                    if (($mileage >= 0) && ($wc_product_id > 0)) {
-                        return __('mileage or time can be set, but not both.');
+                // Distance traveled by bib number
+                // Requires: DISTANCE_TRAVELED, WC_ORDER_ID, and DISTANCE_UNiT
+                if (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST)) {
+                    $distance_traveled = test_number($_POST[Race_Stage_Entry::DISTANCE_TRAVELED]);
+                    if (($distance_traveled >= 0) && ($wc_product_id > 0)) {
+                        return __('distance traveled or time can be set, but not both.');
                     }
 
-                    $mileage_time = $mileage;
+                    $travel_time_or_distance = $distance_traveled;
 
                     if (array_key_exists(WC_ORDER_ID, $_POST)) {
                         $wc_order_id = test_number($_POST[WC_ORDER_ID]);
                         if ($wc_order_id <= 0) {
                             return __("WooCommerce Order Id must be > 0");
+                        }
+
+                        if (array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST)) {
+                            $distance_unit = (string)sanitize_text_field($_POST[Race_Stage_Entry::DISTANCE_UNIT]);
+                            if ($distance_unit <= 0) {
+                                return __("disance unit must be positive and nonzero.");
+                            }
                         }
                     } else {
                         return __("The WooCommerce order id must be specified.");
@@ -439,8 +461,8 @@ defined( 'ABSPATH' ) || exit;
 
             if (is_wp_debug()) {
                 // TODO: Kilometrage?
-                "wcOrderId={$wc_order_id}, mileage/time={$mileage_time}, outcome={$outcome}<br>";
-                "mileage_time={$mileage_time}, raceStage={$race_stage}<br>";
+                "wcOrderId={$wc_order_id}, distance traveled/time={$travel_time_or_distance}, outcome={$outcome}<br>";
+                "travel_time_or_distance={$travel_time_or_distance}, raceStage={$race_stage}<br>";
                 "runClassId={$run_class_id}<br>";
             }
 
@@ -448,17 +470,23 @@ defined( 'ABSPATH' ) || exit;
 
             try {
                 if ($bib_number > 0) {
+
+                    if (Units::KILOMETERS == $distance_unit) {
+                        $travel_time_or_distance *= Units::KILOMETERS_TO_MILES;
+                    } else if (Units::MILES != $distance_unit) {
+                        return __("Invalid distance unit.");}
+
                     $stmt = $db->execSql(
                         "call sp_updateTRSEByBibNumber(
                             :wcProdId,
                             :bibNumber,
-                            :milesTimestamp,
+                            :secondsF,
                             :outcome,
                             :raceStage,
                             :runClass)",
                         ['wcProdId' => $wc_product_id,
                          'bibNumber' => $bib_number,
-                         'milesTimestamp' => $mileage_time,
+                         'secondsF' => $travel_time_or_distance,
                          'outcome' => $outcome,
                          'raceStage' => $race_stage,
                          'runClass' => $run_class_id],
@@ -467,12 +495,12 @@ defined( 'ABSPATH' ) || exit;
                     $stmt = $db->execSql(
                         "call sp_updateTRSEForRSE(
                             :wcOrderId,
-                            :mileage_or_time, 
+                            :distance, 
                             :outcome,  
                             :raceStage, 
                             :runClassId)",
                         ['wcOrderId' => $wc_order_id, 
-                        'mileage_or_time' => $mileage_time, 
+                        'distance' => $travel_time_or_distance, 
                         'outcome' => $outcome, 
                         'raceStage' => $race_stage, 
                         'runClassId' => $run_class_id],
@@ -498,8 +526,13 @@ defined( 'ABSPATH' ) || exit;
                 if (
                     (array_key_exists(Race_Stage_Entry::HOURS, $_POST) &&
                     array_key_exists(Race_Stage_Entry::MINUTES, $_POST) &&
-                    array_key_exists(Race_Stage_Entry::SECONDS, $_POST)) ||
-                    array_key_exists(Race_Stage_Entry::MILEAGE, $_POST)) {
+                    array_key_exists(Race_Stage_Entry::SECONDS, $_POST) &&
+                    array_key_exists(WC_PRODUCT_ID, $_POST) &&
+                    array_key_exists(Race_Stage_Entry::BIB_NUMBER_ID, $_POST)) ||
+                    (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST) &&
+                    array_key_exists(WC_ORDER_ID, $_POST) &&
+                    array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST))
+                    ) {
                         return $this->writeToMush_DB();
                     } else {
                         return $this->makeHTMLRaceStageEntryForm();

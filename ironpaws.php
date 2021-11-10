@@ -7,7 +7,7 @@
  * Author URI: https://supermooseapps.com
  * Text Domain: ironpaws
  * Domain Path: /languages
- * Version: 0.2.9
+ * Version: 0.2.10
  */
 
 /* Place custom code below this line. */
@@ -23,6 +23,7 @@ require_once plugin_dir_path(__FILE__) . 'reg-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'reg-a-dog.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-complete.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-hooks.php';
+require_once plugin_dir_path(__FILE__) . 'wc-login-hooks.php';
 require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
 //require_once 'includes/autoloader.php';
 
@@ -52,7 +53,7 @@ function register_shortcodes() {
 // wp-hooks.php
 function register_wp_hooks() {
     //register_activation_hook(__FILE__, ['IronPaws\\WP_Hooks', 'install']);
-    add_action('user_register', 'IronPaws\\ironpaws_user_register');
+    add_action('user_register', ['IronPaws\\WP_Hooks', 'user_register']);
     add_action('delete_user', 'IronPaws\\ironpaws_wp_delete_user');
     add_action('delete_user_form', 'IronPaws\\ironpaws_wp_delete_user_form');
 
@@ -75,6 +76,7 @@ function register_wp_hooks() {
     add_action( 'init', ['IronPaws\\WP_Hooks', 'init'] );
     add_action('wp_logout',  ['IronPaws\\WP_Hooks', 'login']);
     add_action('wp_login',  ['IronPaws\\WP_Hooks', 'logout']);
+    add_action('register_form',  ['IronPaws\\WP_Hooks', 'registration_form']);
 }
 
 /*
@@ -97,6 +99,7 @@ function register_wc_hooks() {
 /* This is the one that is hit when everything is said and done */
     add_action( 'woocommerce_payment_complete', 'IronPaws\\ironpaws_woocommerce_payment_complete');
     add_action( 'woocommerce_order_details_after_customer_details', 'IronPaws\\ironpaws_order_details_after_customer_details');
+    add_action( 'woocommerce_register_form', ['IronPaws\\WP_Hooks', 'registration_form']);
 }
 
 /* Place custom code above this line. */

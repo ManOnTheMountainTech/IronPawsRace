@@ -67,6 +67,7 @@
     const TEAM_NAME_ID = 4;
       
     public function __construct() {
+      Strings::init();
       $this->wp_user = wp_get_current_user();
     }
 

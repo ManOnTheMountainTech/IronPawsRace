@@ -25,6 +25,7 @@
     // 
     function ironpaws_woocommerce_payment_complete( $order_id ) {
         error_log( "payment complete for order $order_id", 0 );
+        Strings::init();
 
         $wc_order_id = WC_ORDER_ID;
         $next_steps = Strings::$NEXT_STEPS;

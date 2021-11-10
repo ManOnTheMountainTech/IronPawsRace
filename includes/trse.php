@@ -26,15 +26,7 @@
     const TRSE_CLASS_ID_IDX = 4;
     const TRSE_NAME_TN_IDX = 5;
     const TRSE_RUN_CLASS_IDX = 6;
-
-    const RI_START_DATE_TIME = 3;
-    const RI_RACE_DEFS_FK = 2;
-
-    const RD_CORE_STAGES = 0;
-    const RD_CORE_MASTER_NUM_DAYS_PER_STAGE = 1;
-    const RD_CORE_RACE_TYPE = 2;
-    const TIMED = 'timed';
-    const MILES = 'miles';
+    const TRSE_PEOPLE_DISTANCE_UNIT = 7;
 
     // The returned html is the first part of a form. The </select> and </form>
     // tags need to be supplied.
@@ -46,6 +38,8 @@
     const UNTIMED = 'untimed';
 
     static function do_shortcode() {
+      Strings::init();
+
       $logon_form = ensure_loggedon();
       if (!is_null($logon_form)) {
         return $logon_form;

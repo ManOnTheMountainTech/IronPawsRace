@@ -8,7 +8,7 @@
         public static $CONTACT_SUPPORT;
         public static $ERROR;
 
-        function __construct() {
+        static function init() {
             self::$CONTACT_SUPPORT = __("Please contact support or file a bug. ");
             self::$ERROR = __("Error ");
             self::$NEXT_STEPS = '<strong>' . __('Next steps') . '</strong>';

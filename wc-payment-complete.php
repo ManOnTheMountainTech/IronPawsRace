@@ -13,6 +13,7 @@
     // @args: WC_Order -> The order object
      function ironpaws_order_details_after_customer_details(Order $order) {
       $teams_path = plugins_url("fetch-teams", __FILE__);
+      Strings::init();
 
       if (!is_null($order)) {
         $wc_order_arg = $order->get_order_number();

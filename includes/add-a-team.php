@@ -14,6 +14,8 @@ defined( 'ABSPATH' ) || exit;
 
     // Adds a team from scratch
     function do_shortcode_add_a_team() {
+        Strings::init();
+
         $logon_form = ensure_loggedon();
         if (!is_null($logon_form)) {
             return $logon_form;

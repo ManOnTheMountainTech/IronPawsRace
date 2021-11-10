@@ -28,6 +28,8 @@
         protected WC_Rest $wc_rest;
 
         static function do_shortcode() {
+            Strings::init();
+
             return (new Race_Results())->get();    
         }
 
@@ -115,7 +117,7 @@
                             }
 
                             if ($raceController->calcCurRaceStage() <= 
-                                $raceController->cur_rd_core_info[TRSE::RD_CORE_STAGES]) {
+                                $raceController->cur_rd_core_info[Race_Definition::CORE_STAGES]) {
                                     continue;
                             } 
 
@@ -218,7 +220,6 @@
 
             $this_customers_info = $this_customers_info->billing;
             $customer_flname = $this_customers_info->first_name . ' ' . $this_customers_info->last_name;
-
             $args->result .= <<<RACE_RESULTS_ROW
                 <div class="Row">  
                     <div class="Cell"> 

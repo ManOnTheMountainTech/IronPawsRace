@@ -41,8 +41,8 @@
             4);
 
             $this->race_start_date_time = date_create(
-                $this->cur_ri_info[TRSE::RI_START_DATE_TIME]);
-            $ri_race_defs_fk = $this->cur_ri_info[TRSE::RI_RACE_DEFS_FK];
+                $this->cur_ri_info[Race_Instance::START_DATE_TIME]);
+            $ri_race_defs_fk = $this->cur_ri_info[Race_Instance::RACE_DEFS_FK];
 
             $this->cur_rd_core_info = $mushDBArg->execAndReturnRow(
                 'CALL sp_getRaceDefCoreByRD (?)',
@@ -69,7 +69,7 @@
         // @param: Mush_DB -> The databse connection to use
         // @param: int -> The WooCommerce product id
         function createAScore_Card(Race_Details $race_Details): Scoreable {
-            return (Race_Stage_Entry::MILEAGE == $this->cur_rd_core_info[TRSE::RD_CORE_RACE_TYPE]) ?
+            return (Race_Definition::MILEAGE == $this->cur_rd_core_info[Race_Definition::CORE_RACE_TYPE]) ?
                 new Scored_Entry($race_Details) :
                 new Timed_Entry($race_Details);
         }
@@ -82,7 +82,7 @@
         function calcCurRaceStage(): ?int {
             $elapsed_race_days = (date_create()->diff($this->race_start_date_time))->days;
             return \intdiv($elapsed_race_days, 
-                $this->cur_rd_core_info[TRSE::RD_CORE_MASTER_NUM_DAYS_PER_STAGE]) + 1;
+                $this->cur_rd_core_info[Race_Definition::CORE_MASTER_NUM_DAYS_PER_STAGE]) + 1;
         }
 
         // Applys the provided scorecard callback arguments to all nodes in the
