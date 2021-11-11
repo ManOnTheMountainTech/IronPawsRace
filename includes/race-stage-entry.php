@@ -14,6 +14,9 @@
     require_once 'add-a-team.php';
 
     class Race_Stage_Entry { 
+        const NONCE_NAME = "RSE-nonce";
+        const NONCE_ACTION = "RSE-nonce-action";
+
         protected \WP_User $cur_user;
 
         const BIB_NUMBER_ID = 'bib_number_id';
@@ -141,6 +144,10 @@
 
             $mush_db = null;
 
+            if (GET != $_SERVER['REQUEST_METHOD']) {
+                return __("Invalid request method race-stage-entry-get_alloptions_110(  )");
+            }
+
             try {
                 if (array_key_exists(WC_PAIR_ARGS, $_GET)) {
                     $wc_pair_args = sanitize_text_field($_GET[WC_PAIR_ARGS]);
@@ -216,8 +223,11 @@
             $ran_classes = Teams::makeRunRaceClassesHTML($trse_params[TRSE::TRSE_CLASS_ID_IDX]);
             $ran_class = self::RAN_CLASS;
 
+            $nonce = wp_nonce_field(self::NONCE_ACTION, self::NONCE_NAME, true, false);
+
             $trse_selections_html = <<<FORM_HEADER
                 <form method="post" id="RSE_Form" action="">\n
+                $nonce
                 <div class="hide-overflow def-pad">\n
                     <label for="ran_class">{$class_ran_in}</label>\n
                     <select id="{$ran_class}" name="{$ran_class}"><br>
@@ -341,6 +351,18 @@
                 $wc_product_id = 0;
                 $outcome = null;
                 $distance_unit = null;
+
+                if ("POST" != $_SERVER["REQUEST_METHOD"]) {
+                    return __("Invalid request race-stage-entry-1");
+                }
+
+                if (array_key_exists(self::NONCE_NAME, $_POST)) {
+                    if (!wp_verify_nonce($_POST[self::NONCE_NAME], self::NONCE_ACTION)) {
+                        return __("Security check failed race-stage-entry.");
+                    }
+                } else {
+                    return __("Nonce not provided race-stage-entry.");
+                }
 
                 // timed path
                 // Requires: hours, minutes, seconds, bib_number, wc_product id

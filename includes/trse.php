@@ -28,6 +28,9 @@
     const TRSE_RUN_CLASS_IDX = 6;
     const TRSE_PEOPLE_DISTANCE_UNIT = 7;
 
+    const NONCE_NAME = 'trse_nonce';
+    const NONCE_ACTION = 'trse_nonce_action';
+
     // The returned html is the first part of a form. The </select> and </form>
     // tags need to be supplied.
     const STATUS_TRY_NEXT = 0;
@@ -82,6 +85,19 @@
     }
 
     function createFromFinalParams() {
+
+      if ("POST" != $_SERVER['REQUEST_METHOD']) {
+        return __("Invalid request method trse.");
+      }
+
+      if (!array_key_exists(self::NONCE_NAME, $_POST)) {
+        return __("Nonce not supplied trse.");
+      }
+
+      if (!wp_verify_nonce($_POST[self::NONCE_NAME], self::NONCE_ACTION)) {
+        return __("Security check failed trse.");
+      }
+
       if (array_key_exists(RACE_PARAMS, $_POST)) {
         $params_handle_with_care = $_POST[RACE_PARAMS];
         $wc_product_id = 0;

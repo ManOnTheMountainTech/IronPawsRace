@@ -9,6 +9,8 @@
   require_once plugin_dir_path(__FILE__) . 'includes/verify.php';
 
   class Reg_A_Dog {
+    const REG_A_DOG_NONCE_ACTION = 'reg-dog-nonce-action';
+    const REG_A_DOG_NONCE_NAME = 'reg-dog-nonce-name';
 
     static function do_shortcode() {
       /*$logon_form = ensure_loggedon();
@@ -67,9 +69,12 @@
       $dogAge = DogDefs::AGE;
       $dogForm = DogDefs::FORM_ID;
 
+      $nonce = wp_nonce_field(self::REG_A_DOG_NONCE_ACTION, self::REG_A_DOG_NONCE_NAME);
+
       $teams_selections_html = <<<GET_DOGS
         <h3>Please provide the details of this dog.</h3>
         <form method="POST" id="{$dogForm}" action="">
+          {$nonce}
           <label for="{$dogName}">Name:</label>
           <input type="text" id="{$dogName}" name="{$dogName}"><br>
           <label for="{$dogAge}">Age:</label>
@@ -98,6 +103,14 @@
 
       if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try{
+          if (array_key_exists(self::REG_A_DOG_NONCE_NAME, $_POST)) {
+            if (!wp_verify_nonce($_POST[self::REG_A_DOG_NONCE_NAME], self::REG_A_DOG_NONCE_ACTION)) {
+              throw new \Exception("Reg-a-dog nonce failed to verify.");
+            }
+          } else {
+            throw new \Exception("Reg-a-dog nonce not found.");
+          }
+
           if (!array_key_exists(DogDefs::NAME, $_POST)) {
             return DogDefs::NAME . __(" is not present.");
           }

@@ -106,6 +106,7 @@ defined( 'ABSPATH' ) || exit;
                 $add_team_html .= $error_msg;
                 $error_msg = null;
             }
+
             $add_team_html .= <<<ADD_TEAM_PRE
             <form required method="get" id="new_team_form" action="register-a-new-team">
                 <label for="{$team_name}">{$team_name_prompt}</label>

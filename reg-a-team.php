@@ -37,7 +37,7 @@
     if ($_SERVER["REQUEST_METHOD"] == "GET") {
     
       try {
-        $team_names = sanitize_text_field($_POST["dogNames"]);
+        $team_names = sanitize_text_field($_GET["dogNames"]);
         if (empty($team_names)) {
           return ($team_names . " is not a valid list of dogs.");
         }
