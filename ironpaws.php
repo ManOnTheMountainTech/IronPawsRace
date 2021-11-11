@@ -7,7 +7,7 @@
  * Author URI: https://supermooseapps.com
  * Text Domain: ironpaws
  * Domain Path: /languages
- * Version: 0.2.10
+ * Version: 0.3.0
  */
 
 /* Place custom code below this line. */
