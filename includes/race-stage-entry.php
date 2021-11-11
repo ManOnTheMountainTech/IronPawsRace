@@ -1,7 +1,8 @@
 <?php
     namespace IronPaws;
 
-    use WP_Query;
+use Throwable;
+use WP_Query;
 
     defined( 'ABSPATH' ) || exit;
     define("FORM_NAME", "RSE_Form");
@@ -144,8 +145,8 @@
 
             $mush_db = null;
 
-            if (GET != $_SERVER['REQUEST_METHOD']) {
-                return __("Invalid request method race-stage-entry-get_alloptions_110(  )");
+            if (array_key_exists("REQUEST_METHOD", $_SERVER) && $_SERVER["REQUEST_METHOD"] !== 'GET') {
+                return __("Invalid request state race-results phase 2.");
             }
 
             try {
@@ -185,10 +186,8 @@
             try {
                 $wc_rest_api = new WC_Rest();
                 $line_item = $wc_rest_api->get_product_by_id($wcProductId);
-            } catch(User_Visible_Exception_Thrower $e) {
+            } catch(Throwable $e) {
                 return User_Visible_Exception_Thrower::getUserMessage($e);
-            } catch (\Exception $e) {
-                return Strings::$CONTACT_SUPPORT . Strings::$ERROR . ' race-stage-entry-5';
             }
 
             // TODO: 
@@ -492,12 +491,6 @@
 
             try {
                 if ($bib_number > 0) {
-
-                    if (Units::KILOMETERS == $distance_unit) {
-                        $travel_time_or_distance *= Units::KILOMETERS_TO_MILES;
-                    } else if (Units::MILES != $distance_unit) {
-                        return __("Invalid distance unit.");}
-
                     $stmt = $db->execSql(
                         "call sp_updateTRSEByBibNumber(
                             :wcProdId,
@@ -514,6 +507,11 @@
                          'runClass' => $run_class_id],
                         $user_error_msg);
                 } else {
+                    if (Units::KILOMETERS == $distance_unit) {
+                        $travel_time_or_distance *= Units::KILOMETERS_TO_MILES;
+                    } else if (Units::MILES != $distance_unit) {
+                        return __("Invalid distance unit {$distance_unit}.");}
+
                     $stmt = $db->execSql(
                         "call sp_updateTRSEForRSE(
                             :wcOrderId,
@@ -542,23 +540,22 @@
 
         // TODO: See if the race was set up to be untimed.
         // Get stage from race information
-        function makeHTMLRaceStageEntry() {   
-            if (array_key_exists(WC_PAIR_ARGS, $_GET)) {
-
-                if (
-                    (array_key_exists(Race_Stage_Entry::HOURS, $_POST) &&
-                    array_key_exists(Race_Stage_Entry::MINUTES, $_POST) &&
-                    array_key_exists(Race_Stage_Entry::SECONDS, $_POST) &&
-                    array_key_exists(WC_PRODUCT_ID, $_POST) &&
-                    array_key_exists(Race_Stage_Entry::BIB_NUMBER_ID, $_POST)) ||
-                    (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST) &&
-                    array_key_exists(WC_ORDER_ID, $_POST) &&
-                    array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST))
-                    ) {
-                        return $this->writeToMush_DB();
-                    } else {
-                        return $this->makeHTMLRaceStageEntryForm();
-                    }
+        function makeHTMLRaceStageEntry() {              
+            if (
+                (array_key_exists(Race_Stage_Entry::HOURS, $_POST) &&
+                array_key_exists(Race_Stage_Entry::MINUTES, $_POST) &&
+                array_key_exists(Race_Stage_Entry::SECONDS, $_POST) &&
+                array_key_exists(WC_PRODUCT_ID, $_POST) &&
+                array_key_exists(Race_Stage_Entry::BIB_NUMBER_ID, $_POST)) ||
+                (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST) &&
+                array_key_exists(WC_ORDER_ID, $_POST) &&
+                array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST))
+            ) {
+                return $this->writeToMush_DB();
+            } else {
+                if (array_key_exists(WC_PAIR_ARGS, $_GET)) {
+                    return $this->makeHTMLRaceStageEntryForm();
+                }
             }
             
             return $this->makeProductSelectionForm();
