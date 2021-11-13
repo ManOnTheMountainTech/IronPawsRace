@@ -87,7 +87,7 @@
     function createFromFinalParams() {
 
       if ("POST" != $_SERVER['REQUEST_METHOD']) {
-        return __("Invalid request method trse.");
+        return;
       }
 
       if (!array_key_exists(self::NONCE_NAME, $_POST)) {
@@ -244,6 +244,11 @@
     function showProductSelectionForm(): HTML_And_Status {
       $ret = new HTML_And_Status();
 
+      if (!getenv('REQUEST_METHOD')) {
+        $ret->status = self::STATUS_TRY_NEXT;
+        return $ret;
+      }
+
       if (array_key_exists(TEAM_ARGS, $_GET)) {
         $team_id = 0;
         $team_name_id = 0;
@@ -322,9 +327,12 @@
           // Otherwise, show the orders, since we have at least one.
         } else {
           $method = POST;
+
+          $nonce = wp_nonce_field(self::NONCE_ACTION, self::NONCE_NAME, true, false);
     
           $ret->html = <<<RACE_PRE
             <form method="{$method}" action="">
+            $nonce
           RACE_PRE;
     
           $race_select = RACE_SELECT;

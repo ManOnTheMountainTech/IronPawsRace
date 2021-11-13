@@ -20,7 +20,7 @@ use WP_Query;
 
         protected \WP_User $cur_user;
 
-        const BIB_NUMBER_ID = 'bib_number_id';
+        const BIB_NUMBER = 'bib_number';
 
         // __construct()
         public function __construct() {
@@ -47,8 +47,10 @@ use WP_Query;
 
         const RACE_STAGE_ENTRY = 'race_stage_entry';
         const RACE_STAGE_ARG = 'race_stage_arg';
+        
         const DISTANCE_UNIT = 'distance_unit';
         const DISTANCE_TRAVELED = 'distance_traveled';
+        const IS_KILOMETERS = 'is_kilometers';
 
         const RAN_CLASS = 'ran_class';
 
@@ -254,10 +256,11 @@ use WP_Query;
                 $bib_number_user  = __('Bib number');
 
                 // Known heredoc bug
-                $bib_number_id = self::BIB_NUMBER_ID;
+                $bib_number = self::BIB_NUMBER;
                 $wc_product_id_arg = WC_PRODUCT_ID;
 
                 $trse_selections_html .= <<<FORM_BODY
+                    Day: <strong>{$race_stage}</strong><br><br>\n
                     <div class="border">\n
                         <div class="hide-overflow disp-flex">\n
                             <div class="def-pad">\n
@@ -275,47 +278,50 @@ use WP_Query;
                         </div>\n
                         <div class="hide-overflow-disp-flex">\n
                             <div class="def-pad">\n
-                                <label for="{$bib_number_id}">{$bib_number_user}</label>\n
+                                <label for="{$bib_number}">{$bib_number_user}</label>\n
                                 <input required type="number" min="1" max="99" 
-                                    id="{$bib_number_id}" name="{$bib_number_id}" 
+                                    id="{$bib_number}" name="{$bib_number}" 
                                     placeholder="{$bib_number_user_placeholder}" class="disp-block">\n
                             </div>\n
                         </div>\n
                     </div>\n
                     <input type="hidden" id="{$wc_product_id_arg}" 
-                    name="{$wc_product_id_arg}" value="{$wcProductId}">\n
+                        name="{$wc_product_id_arg}" value="{$wcProductId}">\n
                 FORM_BODY;
             } else {
-
-                $useKilometers = $trse_params[TRSE::TRSE_PEOPLE_DISTANCE_UNIT] == Units::KILOMETERS;
-                $distance_unit_visible = ($useKilometers) ? __("Mileage:") : __("Kilometerage:");
+                $distance_unit_value = $trse_params[TRSE::TRSE_PEOPLE_DISTANCE_UNIT];
+                $useKilometers = (Units::KILOMETERS == $distance_unit_value);
+                $distance_unit_visible = ($useKilometers) ? __("Kilometerage:") : __("Mileage:");
 
                 $wc_order_id_arg = WC_ORDER_ID;
-                $distance_traveled_label = Race_Stage_Entry::DISTANCE_TRAVELED;
+                $distance_traveled = Race_Stage_Entry::DISTANCE_TRAVELED;
+                $distance_unit_arg = Race_Stage_Entry::DISTANCE_UNIT;
+                $distance_is_in_kilometers = self::IS_KILOMETERS;
 
                 $trse_selections_html .= <<<FORM_BODY
-                    Race Stage: <strong>{$race_stage}</strong><br><br>\n
-                    <div class="border">\n
-                        <div class="hide-overflow disp-flex">\n
-                            <div class="hide-overflow def-pad">\n
-                                <label for="{$distance_traveled_label}">{$distance_unit_visible}</label>\n
-                                <input required type="number" id="mileage" name="mileage" min="0" step="0.1">\n
+                    Race Stage: <strong>{$race_stage}</strong><br><br>
+                    <div class="border">
+                        <div class="hide-overflow disp-flex">
+                            <div class="hide-overflow def-pad">
+                                <label for="{$distance_traveled}">{$distance_unit_visible}</label>
+                                <input required type="number" id="{$distance_traveled}" name="{$distance_traveled}" min="0" step="0.1">\n
                             </div>\n
                         </div>\n
                     </div>\n
                     <input type="hidden" id="{$wc_order_id_arg}" 
-                    name="{$wc_order_id_arg}" value="{$wcOrderId}">\n
+                        name="{$wc_order_id_arg}" value="{$wcOrderId}">
+                    <input type="hidden" id="{$distance_unit_arg}"
+                        name="{$distance_unit_arg}" value="{$distance_unit_value}">
+                    <input type="hidden" id="{$distance_is_in_kilometers}"
+                        name="{$distance_is_in_kilometers}" value="{$useKilometers}">
                 FORM_BODY;
             }
 
             $race_stage_arg = Race_Stage_Entry::RACE_STAGE_ARG;
-            $distance_unit_arg = Race_Stage_Entry::DISTANCE_UNIT;
 
             $trse_selections_html .= <<<HIDDEN_PART
                 <input type="hidden" id="{$race_stage_arg}" 
-                    name="{$race_stage_arg}" value="{$race_stage}">\n
-                <input type="hidden" id="{$distance_unit_arg}"
-                    name="{$distance_unit_arg}" id="{$distance_unit_arg}"
+                    name="{$race_stage_arg}" value="{$race_stage}">
             HIDDEN_PART;
 
             $trse_selections_html .= $this->makeHTMLSelectableOutcomes();
@@ -350,6 +356,7 @@ use WP_Query;
                 $wc_product_id = 0;
                 $outcome = null;
                 $distance_unit = null;
+                $isKilometers = null;
 
                 if ("POST" != $_SERVER["REQUEST_METHOD"]) {
                     return __("Invalid request race-stage-entry-1");
@@ -388,8 +395,8 @@ use WP_Query;
 
                             $travel_time_or_distance = hoursMinutesSecondsToSecondsF($hours,$minutes,$seconds);
 
-                            if (array_key_exists(Race_Stage_Entry::BIB_NUMBER_ID, $_POST)) {
-                                $bib_number = (int)test_number($_POST[Race_Stage_Entry::BIB_NUMBER_ID]);
+                            if (array_key_exists(Race_Stage_Entry::BIB_NUMBER, $_POST)) {
+                                $bib_number = (int)test_number($_POST[Race_Stage_Entry::BIB_NUMBER]);
                                 if ($bib_number <= 0) {
                                     return __("Bib number must be positive and nonzero.");
                                 }
@@ -413,6 +420,10 @@ use WP_Query;
                         return __('distance traveled or time can be set, but not both.');
                     }
 
+                    if ($distance_traveled < 0) {
+                        return __('Distance traveled is less than 0. Please race in the opposite direction next time.');
+                    }
+
                     $travel_time_or_distance = $distance_traveled;
 
                     if (array_key_exists(WC_ORDER_ID, $_POST)) {
@@ -423,12 +434,37 @@ use WP_Query;
 
                         if (array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST)) {
                             $distance_unit = (string)sanitize_text_field($_POST[Race_Stage_Entry::DISTANCE_UNIT]);
-                            if ($distance_unit <= 0) {
-                                return __("disance unit must be positive and nonzero.");
+                            if (!((Units::MILES == $distance_unit) || (Units::KILOMETERS == $distance_unit)))  {
+                                return __("Invalid distance unit supplied.");
                             }
+                        } else {
+                            return __("Distance unit not supplied.");
                         }
-                    } else {
-                        return __("The WooCommerce order id must be specified.");
+
+                        if (array_key_exists(self::IS_KILOMETERS, $_POST)) {
+                            $isKilometers = (string)sanitize_text_field($_POST[self::IS_KILOMETERS]);
+                            if (true == $isKilometers)  {
+                               $distance_traveled *= Units::KILOMETERS_TO_MILES;
+
+                                if (array_key_exists(WC_ORDER_ID, $_POST)) {
+                                    $wc_order_id = test_number($_POST[WC_ORDER_ID]);
+                                    if ($wc_order_id <= 0) {
+                                        return __("WooCommerce Order Id must be > 0");
+                                    }                    
+                                } else {
+                                    return __("The WooCommerce order id must be specified.");
+                                }
+
+                            } else {
+                                if (false != $isKilometers)  {
+                                    return __("Invalid isKilometers.");
+                                }
+                            }
+                        
+                        } else {
+                            return __("The isKilometers flag must be specified.");
+                        }
+
                     }
                 }
 
@@ -540,13 +576,13 @@ use WP_Query;
 
         // TODO: See if the race was set up to be untimed.
         // Get stage from race information
-        function makeHTMLRaceStageEntry() {              
+        function makeHTMLRaceStageEntry() {             
             if (
                 (array_key_exists(Race_Stage_Entry::HOURS, $_POST) &&
                 array_key_exists(Race_Stage_Entry::MINUTES, $_POST) &&
                 array_key_exists(Race_Stage_Entry::SECONDS, $_POST) &&
                 array_key_exists(WC_PRODUCT_ID, $_POST) &&
-                array_key_exists(Race_Stage_Entry::BIB_NUMBER_ID, $_POST)) ||
+                array_key_exists(Race_Stage_Entry::BIB_NUMBER, $_POST)) ||
                 (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST) &&
                 array_key_exists(WC_ORDER_ID, $_POST) &&
                 array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST))
