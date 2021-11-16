@@ -75,8 +75,8 @@ function register_wp_hooks() {
     add_action( 'shutdown', function() {
         while ( @ob_end_flush() );
     } );
-    add_filter( 'load_textdomain_mofile', ['IronPaws\\WP_Hooks', 'load_my_own_textdomain'], 10, 2 );
-    add_action( 'init', ['IronPaws\\WP_Hooks', 'init'] );
+    add_filter('load_textdomain_mofile', ['IronPaws\\WP_Hooks', 'load_my_own_textdomain'], 10, 2 );
+    add_action('init', ['IronPaws\\WP_Hooks', 'init'] );
     add_action('wp_logout',  ['IronPaws\\WP_Hooks', 'login']);
     add_action('wp_login',  ['IronPaws\\WP_Hooks', 'logout']);
     add_action('register_form',  ['IronPaws\\WP_Hooks', 'registration_form']);

@@ -6,16 +6,6 @@
      const non_web_php = '/home/bryany/php/';
                                       // sent out
      const COMPLETED = 'completed';
-
-     class Dogs {
-          const NAME = 'dogNames';
-          const AGE = "dogAge";
-          const OWNER_FIRST_NAME = "dogOwnerFirstName";
-          const OWNER_LAST_NAME = "dogOwnerLastName";
-          const OWNER_EMAIL = "dogOwnerEmail";
-          const OWNER_USER_NAME = "dogOwnerUserName";
-          const OWNER_PERSON_ID = "dogOwnerPersonId";
-     }
      
      const EMAIL = 'email';
      const FIRST_NAME = 'first_name';
@@ -45,11 +35,12 @@
      const TEAM_REGISTRATION = 'team-registration';
      const URI_PREFIX = "https://ironpawsllc.com/";
      const TRSE_WC_CUSTOMER_ID = 'TRSE_WC_CUSTOMER_ID';
+
      const WC_ORDER_ID = 'wc_order_id'; // The Woo Commerce order ID
-     const WC_PRODUCT_ID = 'wc_product_id';
 
      // Product Id <delim> Order Id
      const WC_PAIR_ARGS = 'wc_pair_args';
+     const WC_PRODUCT_ID = 'wc_product_id';
 
      class WP_Defs {
           const IRONPAWS_TEXTDOMAIN = 'ironpaws';
@@ -59,7 +50,7 @@
 
           static function init()
           {
-               self::$GENERIC_INVALID_PARAMETER_MSG = __("An invalid query string were supplied.");  
+               self::$GENERIC_INVALID_PARAMETER_MSG = __("A parameter is invalid.");  
                self::$FORM_INCOMPLETE_MSG = __("Not enough information entered.");
           }
      }

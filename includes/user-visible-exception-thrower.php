@@ -8,7 +8,7 @@
         const INSTANCE = "instance";
 
         static function makeId() {
-            return bin2hex(openssl_random_pseudo_bytes(16));
+            return bin2hex(openssl_random_pseudo_bytes(8));
         }
 
         // @param: $errorCore -> The user-viewed error message to display
@@ -44,8 +44,11 @@
                 $message .= $e->userHTMLMessage . "<br>";
             
             if (property_exists($e, self::INSTANCE)) {
-                $message .= " (Instance: " . $e->instance . ")";
+                $message .= __(" (Instance: ") . $e->instance . ")";
             }
+
+            $data = \get_plugin_data("..\ironpaws.php");
+            $message .= __(" Version=") . $data["Version"];
     
             if (empty($message)) {
                 $message .= "An error occured. Id=" . self::makeId();
