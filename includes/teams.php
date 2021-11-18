@@ -35,7 +35,7 @@
       ["1 Dog scooter",	    0.5,	0.5,	0.5,	0.5,	1,	  0.5,	1,	  1],				
       ["2 Dog scooter",	    0.5,	0.5,	0.5,	0.5,	1,	  0.5,	1,	  1],  // 16
       ["Old dogs rule",     1,    1,    1,    1,    1,    1,    1,    1],
-      ["Off the couch",     1,    1,    1,    1,    1,    1,    1,    1]];  // 18
+      ["Canicross sporting",0.5,  0,    0,    1,    1,    0,    0,    0]];  // 18
       
     const MAX_RACE_CLASSES = 18;
 

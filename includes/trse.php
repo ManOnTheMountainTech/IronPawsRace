@@ -11,7 +11,8 @@
 
   use Automattic\WooCommerce\Client;
   use Automattic\WooCommerce\HttpClient\HttpClientException;
-  use SplDoublyLinkedList;
+use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Html;
+use SplDoublyLinkedList;
 
 // Team Race Stage Entry
   class TRSE extends Teams {
@@ -30,12 +31,6 @@
 
     const NONCE_NAME = 'trse_nonce';
     const NONCE_ACTION = 'trse_nonce_action';
-
-    // The returned html is the first part of a form. The </select> and </form>
-    // tags need to be supplied.
-    const STATUS_TRY_NEXT = 0;
-    // The returned html closed html. No closing HTML tags need to be supplied.
-    const STATUS_DONE = 1;
 
     const COMPLETED = 'completed';
     const UNTIMED = 'untimed';
@@ -58,7 +53,7 @@
 
         $ret = $trse->showProductSelectionForm();
 
-        if (self::STATUS_DONE == $ret->status) {
+        if (Html_Status::STATUS_DONE == $ret->status) {
           return $ret->html;
         }
 
@@ -241,11 +236,11 @@
     // @return: $->status -> STATUS_TRY_NEXT -> Drop through to next step
     //                    -> STATUS_DONE-> Do not drop through, return
     //          $->html   -> the html to show, if any.
-    function showProductSelectionForm(): HTML_And_Status {
-      $ret = new HTML_And_Status();
+    function showProductSelectionForm(): HTML_Status {
+      $ret = new HTML_Status();
 
       if (!getenv('REQUEST_METHOD')) {
-        $ret->status = self::STATUS_TRY_NEXT;
+        $ret->status = HTML_Status::STATUS_TRY_NEXT;
         return $ret;
       }
 
@@ -294,7 +289,7 @@
 
                 // No team for this order?
                 if (is_null($rsd)) {
-                  $select_html .= makeHTMLOptionString(
+                  $select_html .= Html_Help::makeHTMLOptionString(
                     $line_item->product_id . QUERY_ARG_SEPERATOR . 
                     $order->id . QUERY_ARG_SEPERATOR .  
                     $team_id, 
@@ -315,7 +310,7 @@
             'Error determining if orders have a team.', 0, $e);
         }
   
-        $ret->status = self::STATUS_DONE;
+        $ret->status = HTML_Status::STATUS_DONE;
 
         // If we don't have any orders to show, then don't show any
         if (0 == $num_unbound_orders) {

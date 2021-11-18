@@ -29,17 +29,11 @@
       return '<input type=' . $input_type . ' ' . makeHTMLIdString($id, $value) . ">\n";
     }
 
-    function makeHTMLOptionString(string $value, string $description) {
-      $str = <<<FORM_OPTION
-        <option value="{$value}">{$description}</option>
-    FORM_OPTION;
+ 
 
-      return $str . "\n";
-    }
-
-      // Processes get args to wc customer params
-  // @return: The musher name in first and last format
-  function makeWCParamsFromFirstLast() {
+    // Processes get args to wc customer params
+    // @return: The musher name in first and last format
+    function makeWCParamsFromFirstLast() {
     if (isset($_GET[FIRST_NAME]) && isset($_GET[LAST_NAME])) {
       $first_name = $_SESSION[FIRST_NAME] = sanitize_text_field($_GET[FIRST_NAME]);
       $last_name = $_SESSION[LAST_NAME] = sanitize_text_field($_GET[LAST_NAME]);
@@ -53,6 +47,7 @@
       'last_name' => $last_name, 
         'role' => 'all');
     } else {
+      WP_Defs::init();
       throw new \Exception(WP_Defs::$FORM_INCOMPLETE_MSG, FORM_INCOMPLETE_ERROR);
     }
 

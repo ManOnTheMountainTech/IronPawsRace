@@ -1,10 +1,10 @@
 <?php
     namespace IronPaws;
 
-use Throwable;
-use WP_Query;
+    use Throwable;
+    use WP_Query;
 
-    defined( 'ABSPATH' ) || exit;
+    defined('ABSPATH') || exit;
     define("FORM_NAME", "RSE_Form");
 
     require_once 'autoloader.php';
@@ -17,14 +17,44 @@ use WP_Query;
     class Race_Stage_Entry { 
         const NONCE_NAME = "RSE-nonce";
         const NONCE_ACTION = "RSE-nonce-action";
-
+        
         protected \WP_User $cur_user;
 
-        const BIB_NUMBER = 'bib_number';
+        static array $TIMED_PATH_QUERY_ARGS;
+        static array $NON_RACING_POINTS_ARGS;
+        static HTML_Help $timed_html_help;
+        static HTML_Help $non_racing_points;
 
+        static $ERROR_MSG;
+        
         // __construct()
         public function __construct() {
             $this->cur_user = wp_get_current_user();
+
+            self::$TIMED_PATH_QUERY_ARGS = [
+                'hours',
+                'minutes', // 1
+                'seconds',
+                WC_PRODUCT_ID, // 3
+                'bib_number'];
+
+            self::$NON_RACING_POINTS_ARGS = [
+                'howladays',  // 0
+                'volunteering' //  
+            ];
+
+            self::$ERROR_MSG = __("Error in race stage");
+
+            self::$timed_html_help = new HTML_Help(self::$TIMED_PATH_QUERY_ARGS, $_POST);
+            self::$non_racing_points = new HTML_Help(self::$NON_RACING_POINTS_ARGS, $_POST);
+
+            WP_Defs::init();
+        }
+
+        static function throw(int $line_number) {
+            User_Visible_Exception_Thrower::throwErrorCoreException(
+                self::$ERROR_MSG,
+                $line_number);
         }
 
         static function do_shortcode() {
@@ -38,9 +68,17 @@ use WP_Query;
             return (new Race_Stage_Entry())->makeHTMLRaceStageEntry();
         }
 
-        const HOURS = 'hours';
-        const MINUTES = 'minutes';
-        const SECONDS = 'seconds';
+        const QUERY_ARGS_COUNT = 7;
+
+        const HOURS_IDX = 0;
+        const MINUTES_IDX = 1;
+        const SECONDS_IDX = 2;
+        const WC_PRODUCT_ID_IDX = 3;
+        const BIB_NUMBER_IDX = 4;
+        
+        const HOWLADAYS_IDX = 0;
+        const VOLUNTEERING_IDX = 1;
+
         const OUTCOME = 'outcome';
 
         const RACE_STAGE_RESULTS_PARAMS = 'race_stage_results_params';
@@ -69,7 +107,7 @@ use WP_Query;
             $outcome = Race_Stage_Entry::OUTCOMES[$i];
             $name = ucfirst($outcome);
 
-            return makeHTMLOptionString($outcome, $name);
+            return Html_Help::makeHTMLOptionString($outcome, $name);
         }
 
         // TODO: Disqualify based on a CRON job, or anything incomplete
@@ -87,7 +125,7 @@ use WP_Query;
             }
                             
             $outcomes_html .= <<<OUTCOMES_POST
-                </select>
+                </select><br>
             OUTCOMES_POST;
 
             return $outcomes_html;
@@ -121,7 +159,7 @@ use WP_Query;
             foreach($orders as $order) {
                 if ($wc_rest_api->checkRaceEditable_noThrow($order)) {
                     foreach ($order->line_items as $line_item) {
-                    $form_html .= makeHTMLOptionString(
+                    $form_html .= Html_Help::makeHTMLOptionString(
                         "{$line_item->product_id}{$query_arg_seperator}{$order->id}", 
                         $line_item->name);
                     }
@@ -226,7 +264,9 @@ use WP_Query;
 
             $nonce = wp_nonce_field(self::NONCE_ACTION, self::NONCE_NAME, true, false);
 
-            $trse_selections_html = <<<FORM_HEADER
+            $trse_selections_html = "";
+
+            $ran_class_html = <<<FORM_HEADER
                 <form method="post" id="RSE_Form" action="">\n
                 $nonce
                 <div class="hide-overflow def-pad">\n
@@ -246,6 +286,8 @@ use WP_Query;
                 return __("This race has not started.");
             }
 
+            $outcomes_html = $this->makeHTMLSelectableOutcomes();
+
             // Timed race?
             if (Race_Definition::TIMED == $cur_rd_core_info[Race_Definition::CORE_RACE_TYPE]) {
                 // Make sure that the race is still running
@@ -256,11 +298,12 @@ use WP_Query;
                 $bib_number_user  = __('Bib number');
 
                 // Known heredoc bug
-                $bib_number = self::BIB_NUMBER;
+                $bib_number = self::$TIMED_PATH_QUERY_ARGS[self::BIB_NUMBER_IDX];
                 $wc_product_id_arg = WC_PRODUCT_ID;
 
                 $trse_selections_html .= <<<FORM_BODY
-                    Day: <strong>{$race_stage}</strong><br><br>\n
+                    Day: <strong>{$race_stage}</strong><br>\n
+                    {$ran_class_html}
                     <div class="border">\n
                         <div class="hide-overflow disp-flex">\n
                             <div class="def-pad">\n
@@ -274,19 +317,24 @@ use WP_Query;
                             <div class="def-pad">\n
                                 <label for="seconds">{$seconds}</label>\n
                                 <input required type="number" min="0" max="60" id="seconds" name="seconds" step="0.1" class="disp-block">\n
-                            </div>\n
-                        </div>\n
-                        <div class="hide-overflow-disp-flex">\n
-                            <div class="def-pad">\n
-                                <label for="{$bib_number}">{$bib_number_user}</label>\n
+                            </div>
+                        </div>
+                        <div class="hide-overflow disp-flex">
+                            <div class="def-pad">
+                                <label for="{$bib_number}">{$bib_number_user}</label>
                                 <input required type="number" min="1" max="99" 
                                     id="{$bib_number}" name="{$bib_number}" 
-                                    placeholder="{$bib_number_user_placeholder}" class="disp-block">\n
-                            </div>\n
-                        </div>\n
-                    </div>\n
+                                    placeholder="{$bib_number_user_placeholder}" class="disp-block">
+                            </div>
+                        </div>
+                        <div class="hide-overflow disp-flex">
+                            <div class="def-pad">
+                                {$outcomes_html}
+                            </div>
+                        </div>
+                    </div>
                     <input type="hidden" id="{$wc_product_id_arg}" 
-                        name="{$wc_product_id_arg}" value="{$wcProductId}">\n
+                        name="{$wc_product_id_arg}" value="{$wcProductId}">
                 FORM_BODY;
             } else {
                 $distance_unit_value = $trse_params[TRSE::TRSE_PEOPLE_DISTANCE_UNIT];
@@ -299,12 +347,14 @@ use WP_Query;
                 $distance_is_in_kilometers = self::IS_KILOMETERS;
 
                 $trse_selections_html .= <<<FORM_BODY
-                    Race Stage: <strong>{$race_stage}</strong><br><br>
+                    Race stage: <strong>{$race_stage}</strong><br>
+                    {$ran_class_html}
                     <div class="border">
                         <div class="hide-overflow disp-flex">
                             <div class="hide-overflow def-pad">
                                 <label for="{$distance_traveled}">{$distance_unit_visible}</label>
                                 <input required type="number" id="{$distance_traveled}" name="{$distance_traveled}" min="0" step="0.1">\n
+                                {$outcomes_html}
                             </div>\n
                         </div>\n
                     </div>\n
@@ -324,7 +374,12 @@ use WP_Query;
                     name="{$race_stage_arg}" value="{$race_stage}">
             HIDDEN_PART;
 
-            $trse_selections_html .= $this->makeHTMLSelectableOutcomes();
+            $trse_selections_html .= "<br>" . HTML_Help::makeHTMLYesNoOptionString(
+                self::$NON_RACING_POINTS_ARGS[self::HOWLADAYS_IDX], 
+                __("Did you do any howladays?")) . "<br>";
+            $trse_selections_html .= HTML_Help::makeHTMLYesNoOptionString(
+                self::$NON_RACING_POINTS_ARGS[self::VOLUNTEERING_IDX], 
+                __("Did you volunteer?")) . "<br>";
 
             //$trse_selections_html .= "</div>\n"; // for border
 
@@ -332,11 +387,130 @@ use WP_Query;
 
             $trse_selections_html .= <<<FORM_END_GAME
                 <br>\n
-                <button type="submit">{$record_to_server}</button>\n
-            </form>\n
+                    <button type="submit">{$record_to_server}</button>\n
+                </form>\n
             FORM_END_GAME;
 
             return $trse_selections_html;
+        }
+
+        function checkNonceState() {
+            if ("POST" != $_SERVER["REQUEST_METHOD"]) {
+                User_Visible_Exception_Thrower::throwErrorCoreException(__("Invalid request race-stage-entry-2"));
+            }
+            
+            if (array_key_exists(self::NONCE_NAME, $_POST)) {
+                if (!wp_verify_nonce($_POST[self::NONCE_NAME], self::NONCE_ACTION)) {
+                    User_Visible_Exception_Thrower::throwErrorCoreException(__("Security check failed race-stage-entry."));
+                }
+            } else {
+                User_Visible_Exception_Thrower::throwErrorCoreException(__("Nonce not provided race-stage-entry."));
+            }
+        }
+
+        // Writes out the parameters for the timed path to the database
+        function writeTimedPathToMushDB(): string {
+            try {
+                $this->checkNonceState();
+
+                $hours = -1;
+                $minutes = -1;
+                $seconds = -1.0;
+                $bib_number = 0;
+                $wc_product_id = 0;
+                $travel_time = -1;
+
+                // timed path
+                // Requires: hours, minutes, seconds, bib_number, wc_product id
+                $hours = (int)test_number($_POST[self::$TIMED_PATH_QUERY_ARGS[self::HOURS_IDX]]);  
+                if ($hours < 0) {
+                    self::throw(__LINE__);
+                }
+
+                $minutes = (int)test_number($_POST[self::$TIMED_PATH_QUERY_ARGS[self::MINUTES_IDX]]); 
+                if ($minutes < 0) {
+                    self::throw(__LINE__);
+                }
+
+                $seconds = (int)test_number($_POST[self::$TIMED_PATH_QUERY_ARGS[self::SECONDS_IDX]]);
+                if ($seconds < 0) {
+                    self::throw(__LINE__);
+                }
+                
+                $seconds = round($seconds, 1, PHP_ROUND_HALF_DOWN);
+
+                $travel_time = hoursMinutesSecondsToSecondsF($hours,$minutes,$seconds);
+
+                $bib_number = (int)test_number($_POST[self::$TIMED_PATH_QUERY_ARGS[self::BIB_NUMBER_IDX]]);
+                if ($bib_number <= 0) {
+                    self::throw(__LINE__);
+                }
+                            
+                $wc_product_id = (int)test_number($_POST[WC_PRODUCT_ID]);
+                if ($wc_product_id <= 0) {
+                    self::throw(__LINE__);
+                }
+
+                $common = $this->getCommonArgs();
+            } catch (\Exception $e) {
+                return WP_Defs::$GENERIC_INVALID_PARAMETER_MSG;
+            }
+
+            $stmt = null;
+
+            try {
+            $stmt = (new Mush_DB)->execSql(
+                "call sp_updateTRSEByBibNumber(
+                    :wcProdId,
+                    :bibNumber,
+                    :secondsF,
+                    :outcome,
+                    :raceStage,
+                    :runClass)",
+                ['wcProdId' => $wc_product_id,
+                 'bibNumber' => $bib_number,
+                 'secondsF' => $travel_time,
+                 'outcome' => $common->outcome,
+                 'raceStage' => $common->race_stage,
+                 'runClass' => $common->run_class_id],
+                $common->user_error_msg);
+            } catch (\Exception $e) {
+                return WP_Defs::$GENERIC_INVALID_PARAMETER_MSG;
+            }
+
+            return $this->cleanup($stmt);
+        }
+
+        function cleanup($stmt): string {
+            unset($_GET);
+            unset($_POST);
+
+            if (is_null($stmt)) {
+                return __("The race stage entry could not be recorded.");
+            }
+
+            return __("The race entry has been recorded.");
+        }
+
+        function validateDistanceRaceQueryArgs() {
+            try {
+                if (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST)) {
+                    if (array_key_exists(WC_ORDER_ID, $_POST)) {
+                        if (array_key_exists(self::IS_KILOMETERS, $_POST)) {
+                            if (array_key_exists(WC_ORDER_ID, $_POST)) {
+                                if (array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST)) {
+                                    return (self::$non_racing_points->validateQueryArgs());}
+                            } else {self::throw(__LINE__);}
+                        } else {self::throw(__LINE__);}
+                    } else {self::throw(__LINE__);}
+                }
+
+                return HTML_Status::STATUS_TRY_NEXT;
+            } catch (\Exception $e) {
+                var_debug($e);
+                error_log(print_r($e, true));
+                return WP_Defs::$GENERIC_INVALID_PARAMETER_MSG;
+            }
         }
 
         // params: $_POST
@@ -345,253 +519,147 @@ use WP_Query;
         //  -> mileage, order id
         //  and
         //  -> Race stage, ran class, and outcome - Enum as string
-        function writeToMush_DB() {
+        function writeDistancePathToMushDB() {
+            // TODO: Currentelly we may end up doing this twice.
+            //      revisit after the security implications are understood.
             try {
-                $hours = -1;
-                $minutes = -1;
-                $seconds = -1.0;
-                $travel_time_or_distance = -1;
-                $bib_number = 0;
+                $this->checkNonceState();
+
+                $distance = -1;
                 $wc_order_id = 0;
-                $wc_product_id = 0;
-                $outcome = null;
                 $distance_unit = null;
                 $isKilometers = null;
 
-                if ("POST" != $_SERVER["REQUEST_METHOD"]) {
-                    return __("Invalid request race-stage-entry-1");
-                }
-
-                if (array_key_exists(self::NONCE_NAME, $_POST)) {
-                    if (!wp_verify_nonce($_POST[self::NONCE_NAME], self::NONCE_ACTION)) {
-                        return __("Security check failed race-stage-entry.");
-                    }
-                } else {
-                    return __("Nonce not provided race-stage-entry.");
-                }
-
-                // timed path
-                // Requires: hours, minutes, seconds, bib_number, wc_product id
-                if (array_key_exists(Race_Stage_Entry::HOURS, $_POST)) {
-                    $hours = (int)test_number($_POST[Race_Stage_Entry::HOURS]);  
-
-                    if ($hours < 0) {
-                        return __("Hours must be positive, you cannot go back in time yet.");
-                    }
-
-                    if (array_key_exists(Race_Stage_Entry::MINUTES, $_POST)) {
-                        $minutes = (int)test_number($_POST[Race_Stage_Entry::MINUTES]);
-                        if ($minutes < 0) {
-                            return __("Minutes must be positive. No going back in time permitted.");
-                        }
-
-                        if (array_key_exists(Race_Stage_Entry::SECONDS, $_POST)) {
-                            $seconds = (int)test_number($_POST[Race_Stage_Entry::SECONDS]);
-                            if ($seconds < 0) {
-                                return __("Seconds must be positive. Don't be so negative.");
-                            }
-                            
-                            $seconds = round($seconds, 1, PHP_ROUND_HALF_DOWN);
-
-                            $travel_time_or_distance = hoursMinutesSecondsToSecondsF($hours,$minutes,$seconds);
-
-                            if (array_key_exists(Race_Stage_Entry::BIB_NUMBER, $_POST)) {
-                                $bib_number = (int)test_number($_POST[Race_Stage_Entry::BIB_NUMBER]);
-                                if ($bib_number <= 0) {
-                                    return __("Bib number must be positive and nonzero.");
-                                }
-
-                                if (array_key_exists(WC_PRODUCT_ID, $_POST)) {
-                                    $wc_product_id = (int)test_number($_POST[WC_PRODUCT_ID]);
-                                    if ($wc_product_id <= 0) {
-                                        return __("Product id must be positive and nonzero.");
-                                    }
-                                }
-                            }                            
-                        }
-                    }
-                }
-
                 // Distance traveled by bib number
                 // Requires: DISTANCE_TRAVELED, WC_ORDER_ID, and DISTANCE_UNiT
-                if (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST)) {
-                    $distance_traveled = test_number($_POST[Race_Stage_Entry::DISTANCE_TRAVELED]);
-                    if (($distance_traveled >= 0) && ($wc_product_id > 0)) {
-                        return __('distance traveled or time can be set, but not both.');
-                    }
-
-                    if ($distance_traveled < 0) {
-                        return __('Distance traveled is less than 0. Please race in the opposite direction next time.');
-                    }
-
-                    $travel_time_or_distance = $distance_traveled;
-
-                    if (array_key_exists(WC_ORDER_ID, $_POST)) {
-                        $wc_order_id = test_number($_POST[WC_ORDER_ID]);
-                        if ($wc_order_id <= 0) {
-                            return __("WooCommerce Order Id must be > 0");
-                        }
-
-                        if (array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST)) {
-                            $distance_unit = (string)sanitize_text_field($_POST[Race_Stage_Entry::DISTANCE_UNIT]);
-                            if (!((Units::MILES == $distance_unit) || (Units::KILOMETERS == $distance_unit)))  {
-                                return __("Invalid distance unit supplied.");
-                            }
-                        } else {
-                            return __("Distance unit not supplied.");
-                        }
-
-                        if (array_key_exists(self::IS_KILOMETERS, $_POST)) {
-                            $isKilometers = (string)sanitize_text_field($_POST[self::IS_KILOMETERS]);
-                            if (true == $isKilometers)  {
-                               $distance_traveled *= Units::KILOMETERS_TO_MILES;
-
-                                if (array_key_exists(WC_ORDER_ID, $_POST)) {
-                                    $wc_order_id = test_number($_POST[WC_ORDER_ID]);
-                                    if ($wc_order_id <= 0) {
-                                        return __("WooCommerce Order Id must be > 0");
-                                    }                    
-                                } else {
-                                    return __("The WooCommerce order id must be specified.");
-                                }
-
-                            } else {
-                                if (false != $isKilometers)  {
-                                    return __("Invalid isKilometers.");
-                                }
-                            }
-                        
-                        } else {
-                            return __("The isKilometers flag must be specified.");
-                        }
-
-                    }
+                $distance_traveled = test_number($_POST[Race_Stage_Entry::DISTANCE_TRAVELED]);
+                if ($distance_traveled < 0) {
+                    self::throw(__LINE__);
                 }
 
-                if (($wc_product_id <= 0) && ($wc_order_id <= 0)) {
-                    return __("Not all parameters were provided.");
+                $distance = $distance_traveled;
+
+                $wc_order_id = test_number($_POST[WC_ORDER_ID]);
+                if ($wc_order_id <= 0) {
+                    self::throw(__LINE__);
                 }
 
-                if (array_key_exists(Race_Stage_Entry::RACE_STAGE_ARG, $_POST)) {
-                    $race_stage = test_number($_POST[Race_Stage_Entry::RACE_STAGE_ARG]);
-                    if ($race_stage < 0) {
-                        return __("Race stage must be greater than 0.");
-                    }
+                $distance_unit = (string)sanitize_text_field($_POST[Race_Stage_Entry::DISTANCE_UNIT]);
+                if (!((Units::MILES == $distance_unit) || (Units::KILOMETERS == $distance_unit))) {
+                    self::throw(__LINE__);
+                }
+            
+                $isKilometers = (string)sanitize_text_field($_POST[self::IS_KILOMETERS]);
+                if (true == $isKilometers)  {
+                    $distance_traveled *= Units::KILOMETERS_TO_MILES;
                 } else {
-                    return __("The race stage must be provided.");
+                    // No telling what could be in isKilometers
+                    if (false != $isKilometers)  {
+                        self::throw(__LINE__);
+                    }
                 }
 
-                if (array_key_exists(Race_Stage_Entry::OUTCOME, $_POST)) {
-                    $outcome = sanitize_text_field($_POST[Race_Stage_Entry::OUTCOME]);
-                    if (!in_array($outcome, Race_Stage_Entry::OUTCOMES)) {
-                        return __("Invalid race outcome supplied.");
-                    }
+                $wc_order_id = (int)test_number($_POST[WC_ORDER_ID]);
+                if ($wc_order_id <= 0) {
+                    self::throw(__LINE__);
+                }   
 
-                    if ($race_stage < 0) {
-                        return __("The race stage was not set properly.");
-                    }
-                } else {
-                    return __("The race outcome must be provided.");
-                }
-              
-                if (array_key_exists(Race_Stage_Entry::RAN_CLASS, $_POST)) {
-                    $run_class_id = test_number($_POST[Race_Stage_Entry::RAN_CLASS]);
-                    if ($run_class_id < 0) {
-                        return __("Run class id must be greater than 0");
-                    }
-                    if ($run_class_id > Teams::MAX_RUN_RACE_CLASSES) {
-                        return __("No such run class id.");
-                    }
-                } else {
-                    return __("The class ran in must be provided.");
-                }
-
-            } catch(\Exception $e) {
-                return $this->defs->GENERIC_INVALID_PARAMETER_MSG;
-            }
-
-            try {
-                $db = new Mush_DB();
-            } catch(\PDOException $e) {
-                return __(Strings::$CONTACT_SUPPORT . Strings::$ERROR) . 'reg-a-dog_connect.';
-            }
-
-            if (is_wp_debug()) {
-                // TODO: Kilometrage?
-                "wcOrderId={$wc_order_id}, distance traveled/time={$travel_time_or_distance}, outcome={$outcome}<br>";
-                "travel_time_or_distance={$travel_time_or_distance}, raceStage={$race_stage}<br>";
-                "runClassId={$run_class_id}<br>";
-            }
-
-            $user_error_msg = __("A failure occured writing this team race stage entry.");
-
-            try {
-                if ($bib_number > 0) {
-                    $stmt = $db->execSql(
-                        "call sp_updateTRSEByBibNumber(
-                            :wcProdId,
-                            :bibNumber,
-                            :secondsF,
-                            :outcome,
-                            :raceStage,
-                            :runClass)",
-                        ['wcProdId' => $wc_product_id,
-                         'bibNumber' => $bib_number,
-                         'secondsF' => $travel_time_or_distance,
-                         'outcome' => $outcome,
-                         'raceStage' => $race_stage,
-                         'runClass' => $run_class_id],
-                        $user_error_msg);
-                } else {
-                    if (Units::KILOMETERS == $distance_unit) {
-                        $travel_time_or_distance *= Units::KILOMETERS_TO_MILES;
-                    } else if (Units::MILES != $distance_unit) {
-                        return __("Invalid distance unit {$distance_unit}.");}
-
-                    $stmt = $db->execSql(
-                        "call sp_updateTRSEForRSE(
-                            :wcOrderId,
-                            :distance, 
-                            :outcome,  
-                            :raceStage, 
-                            :runClassId)",
-                        ['wcOrderId' => $wc_order_id, 
-                        'distance' => $travel_time_or_distance, 
-                        'outcome' => $outcome, 
-                        'raceStage' => $race_stage, 
-                        'runClassId' => $run_class_id],
-                        $user_error_msg);
-                }
-
-                unset($_GET);
-                unset($_POST);
-
-                $user_return_msg = is_null($stmt) ? "Failed to write" : "Successfully wrote";
-                return "{$user_return_msg} race stage <strong>{$race_stage}</strong> to the server.";
+                $common = $this->getCommonArgs();
             } catch (\Exception $e) {
-                return User_Visible_Exception_Thrower::throwErrorCoreException(
-                    __("Unable to write the race stage information."), 0, $e);
+                var_debug($e);
+                write_log(print_r($e, true));
+                return WP_Defs::$GENERIC_INVALID_PARAMETER_MSG;
             }
+            
+            if (Units::KILOMETERS == $distance_unit) {
+                $distance *= Units::KILOMETERS_TO_MILES;
+            } else if (Units::MILES != $distance_unit) {
+                return __("Invalid distance unit {$distance_unit}.");}
+
+            $stmt = null;
+
+            try {
+                $stmt = (new Mush_DB)->execSql(
+                    "call sp_updateTRSEForRSE(
+                        :wcOrderId,
+                        :distance, 
+                        :outcome,  
+                        :raceStage, 
+                        :runClassId)",
+                    ['wcOrderId' => $wc_order_id, 
+                    'distance' => $distance, 
+                    'outcome' => $common->outcome, 
+                    'raceStage' => $common->race_stage, 
+                    'runClassId' => $common->run_class_id],
+                    $common->user_error_msg);   
+            } catch (\Exception $e) {
+                return WP_Defs::$GENERIC_INVALID_PARAMETER_MSG;
+            }
+
+            return $this->cleanup($stmt);
+        }
+
+        // Gets the common args and puts them into a structure
+        // Returning a string would tightly bind this function to other functions.
+        function getCommonArgs() {
+            $common = new Race_Stage_Common();
+
+            if (array_key_exists(Race_Stage_Entry::RACE_STAGE_ARG, $_POST)) {
+                $common->race_stage = test_number($_POST[Race_Stage_Entry::RACE_STAGE_ARG]);
+                if ($common->race_stage < 0) {
+                    return __("Race stage must be greater than 0.");
+                }
+            } else {
+                return __("The race stage must be provided.");
+            }
+
+            if (array_key_exists(Race_Stage_Entry::OUTCOME, $_POST)) {
+                $common->outcome = sanitize_text_field($_POST[Race_Stage_Entry::OUTCOME]);
+                if (!in_array($common->outcome, Race_Stage_Entry::OUTCOMES)) {
+                    return __("Invalid race outcome supplied.");
+                }
+
+                if ($common->race_stage < 0) {
+                    return __("The race stage was not set properly.");
+                }
+            } else {
+                return __("The race outcome must be provided.");
+            }
+            
+            if (array_key_exists(Race_Stage_Entry::RAN_CLASS, $_POST)) {
+                $common->run_class_id = test_number($_POST[Race_Stage_Entry::RAN_CLASS]);
+                if ($common->run_class_id < 0) {
+                    return __("Run class id must be greater than 0");
+                }
+                if ($common->run_class_id > Teams::MAX_RUN_RACE_CLASSES) {
+                    return __("No such run class id.");
+                }
+            } else {
+                return __("The class ran in must be provided.");
+            }
+
+            return $common;
+        }
+
+        function validateTimedRaceQueryArgs() {
+            if (self::$timed_html_help->validateQueryArgs()) {
+                if (self::$non_racing_points->validateQueryArgs()) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // TODO: See if the race was set up to be untimed.
         // Get stage from race information
         function makeHTMLRaceStageEntry() {             
-            if (
-                (array_key_exists(Race_Stage_Entry::HOURS, $_POST) &&
-                array_key_exists(Race_Stage_Entry::MINUTES, $_POST) &&
-                array_key_exists(Race_Stage_Entry::SECONDS, $_POST) &&
-                array_key_exists(WC_PRODUCT_ID, $_POST) &&
-                array_key_exists(Race_Stage_Entry::BIB_NUMBER, $_POST)) ||
-                (array_key_exists(Race_Stage_Entry::DISTANCE_TRAVELED, $_POST) &&
-                array_key_exists(WC_ORDER_ID, $_POST) &&
-                array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST))
-            ) {
-                return $this->writeToMush_DB();
-            } else {
-                if (array_key_exists(WC_PAIR_ARGS, $_GET)) {
-                    return $this->makeHTMLRaceStageEntryForm();
-                }
+            if (Html_Status::STATUS_DONE == $this->validateTimedRaceQueryArgs()) {
+                return $this->writeTimedPathToMushDB();
+            } else if (Html_Status::STATUS_DONE == $this->validateDistanceRaceQueryArgs()) {
+                return $this->writeDistancePathToMushDB();
+            } else if (array_key_exists(WC_PAIR_ARGS, $_GET)) {
+                return $this->makeHTMLRaceStageEntryForm();
             }
             
             return $this->makeProductSelectionForm();
