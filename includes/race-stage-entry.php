@@ -177,8 +177,11 @@
             return $form_html;
         } // end: makeProductSelectionForm
 
-
-        // IN: GET -> <product id> <QUERY_ARG_SEPERATOR> <order id>
+        // Produces a string that contains all of the elements for the race
+        // stage entry form.
+        // @param: IN: GET -> <product id> <QUERY_ARG_SEPERATOR> <order id>
+        // @return: String -> An HTML strign containing all of the elements
+        //   between the <form> and </form> tags.
         function makeHTMLRaceStageEntryForm() {
             $wcProductId = 0;
             $wcOrderId = 0;
@@ -365,6 +368,13 @@
                     <input type="hidden" id="{$distance_is_in_kilometers}"
                         name="{$distance_is_in_kilometers}" value="{$useKilometers}">
                 FORM_BODY;
+
+                $trse_selections_html .= "<br>" . HTML_Help::makeHTMLYesNoOptionString(
+                    self::$NON_RACING_POINTS_ARGS[self::HOWLADAYS_IDX], 
+                    __("Did you do any howladays?")) . "<br>";
+                $trse_selections_html .= HTML_Help::makeHTMLYesNoOptionString(
+                    self::$NON_RACING_POINTS_ARGS[self::VOLUNTEERING_IDX], 
+                    __("Did you volunteer?")) . "<br>";
             }
 
             $race_stage_arg = Race_Stage_Entry::RACE_STAGE_ARG;
@@ -374,16 +384,9 @@
                     name="{$race_stage_arg}" value="{$race_stage}">
             HIDDEN_PART;
 
-            $trse_selections_html .= "<br>" . HTML_Help::makeHTMLYesNoOptionString(
-                self::$NON_RACING_POINTS_ARGS[self::HOWLADAYS_IDX], 
-                __("Did you do any howladays?")) . "<br>";
-            $trse_selections_html .= HTML_Help::makeHTMLYesNoOptionString(
-                self::$NON_RACING_POINTS_ARGS[self::VOLUNTEERING_IDX], 
-                __("Did you volunteer?")) . "<br>";
-
             //$trse_selections_html .= "</div>\n"; // for border
 
-            $record_to_server = "Record to server.";
+            $record_to_server = "Record to server";
 
             $trse_selections_html .= <<<FORM_END_GAME
                 <br>\n
@@ -641,14 +644,11 @@
             return $common;
         }
 
+        // Encapsulator for validating the timed race query args
+        // @return: bool -> true = timed path entaance state valiated
+        //  false -> timed path entrance state not validated
         function validateTimedRaceQueryArgs() {
-            if (self::$timed_html_help->validateQueryArgs()) {
-                if (self::$non_racing_points->validateQueryArgs()) {
-                    return true;
-                }
-            }
-
-            return false;
+            return (self::$timed_html_help->validateQueryArgs());
         }
 
         // TODO: See if the race was set up to be untimed.

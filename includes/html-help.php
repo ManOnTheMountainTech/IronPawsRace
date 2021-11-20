@@ -54,8 +54,8 @@
                 <select id="{$id}" name="{$id}">
             HTML;
         
-            $html .= Html_Help::makeHTMLOptionString($id, Strings::$USER_YES);
             $html .= Html_Help::makeHTMLOptionString($id, Strings::$USER_NO);
+            $html .= Html_Help::makeHTMLOptionString($id, Strings::$USER_YES);
         
             $html .= '</select>';
         return $html;
