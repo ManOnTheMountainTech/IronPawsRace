@@ -7,7 +7,7 @@
  * Author URI: https://supermooseapps.com
  * Text Domain: ironpaws
  * Domain Path: /languages
- * Version: 0.3.0
+ * Version: 0.3.1
  */
 
 /* Place custom code below this line. */
@@ -57,7 +57,7 @@ function register_shortcodes() {
 function register_wp_hooks() {
     //register_activation_hook(__FILE__, ['IronPaws\\WP_Hooks', 'install']);
     add_action('user_register', ['IronPaws\\WP_Hooks', 'user_register']);
-    add_action('delete_user', 'IronPaws\\ironpaws_wp_delete_user');
+    add_action('delete_user',   ['IronPaws\\WP_Hooks', 'delete_user']);
     add_action('delete_user_form', 'IronPaws\\ironpaws_wp_delete_user_form');
 
     // https://stackoverflow.com/questions/5034826/wp-nav-menu-change-sub-menu-class-name

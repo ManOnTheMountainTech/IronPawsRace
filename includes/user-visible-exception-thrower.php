@@ -8,7 +8,7 @@
         const INSTANCE = "instance";
 
         static function makeId() {
-            return bin2hex(openssl_random_pseudo_bytes(8));
+            return bin2hex(random_bytes(8));
         }
 
         // @param: $errorCore -> The user-viewed error message to display
