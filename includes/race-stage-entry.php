@@ -2,7 +2,6 @@
     namespace IronPaws;
 
     use Throwable;
-    use WP_Query;
 
     defined('ABSPATH') || exit;
     define("FORM_NAME", "RSE_Form");
@@ -14,11 +13,22 @@
     require_once 'strings.php';
     require_once 'add-a-team.php';
 
+    // Displays the race stage entry form, and uses a 2-pass method for
+    // validation. 
+    //  The form starts out in a data collection state, which presents the RSE
+    //  form. Stage 1 validation ("Validators") run and determine what arguments
+    //  are required for the next stage. When all the arguments for stage 1
+    //  validation are present, stage 2 validation commences. Stage 2 validation
+    //  proves that all arguments are of the correct type and that the contents
+    //  are valid and sanitized.
     class Race_Stage_Entry { 
         const NONCE_NAME = "RSE-nonce";
         const NONCE_ACTION = "RSE-nonce-action";
         
         protected \WP_User $cur_user;
+      
+        const HOWLADAYS_IDX = 0;
+        const VOLUNTEERING_IDX = 1;
 
         static array $TIMED_PATH_QUERY_ARGS;
         static array $NON_RACING_POINTS_ARGS;
@@ -75,9 +85,6 @@
         const SECONDS_IDX = 2;
         const WC_PRODUCT_ID_IDX = 3;
         const BIB_NUMBER_IDX = 4;
-        
-        const HOWLADAYS_IDX = 0;
-        const VOLUNTEERING_IDX = 1;
 
         const OUTCOME = 'outcome';
 
@@ -348,6 +355,10 @@
                 $distance_traveled = Race_Stage_Entry::DISTANCE_TRAVELED;
                 $distance_unit_arg = Race_Stage_Entry::DISTANCE_UNIT;
                 $distance_is_in_kilometers = self::IS_KILOMETERS;
+                $howladays_user = __("Did you do a howleday? If so, please enter the link. Otherwise, leave this blank.");
+                $howladays_id = self::$NON_RACING_POINTS_ARGS[self::HOWLADAYS_IDX];
+                $volunteering_user = __("Did you volunteer? If so, please enter the description. Otherwise, leave this blank.");
+                $volunteering_id = self::$NON_RACING_POINTS_ARGS[self::VOLUNTEERING_IDX];
 
                 $trse_selections_html .= <<<FORM_BODY
                     Race stage: <strong>{$race_stage}</strong><br>
@@ -358,6 +369,12 @@
                                 <label for="{$distance_traveled}">{$distance_unit_visible}</label>
                                 <input required type="number" id="{$distance_traveled}" name="{$distance_traveled}" min="0" step="0.1">\n
                                 {$outcomes_html}
+                                <label for="{$howladays_id}">{$howladays_user}</label><br>
+                                <input type="text" id="{$howladays_id}"
+                                    name="{$howladays_id}" size="60"><br>
+                                <label for="{$volunteering_id}">{$volunteering_user}</label><br>
+                                <input type="text" id="{$volunteering_id}"
+                                    name="{$volunteering_id}" size="60">
                             </div>\n
                         </div>\n
                     </div>\n
@@ -367,14 +384,8 @@
                         name="{$distance_unit_arg}" value="{$distance_unit_value}">
                     <input type="hidden" id="{$distance_is_in_kilometers}"
                         name="{$distance_is_in_kilometers}" value="{$useKilometers}">
-                FORM_BODY;
 
-                $trse_selections_html .= "<br>" . HTML_Help::makeHTMLYesNoOptionString(
-                    self::$NON_RACING_POINTS_ARGS[self::HOWLADAYS_IDX], 
-                    __("Did you do any howladays?")) . "<br>";
-                $trse_selections_html .= HTML_Help::makeHTMLYesNoOptionString(
-                    self::$NON_RACING_POINTS_ARGS[self::VOLUNTEERING_IDX], 
-                    __("Did you volunteer?")) . "<br>";
+                FORM_BODY;
             }
 
             $race_stage_arg = Race_Stage_Entry::RACE_STAGE_ARG;
@@ -484,6 +495,8 @@
             return $this->cleanup($stmt);
         }
 
+        // Reset the form to the default state,
+        // and notify the user of the outcome.
         function cleanup($stmt): string {
             unset($_GET);
             unset($_POST);
@@ -516,6 +529,8 @@
             }
         }
 
+        // Performs 2nd stage parameter validation for timed path,
+        // and writes the results to the db.
         // params: $_POST
         //  -> Hours, Minutes, Seconds, Race stage, bib_number, product id
         //  or
@@ -523,15 +538,19 @@
         //  and
         //  -> Race stage, ran class, and outcome - Enum as string
         function writeDistancePathToMushDB() {
+            $distance = -1;
+            $wc_order_id = 0;
+            $distance_unit = null;
+            $isKilometers = null;
+            $howladay = "";
+            $volunteering = "";
+
+            set_time_limit(5);
+
             // TODO: Currentelly we may end up doing this twice.
             //      revisit after the security implications are understood.
             try {
                 $this->checkNonceState();
-
-                $distance = -1;
-                $wc_order_id = 0;
-                $distance_unit = null;
-                $isKilometers = null;
 
                 // Distance traveled by bib number
                 // Requires: DISTANCE_TRAVELED, WC_ORDER_ID, and DISTANCE_UNiT
@@ -568,6 +587,12 @@
                 }   
 
                 $common = $this->getCommonArgs();
+
+                $howladays_idx = self::$NON_RACING_POINTS_ARGS[self::HOWLADAYS_IDX];
+                $howladay = (string)sanitize_text_field($_POST[$howladays_idx]);
+
+                $volunteering_idx = self::$NON_RACING_POINTS_ARGS[self::VOLUNTEERING_IDX];
+                $volunteering = (string)sanitize_text_field($_POST[$volunteering_idx]);
             } catch (\Exception $e) {
                 var_debug($e);
                 write_log(print_r($e, true));
@@ -582,7 +607,9 @@
             $stmt = null;
 
             try {
-                $stmt = (new Mush_DB)->execSql(
+                $db = new Mush_DB();
+
+                $stmt = $db->execSql(
                     "call sp_updateTRSEForRSE(
                         :wcOrderId,
                         :distance, 
@@ -594,12 +621,52 @@
                     'outcome' => $common->outcome, 
                     'raceStage' => $common->race_stage, 
                     'runClassId' => $common->run_class_id],
-                    $common->user_error_msg);   
+                    $common->user_error_msg);
+
+                $event_type = null;
+
+                $write_args = new External_Refs_Write_Args();
+                $write_args->common = $common;
+                $write_args->db = $db;
+                    
+                if (!empty($howladay)) {
+                    $this->writeExternalRef($write_args, $howladay, External_Refs::HOWLEDAY);
+                } 
+
+                if (!empty($volunteering)) {
+                    $this->writeExternalRef($write_args, $volunteering, External_Refs::VOLUNTEER_EXTERNAL);
+                }
             } catch (\Exception $e) {
                 return WP_Defs::$GENERIC_INVALID_PARAMETER_MSG;
             }
 
             return $this->cleanup($stmt);
+        }
+
+        // @param: External_Refs_Write_Args $args -> Common arguments that don't change between calls
+        // @param: $er_name
+        function writeExternalRef(External_Refs_Write_Args $args, string $er_name, string $event_type): void {
+            if (!$args->person_id) {   
+                $args->person_id = $args->db->execAndReturnInt(
+                    "call sp_getPersonDetailsFromUserId(:wcOrderId)",
+                    ['wcOrderId' => $this->cur_user->ID],
+                    $args->common->user_error_msg);
+            }
+
+            $erId = $args->db->execAndReturnIntOrNull("CALL sp_getERId(:name, :enum_type)",
+            ['name' => $er_name, 'enum_type' => External_Refs::HOWLEDAY],
+            __("Can't get details about howledays.")); 
+
+            // If there is no external ref, then we know that there will be 1 soon.
+            if (empty($erId)) {
+                $erId = $args->db->execAndReturnInt("CALL sp_addER(:name, :enum_type)",
+                ["name" => $er_name, "enum_type" => $event_type],
+                "Can't add howleday details.");
+            }
+
+            $args->db->execSql("CALL sp_addNRP(:person_id, :er_id)",
+                ['person_id' => $args->person_id, 'er_id' => $erId],
+                __("Can't add details about participation."));
         }
 
         // Gets the common args and puts them into a structure

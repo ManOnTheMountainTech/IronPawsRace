@@ -61,7 +61,7 @@
         return $html;
         }
 
-                // Validates that all the arguments are present for a timed race.
+        // Validates that all the arguments are present for a timed race.
         // @param: array -> $submit_args -> The array that corresponds to the
         //  HTTPS method used.
         //  returns:
