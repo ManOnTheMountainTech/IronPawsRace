@@ -1,12 +1,12 @@
 .img-a {
     display:inline-flex;
     flex-direction:row;
-    aligns-items:center;
+    align-items:center;
     vertical-align:center;
     line-height:5rem;
     height:5rem;
 }
 
 .p-aligned {
-    aligns-items: center;
+    align-items: center;
 }

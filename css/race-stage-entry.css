@@ -1,5 +1,5 @@
 .hide-overflow {
-    overflow: hidden;/* Makes this div contain its floats */
+	overflow: auto; 
 }
 
 .hide-overflow .col {
@@ -29,4 +29,8 @@
 
 .def-pad {
 	padding: 0% 0% 1rem 1rem;
+}
+
+.fullsize {
+	width: 100%;
 }

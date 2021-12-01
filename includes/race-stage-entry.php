@@ -297,6 +297,7 @@
             }
 
             $outcomes_html = $this->makeHTMLSelectableOutcomes();
+            $record_to_server = "Record to server";
 
             // Timed race?
             if (Race_Definition::TIMED == $cur_rd_core_info[Race_Definition::CORE_RACE_TYPE]) {
@@ -360,21 +361,26 @@
                 $volunteering_user = __("Did you volunteer? If so, please enter the description. Otherwise, leave this blank.");
                 $volunteering_id = self::$NON_RACING_POINTS_ARGS[self::VOLUNTEERING_IDX];
 
+
                 $trse_selections_html .= <<<FORM_BODY
                     Race stage: <strong>{$race_stage}</strong><br>
                     {$ran_class_html}
                     <div class="border">
-                        <div class="hide-overflow disp-flex">
-                            <div class="hide-overflow def-pad">
+                        <div class="hide-overflow">
+                            <div class="def-pad">\n
                                 <label for="{$distance_traveled}">{$distance_unit_visible}</label>
                                 <input required type="number" id="{$distance_traveled}" name="{$distance_traveled}" min="0" step="0.1">\n
                                 {$outcomes_html}
-                                <label for="{$howladays_id}">{$howladays_user}</label><br>
+                            </div>
+                            <div class="def-pad">\n
+                                <label for="{$howladays_id}">{$howladays_user}</label>
                                 <input type="text" id="{$howladays_id}"
-                                    name="{$howladays_id}" size="60"><br>
-                                <label for="{$volunteering_id}">{$volunteering_user}</label><br>
+                                    name="{$howladays_id}" class="fullsize">
+                            </div>
+                            <div class="def-pad">\n
+                                <label for="{$volunteering_id}">{$volunteering_user}</label>
                                 <input type="text" id="{$volunteering_id}"
-                                    name="{$volunteering_id}" size="60">
+                                    name="{$volunteering_id}" class="fullsize">
                             </div>\n
                         </div>\n
                     </div>\n
@@ -395,10 +401,7 @@
                     name="{$race_stage_arg}" value="{$race_stage}">
             HIDDEN_PART;
 
-            //$trse_selections_html .= "</div>\n"; // for border
-
-            $record_to_server = "Record to server";
-
+            $trse_selections_html .= "</div>\n"; // for border
             $trse_selections_html .= <<<FORM_END_GAME
                 <br>\n
                     <button type="submit">{$record_to_server}</button>\n
