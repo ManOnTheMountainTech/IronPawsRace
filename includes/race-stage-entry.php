@@ -548,7 +548,7 @@
             $howladay = "";
             $volunteering = "";
 
-            set_time_limit(5);
+            //set_time_limit(5);
 
             // TODO: Currentelly we may end up doing this twice.
             //      revisit after the security implications are understood.
