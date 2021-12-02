@@ -106,7 +106,7 @@
             WP_Hooks::init();
             try {
                 $distance_unit = self::DISTANCE_UNIT;
-                $selected_unit = null;
+                $selected_unit = "miles";
 
                 if (array_key_exists($distance_unit, $_POST)) {
                     $selected_unit = sanitize_text_field($_POST[$distance_unit]);
