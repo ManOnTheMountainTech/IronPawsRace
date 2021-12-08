@@ -34,3 +34,7 @@
 .fullsize {
 	width: 100%;
 }
+
+.select_placeholder {
+    color: #999;
+}

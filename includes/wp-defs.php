@@ -31,7 +31,7 @@
      const TEAM_ID = 'team_id';
      const TEAM_NAME = 'team_name';
      const TEAM_NAME_ID = 'team_name_id';
-     const TEAM_ARGS = 'team_args';
+     const TEAM_ARG = 'TEAM_ARG';
      const TEAM_REGISTRATION = 'team-registration';
      const URI_PREFIX = "https://ironpawsllc.com/";
      const TRSE_WC_CUSTOMER_ID = 'TRSE_WC_CUSTOMER_ID';

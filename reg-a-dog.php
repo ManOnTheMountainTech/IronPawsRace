@@ -13,10 +13,10 @@
     const REG_A_DOG_NONCE_NAME = 'reg-dog-nonce-name';
 
     static function do_shortcode() {
-      /*$logon_form = ensure_loggedon();
+      $logon_form = ensure_loggedon();
       if (!is_null($logon_form)) {
         return $logon_form;
-      }*/
+      }
 
       Strings::init();
       $regADog = new Reg_A_Dog();
@@ -38,16 +38,16 @@
 
       // else, if we have a team name, ask for the dog details
       if ($_SERVER["REQUEST_METHOD"] == "GET") {
-        if (array_key_exists(TEAM_ARGS, $_GET)) {
+        if (array_key_exists(TEAM_NAME_ID, $_GET)) {
           $retHTML .= $this->makeOpeningHTML();
-          $retHTML .= $this->makeListItemHTML(['reg-a-dog']); // TODO: Consider making empty
+          $retHTML .= $this->makeListItemHTML(['']);
           $retHTML .= $this->makeClosingHTML();
         } else {
           // else, ask for the team
           try {
-            $retHTML .= (new TRSE())->get('reg-a-dog');
+            $retHTML .= (new TRSE())->get('');
             if (is_null($retHTML)) {
-              return _e("Unable to get any teams for this musher.", "ironpaws");
+              return __("Unable to get any teams for this musher.", "ironpaws");
             }
 
             $retHTML .= '</select><br><br><button type="submit" value="' . 
@@ -95,20 +95,23 @@
 
     }
 
+    // In POST:
+    // @param- self::REGA_DOG_NONCE_NAME
+    // @param- DogDefs::NAME
+    // @param- DogDefs::AGE
+    // @param- DogDefs::NAME
     function writeToDB() {
       // define variables and set to empty values
       $dogname = "";
-
-      $numberError = FALSE;
 
       if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try{
           if (array_key_exists(self::REG_A_DOG_NONCE_NAME, $_POST)) {
             if (!wp_verify_nonce($_POST[self::REG_A_DOG_NONCE_NAME], self::REG_A_DOG_NONCE_ACTION)) {
-              throw new \Exception("Reg-a-dog nonce failed to verify.");
+              throw new \Exception();
             }
           } else {
-            throw new \Exception("Reg-a-dog nonce not found.");
+            throw new \Exception();
           }
 
           if (!array_key_exists(DogDefs::NAME, $_POST)) {
@@ -121,21 +124,20 @@
 
           $dogname = \sanitize_text_field($_POST[DogDefs::NAME]);
           if (empty($dogname)) {
-            return ($dogname . " is not a valid name.");
+            return ($dogname . __(" is not a valid name."));
           }
 
           $dogage = test_input($_POST[DogDefs::AGE]);
           if (empty($dogage)) {
-            return ($dogage . " is not a valid age.");
+            return ($dogage . __(" is not a valid age."));
           }
         } catch (\Exception $e) {
-          return "Invalid param passed in reg-a-dog_bad_param";
+          return Strings::get_bad_arguments_msg();
         }
 
         $teamId = 0;
-        $teamNameId = 0;
 
-        $html = TRSE::decodeUnsafeTeamArgs($teamId, $teamNameId);
+        $html = TRSE::decodeUnsafeTeamNameId($teamId);
         if (!is_null($html)) {
           return $html;
         }

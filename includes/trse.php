@@ -79,6 +79,9 @@ use SplDoublyLinkedList;
       return $html;
     }
 
+    // IN POST:
+    //  @param: self::NONCE_NAME
+    //  @param: RACE_PARAMS
     function createFromFinalParams() {
 
       if ("POST" != $_SERVER['REQUEST_METHOD']) {
@@ -195,35 +198,24 @@ use SplDoublyLinkedList;
     // @param: IN OUT->team Id
     // @param: IN OUT->team Name
     // @return: null -> success, otherwise an error message
-    static function decodeUnsafeTeamArgs(int &$teamId, int &$teamNameId) {
+    static function decodeUnsafeTeamNameId(int &$teamId) {
       try {
-        if (array_key_exists(TEAM_ARGS, $_GET)) {
-          $team_args_danger_will_robertson = $_GET[TEAM_ARGS];
-          $team_args = \sanitize_text_field($team_args_danger_will_robertson);
+        if (array_key_exists(TEAM_NAME_ID, $_GET)) {
+          $team_arg_danger_will_robertson = $_GET[TEAM_NAME_ID];
+          $team_arg = \sanitize_text_field($team_arg_danger_will_robertson);
 
-          $team_params_unsafe = explode(QUERY_ARG_SEPERATOR, $team_args);
-          $team_params_size = count($team_params_unsafe);
-          if (2 != $team_params_size) {
-            return "Invalid number of team params passed in";
-          }
-
-          $teamId = test_number($team_params_unsafe[0]);
+          $teamId = test_number($team_arg);
           if ($teamId < 1) {
-            return "Bad team id passed in.";
-          }
-
-          $teamNameId = test_number($team_params_unsafe[1]);
-          if ($teamNameId < 1) {
-            return "Bad team name passed in.";
+            return "Bad arg.";
           }
         } else {
-          return __("Bad ") . TEAM_ARGS;
+          return __("Bad ") . TEAM_NAME_ID;
         }
       } catch (\Exception $e) {
         if (is_wp_debug()) {
           var_dump($e);
         }
-        return __("Bad ") . TEAM_ARGS . __(" parameters passed in.");
+        return __("Bad ") . TEAM_NAME_ID . __(" parameters passed in.");
       }
 
       return null;
@@ -233,6 +225,8 @@ use SplDoublyLinkedList;
     // If possible, ultimately produces a string that contains the product 
     // selection form and all tags closed. 
     // Next, Any teams that are assigned to a product are then shown.
+    // IN GET:
+    //  @param: TEAM_NAME_ID
     // @return: $->status -> STATUS_TRY_NEXT -> Drop through to next step
     //                    -> STATUS_DONE-> Do not drop through, return
     //          $->html   -> the html to show, if any.
@@ -244,11 +238,11 @@ use SplDoublyLinkedList;
         return $ret;
       }
 
-      if (array_key_exists(TEAM_ARGS, $_GET)) {
+      if (array_key_exists(TEAM_NAME_ID, $_GET)) {
         $team_id = 0;
         $team_name_id = 0;
 
-        $error = self::decodeUnsafeTeamArgs($team_id, $team_name_id);
+        $error = self::decodeUnsafeTeamNameId($team_id);
         if (!is_null($error)) {
           $ret->html = $error;
           return $ret;
@@ -364,22 +358,21 @@ use SplDoublyLinkedList;
 
     // Teams::get
     // End result is to have the team args from the form in _GET
-    // @return: GET: TEAM_ARGS -> The ids of the team and team name upon
+    // @return: GET: TEAM_NAME_ID -> The ids of the team and team name upon
     // form completion.
-    // @see: decodeUnsafeTeamArgs() -> Decodes TEAM_ARGS
+    // @see: decodeUnsafeTeamNameId() -> Decodes TEAM_NAME_ID
     //  function get(string $form_action) {}
     function makeOpeningHTML(?array $params = null) {
-      $team_args = TEAM_ARGS;
       $team_name_id = TEAM_NAME_ID;
       return <<<GET_TEAMS
             <label for="{$team_name_id}">Please select a dog team:</label>
-            <select name="{$team_args}" id="{$team_name_id}">
+            <select name="{$team_name_id}" id="{$team_name_id}">
       GET_TEAMS;
     }
 
     function makeListItemHTML(?array $team_idxs = null) {
-      return '<option value="' . $team_idxs[TEAMS::TEAM_IDX] . QUERY_ARG_SEPERATOR . 
-        $team_idxs[TEAMS::TEAM_TN_FK] . '">' . $team_idxs[TEAMS::TEAM_NAME_ID] . '</option>';
+      return '<option value="' . $team_idxs[TEAMS::TEAM_IDX] . 
+        '">' . $team_idxs[TEAMS::TEAM_NAME_ID] . '</option>';
     }
 
     function makeClosingHTML(?array $params = null) {

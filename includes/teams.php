@@ -62,9 +62,8 @@
 
     const TEAM_IDX = 0;
     const TRSE_BIB_NUMBER_IDX = 1;
-    const TEAM_TN_FK = 2;
-    const TRSE_CLASS_ID_IDX = 3;
-    const TEAM_NAME_ID = 4;
+    const TRSE_CLASS_ID_IDX = 2;
+    const TEAM_NAME_ID = 3;
       
     public function __construct() {
       Strings::init();

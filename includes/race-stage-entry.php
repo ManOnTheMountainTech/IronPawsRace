@@ -93,7 +93,6 @@
         const RACE_STAGE_ENTRY = 'race_stage_entry';
         const RACE_STAGE_ARG = 'race_stage_arg';
         
-        const DISTANCE_UNIT = 'distance_unit';
         const DISTANCE_TRAVELED = 'distance_traveled';
         const IS_KILOMETERS = 'is_kilometers';
 
@@ -354,7 +353,7 @@
 
                 $wc_order_id_arg = WC_ORDER_ID;
                 $distance_traveled = Race_Stage_Entry::DISTANCE_TRAVELED;
-                $distance_unit_arg = Race_Stage_Entry::DISTANCE_UNIT;
+                $distance_unit_arg = WP_Hooks::DISTANCE_UNIT;
                 $distance_is_in_kilometers = self::IS_KILOMETERS;
                 $howladays_user = __("Did you do a howleday? If so, please enter the link. Otherwise, leave this blank.");
                 $howladays_id = self::$NON_RACING_POINTS_ARGS[self::HOWLADAYS_IDX];
@@ -517,7 +516,7 @@
                     if (array_key_exists(WC_ORDER_ID, $_POST)) {
                         if (array_key_exists(self::IS_KILOMETERS, $_POST)) {
                             if (array_key_exists(WC_ORDER_ID, $_POST)) {
-                                if (array_key_exists(Race_Stage_Entry::DISTANCE_UNIT, $_POST)) {
+                                if (array_key_exists(WP_Hooks::DISTANCE_UNIT, $_POST)) {
                                     return (self::$non_racing_points->validateQueryArgs());}
                             } else {self::throw(__LINE__);}
                         } else {self::throw(__LINE__);}
@@ -569,7 +568,7 @@
                     self::throw(__LINE__);
                 }
 
-                $distance_unit = (string)sanitize_text_field($_POST[Race_Stage_Entry::DISTANCE_UNIT]);
+                $distance_unit = (string)sanitize_text_field($_POST[WP_Hooks::DISTANCE_UNIT]);
                 if (!((Units::MILES == $distance_unit) || (Units::KILOMETERS == $distance_unit))) {
                     self::throw(__LINE__);
                 }

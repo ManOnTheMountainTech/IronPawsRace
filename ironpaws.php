@@ -7,7 +7,7 @@
  * Author URI: https://supermooseapps.com
  * Text Domain: ironpaws
  * Domain Path: /languages
- * Version: 0.3.1
+ * Version: 0.3.2
  */
 
 /* Place custom code below this line. */
@@ -23,6 +23,7 @@ require_once plugin_dir_path(__FILE__) . 'reg-a-team.php';
 require_once plugin_dir_path(__FILE__) . 'reg-a-dog.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-complete.php';
 require_once plugin_dir_path(__FILE__) . 'wc-payment-hooks.php';
+require_once plugin_dir_path(__FILE__) . 'wc-checkout-hooks.php';
 require_once plugin_dir_path(__FILE__) . 'includes/debug.php';
 //require_once 'includes/autoloader.php';
 
@@ -103,6 +104,10 @@ function register_wc_hooks() {
     add_action( 'woocommerce_payment_complete', 'IronPaws\\ironpaws_woocommerce_payment_complete');
     add_action( 'woocommerce_order_details_after_customer_details', 'IronPaws\\ironpaws_order_details_after_customer_details');
     add_action( 'woocommerce_register_form', ['IronPaws\\WP_Hooks', 'registration_form']);
+
+    // @see woocommerce_form_field(...) in wc-template-functions.php
+    add_action( 'woocommerce_after_checkout_registration_form', ['IronPaws\\WC_Checkout_Hooks', 'after_checkout_registration_form']);
+    add_action( 'woocommerce_checkout_process', ['IronPaws\\WC_Checkout_Hooks', 'checkout_process']);
 }
 
 /* Place custom code above this line. */
