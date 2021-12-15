@@ -5,9 +5,10 @@
 
     static $error_instance = 0;
     const MEASURE_PERF = true;
-    const TRACE_SQL_RETRIES = false;
+    const TRACE_SQL_RETRIES = true;
 
     function is_wp_debug() {
+        var_dump(defined('WP_DEBUG'));
         return (defined('WP_DEBUG') && true === WP_DEBUG);
     }
 

@@ -20,7 +20,9 @@ defined( 'ABSPATH' ) || exit;
         public const EXEC_EXCEPTION_EMPTY = 3;
         public const EXEC_EXCEPTION_COLUMNS_MISMATCH = 4;
 
-        protected $maxReconnectTries = 100;
+        public const SQL_DEBUG_INFO = "SQL_DEBUG_INFO";
+
+        protected $maxReconnectTries = 10;
 
         protected $reconnectTries = 0;
 
@@ -253,23 +255,32 @@ defined( 'ABSPATH' ) || exit;
                             ++$this->reconnectTries;
                             continue; 
                     } 
+
+                    self::throwFnFailure($fn, __LINE__, $result_set);
                 } else {
-                    global $error_instance;
-                    ++$error_instance;
-                    statement_log(__FUNCTION__, __LINE__, "Caught exception {$error_instance}", $result_set);
+                    statement_log(__FUNCTION__, __LINE__, "Caught exception", $result_set);
                     statement_log(__FUNCTION__, __LINE__, "function:", $fn);
-                    var_debug($result_set);
                     
                     User_Visible_Exception_Thrower::throwErrorCoreException(
-                        __("Something bad happened while talking to the database.", 7, $result_set));
+                        __("Something bad happened while talking to the database."), 
+                        __LINE__, 
+                        $result_set);
                 }  
             }
 
             //Out of retries. Let the user know.
             User_Visible_Exception_Thrower::throwErrorCoreException(
                 "Retried {$this->maxReconnectTries} times. I couldn't make the network work.", 
-                6, 
+                __LINE__, 
                 $result_set);        
+        }
+
+        static function throwFnFailure(string $fn, 
+            int $line, 
+            \Exception $e) {
+            $e->{self::SQL_DEBUG_INFO} = 'fn()= ' . $fn;
+            User_Visible_Exception_Thrower::throwErrorCoreException(
+                __("Something bad happened while talking to the database.", $line, $e));
         }
         
         // Generic sql executor, but in an auto-retry loop. The operation will
@@ -288,7 +299,7 @@ defined( 'ABSPATH' ) || exit;
             }
 
             // ensure that everything is gaurded
-            while($this->reconnectTries < $this->maxReconnectTries) {                   
+            while($this->reconnectTries < $this->maxReconnectTries) {                        
                 try{
                     if (is_null($this->conn)) {
                         $this->connect();
@@ -308,48 +319,52 @@ defined( 'ABSPATH' ) || exit;
 
                     if (!is_null($this->perf)) {
                         echo $this->perf->returnStats($statement . ' ' . print_r($params)); }
-                    $this->reconnectTries = 0;
+                    $this->reconnectTries = 0;  // Clear for next try
                     return $result_set;
                 }   // Retry case
                 // higher-level exception handlers will catch more specific exceptions.
                 // So catch here so that the retry case works.
                 catch(\PDOException | \Exception $e) {
-                    if (isset($e->errorInfo)) {
-                        if (TRACE_SQL_RETRIES) {
-                            echo "PDO: Error {$e->errorInfo[1]}<br>";
-                        }
+                    if ($this->isContinuableError($e)) {continue;}
 
-                        if (in_array($e->errorInfo[1], MySql::$reconnectErrors)) {
-                                $this->conn = null;
-                                ++$this->reconnectTries;
-                                continue; 
-                        } 
-                    } else {
-                        global $error_instance;
-                        ++$error_instance;
-                        statement_log(__FUNCTION__, __LINE__, "Caught exception {$error_instance}", $e);
-                        statement_log(__FUNCTION__, __LINE__, "prepare:", $statement);
-                        statement_log(__FUNCTION__, __LINE__, "execute:", $params);
-                        var_debug($e);
-                        
-                        User_Visible_Exception_Thrower::throwErrorCoreException(
-                            __("Something bad happened while talking to the database.", 7, $e));
-                    }
+                    self::throwParametrizedFailure($statement, $params, __LINE__, $e);
                 }   
             }
-
-            
 
             //Out of retries. Let the user know.
             User_Visible_Exception_Thrower::throwErrorCoreException(
                 "Retried {$this->maxReconnectTries} times. I couldn't make the network work.", 
-                6, 
+                __LINE__, 
                 $e);        
+        }
+
+        static function throwParametrizedFailure(string $statement, 
+            array $params, 
+            int $line, 
+            \Exception $e) {
+            $e->{self::SQL_DEBUG_INFO} = 'Statement ' . $statement . 
+                ' Params =' . print_r($params);
+            User_Visible_Exception_Thrower::throwErrorCoreException(
+                __("Something bad happened while talking to the database.", $line, $e));
+        }
+
+        function isContinuableError(\Exception $e) {
+            if (TRACE_SQL_RETRIES) {
+                echo "PDO: Error {$e->errorInfo[1]}<br>";
+            }
+
+            if (isset($e->errorInfo) && 
+                (in_array($e->errorInfo[1], MySql::$reconnectErrors))) {
+                        $this->conn = null;
+                        ++$this->reconnectTries;
+                        return true; 
+            }
+
+            return false;
         }
     }
 
     function makeSqlString(string $value) {
         return '\'' . $value . '\'';
     }
-
 ?>
