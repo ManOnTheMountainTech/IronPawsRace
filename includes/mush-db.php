@@ -280,7 +280,7 @@ defined( 'ABSPATH' ) || exit;
             \Exception $e) {
             $e->{self::SQL_DEBUG_INFO} = 'fn()= ' . $fn;
             User_Visible_Exception_Thrower::throwErrorCoreException(
-                __("Something bad happened while talking to the database.", $line, $e));
+                __("Something bad happened while talking to the database."), $line, $e);
         }
         
         // Generic sql executor, but in an auto-retry loop. The operation will
@@ -343,9 +343,9 @@ defined( 'ABSPATH' ) || exit;
             int $line, 
             \Exception $e) {
             $e->{self::SQL_DEBUG_INFO} = 'Statement ' . $statement . 
-                ' Params =' . print_r($params);
+                ' Params =' . print_r($params, true);
             User_Visible_Exception_Thrower::throwErrorCoreException(
-                __("Something bad happened while talking to the database.", $line, $e));
+                __("Something bad happened while talking to the database."), $line, $e);
         }
 
         function isContinuableError(\Exception $e) {

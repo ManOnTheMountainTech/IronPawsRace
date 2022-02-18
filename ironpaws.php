@@ -7,7 +7,7 @@
  * Author URI: https://supermooseapps.com
  * Text Domain: ironpaws
  * Domain Path: /languages
- * Version: 0.3.3
+ * Version: 0.3.4
  */
 
 /* Place custom code below this line. */
@@ -78,25 +78,10 @@ function register_wp_hooks() {
     } );
     add_filter('load_textdomain_mofile', ['IronPaws\\WP_Hooks', 'load_my_own_textdomain'], 10, 2 );
     add_action('init', ['IronPaws\\WP_Hooks', 'init'] );
-    add_action('wp_logout',  ['IronPaws\\WP_Hooks', 'login']);
-    add_action('wp_login',  ['IronPaws\\WP_Hooks', 'logout']);
+    //add_action('wp_logout',  ['IronPaws\\WP_Hooks', 'login']);
+    //add_action('wp_login',  ['IronPaws\\WP_Hooks', 'logout']);
     add_action('register_form',  ['IronPaws\\WP_Hooks', 'registration_form']);
 }
-
-/*
-add_action( 'rest_api_init', function () {
-    register_rest_route( 'ironpaws/v1', '/woocommerce', array(
-      'methods'  => 'POST',
-      'callback' => 'init',
-    ) );
-} );
-
-function init($request) {
-    _e('IronPaws initd');
-}
-*/
-//add_action( 'woocommerce_order_status_completed', 'ironpaws_woocommerce_order_status_completed');
-//add_action( 'woocommerce_payment_complete_order_status_completed', 'ironpaws_woocommerce_payment_complete_order_status');
 
 // In: wc-payment-complete.php
 function register_wc_hooks() {

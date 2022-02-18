@@ -20,6 +20,9 @@
         if ($wc_order_arg > 0) {
           $wc_order_id = WC_ORDER_ID;
           $teams_path .= "?{$wc_order_id}={$wc_order_arg}";
+
+          $transaction_id = $order->get_transaction_id();
+          $bib_number = (int)substr($transaction_id, 0 - 4);
         }
       }
 

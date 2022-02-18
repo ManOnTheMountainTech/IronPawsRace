@@ -190,7 +190,7 @@
           ['dogName' => $dogname, 'dogAge' => $dogage, 'dogOwnerId' => $personId, 'teamId' => $teamId],
           "An error ocured saving the dogs information, error reg-a-dog_dog-1");
         } catch (\Exception $e) {
-          return User_Visible_Exception_Thrower::throwErrorCoreException(__("Error in adding a dog to a team.", 0, $e));
+          return User_Visible_Exception_Thrower::throwErrorCoreException(__("Error in adding a dog to a team."), 0, $e);
         }
 
         $dogname .= " is now on the team.<br>" . Strings::$NEXT_STEPS . "<br>";

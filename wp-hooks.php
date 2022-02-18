@@ -50,9 +50,9 @@
         }
 
         static function init() {
-            if (PHP_SESSION_ACTIVE !== session_status()) {
+            /*if (PHP_SESSION_ACTIVE !== session_status()) {
                 session_start();
-            }
+            }*/
             
             load_plugin_textdomain(WP_Defs::IRONPAWS_TEXTDOMAIN, false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
