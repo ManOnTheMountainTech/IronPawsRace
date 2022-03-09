@@ -1,5 +1,5 @@
 <?php
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
     defined( 'ABSPATH' ) || exit;
 
@@ -21,7 +21,7 @@
 
             // No previous exception? Let's make one!
             if (is_null($e)) {
-                $e = new \IronPaws\User_Visible_Exception_Thrower($errorCore, $code);
+                $e = new \IronPawsLLC\User_Visible_Exception_Thrower($errorCore, $code);
             }
 
             $e->{"userHTMLMessage"} = $errorCore;
@@ -55,12 +55,12 @@
             }
             
             var_debug($e);
-            write_log($message . '\n' . print_r($e));
+            write_log($message . '\n' . print_r($e, true));
 
             while(!is_null($e->getPrevious())) {
                 $e = $e->getPrevious();
                 var_debug($e);
-                write_log($message . '\n' . print_r($e));
+                write_log($message . '\n' . print_r($e, true));
             }
 
             return $message;     

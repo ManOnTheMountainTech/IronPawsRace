@@ -1,5 +1,5 @@
 <?php
-  namespace IronPaws;
+  namespace IronPawsLLC;
 
   defined( 'ABSPATH' ) || exit;
 
@@ -9,10 +9,7 @@
   require_once plugin_dir_path(__FiLE__) . 'util.php';
   require_once plugin_dir_path(__FILE__) . 'strings.php';
 
-  use Automattic\WooCommerce\Client;
-  use Automattic\WooCommerce\HttpClient\HttpClientException;
-use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Html;
-use SplDoublyLinkedList;
+  use SplDoublyLinkedList;
 
 // Team Race Stage Entry
   class TRSE extends Teams {

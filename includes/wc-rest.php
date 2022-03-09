@@ -1,5 +1,5 @@
 <?php
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
     defined( 'ABSPATH' ) || exit;
 
@@ -9,18 +9,18 @@
     require plugin_dir_path(__FILE__) . '../vendor/autoload.php';
     require_once 'autoloader.php';
 
-    use Automattic\WooCommerce\Client;
-    use Automattic\WooCommerce\HttpClient\HttpClientException;
-
     // To create a key programatically: WC_Auth::Create_Keys(), around line 209
     // Might consider WC_API_Client() in the future.
 
     class WC_Rest {
-        protected $woocommerce;
+        protected Abstract_REST_Client $woocommerce;
 
         public $perf;
 
         const CUSTOMERS = "customers/";
+        const ORDERS = 'orders';
+        const CODE = 'code';
+        const MESSAGE = 'message';
 
         public function __construct() {
             if (MEASURE_PERF) {
@@ -36,7 +36,7 @@
         // -Given a product id, get the product id object from the WooCommerce API.
         // @arg: product_id: int -> the product id
         // @return mixed->Returns the product object if found, otherwise null.
-        // @throws-> HttpClientException: If the request fails.
+        // @throws-> (Implementation specific) exception: If the request fails.
         function get_product_by_id($product_id) {
             $product = $this->woocommerce->get("products/$product_id");
             if (empty($product_id)) {
@@ -54,11 +54,11 @@
             //  3 -> Purchased previously and logged in
             // The user should be verified as logged in.
             // TODO: Jump back from logging in.
-            // return: An array that contains a single dimensional array
+            // @return: An array that contains a single dimensional array
             // of orders.
 
             // Validate the order id
-            $results = $this->woocommerce->get(ORDERS . $wc_order_id);
+            $results = $this->woocommerce->get(self::ORDERS . $wc_order_id);
             if (NULL == $results) {
                 return null;
             }
@@ -80,20 +80,24 @@
         function getOrdersByCustomerId(int $TRSE_WC_CUSTOMER_ID) {
             // Validate the order id
             $results = $this->woocommerce->get(
-                ORDERS, ['customer' => $TRSE_WC_CUSTOMER_ID]);
+                self::ORDERS, ['customer' => $TRSE_WC_CUSTOMER_ID]);
 
             return $results;
         }
 
         // @return-> an array of orders that are raceable (PROCESSING)
         function getAllOrders() {
+            //requires view_woocommrce_reports
+            // put a breakpoint on WP_REST_Server::respond_to_requests
+            // or look for 'permission_callback'
+            // if ( ! is_wp_error( $response ) && ! empty( $handler['permission_callback'] ) ) {
+            //    $permission = call_user_func( $handler['permission_callback'], $request );
             if (!is_null($this->perf)) {
                 $this->perf->startTiming();}
 
             // Validate the order id
-            $results = $this->woocommerce->get(
-                ORDERS);
-            if (NULL == $results) {
+            $results = $this->woocommerce->get(self::ORDERS);
+            if (is_null($results)) {
                 return "Unable to talk to WooCommerce while getting customer information";
             }
 
@@ -108,8 +112,8 @@
         function getAllCustomers() {
             // Validate the order id
             $results = $this->woocommerce->get(
-                'customers');
-            if (NULL == $results) {
+                self::CUSTOMERS);
+            if (is_null($results)) {
                 return "Unable to talk to WooCommerce while getting all customers information";
             }
 
@@ -126,7 +130,7 @@
         }
 
         function getOrderFromOrderId(int $wc_order_id) {
-            return $this->woocommerce->get(ORDERS . '/' . $wc_order_id);
+            return $this->woocommerce->get(self::ORDERS . '/' . $wc_order_id);
             //return $this->woocommerce->get(ORDERS,  ['id' => $wc_order_id]);
         }
 
@@ -134,7 +138,7 @@
         function getProductIdsFromOrderId(int $wc_order_id) {
             
             // Validate the order id
-            $results = $this->woocommerce->get(ORDERS . '/' . $wc_order_id);
+            $results = $this->woocommerce->get(self::ORDERS . '/' . $wc_order_id);
             if (NULL == $results) {
                 return "Unable to talk to WooCommerce while getting customer information";
             }
@@ -169,15 +173,9 @@
         function throwGetCustomersFromWoo($params) {
             $results = null;
 
-            try {
-            $results = $this->woocommerce->get(CUSTOMERS, $params);
-            if (null == $results) {
-                throw new WCRaceRegistrationException(NO_SUCH_PERSON_ERROR);
-            }
-            }
-            catch (HttpClientException $e) {
-                handleHttpClientException($e);
-            throw new WCRaceRegistrationException(NO_SUCH_PERSON_ERROR);
+            $results = $this->woocommerce->get(self::CUSTOMERS, $params);
+            if (is_null($results)) {
+                throw new WCRaceRegistrationException(Race_Registration_Exception::NO_SUCH_PERSON_ERROR);
             }
 
             return $results;
@@ -196,10 +194,13 @@
                 case PROCESSING:
                     return;
                 case COMPLETED:
-                    throw new WCRaceRegistrationException(RACE_CLOSED_MSG, RACE_CLOSED_ERROR);
+                    throw new WCRaceRegistrationException(
+                        Race_Registration_Exception::RACE_CLOSED_MSG, 
+                        Race_Registration_Exception::RACE_CLOSED_ERROR);
                 default:
-                    throw new WCRaceRegistrationException(PAYMENT_NOT_COMPLETED_MSG, 
-                        PAYMENT_NOT_COMPLETED_ERROR);
+                    throw new WCRaceRegistrationException(
+                        Race_Registration_Exception::PAYMENT_NOT_COMPLETED_MSG, 
+                        Race_Registration_Exception::PAYMENT_NOT_COMPLETED_ERROR);
             }
         }
 
@@ -225,44 +226,12 @@
                 case 'completed':
                     return;
                 default:
-                    throw new WCRaceRegistrationException(PAYMENT_NOT_COMPLETED_MSG, 
-                        PAYMENT_NOT_COMPLETED_ERROR);
+                    throw new WCRaceRegistrationException(
+                        Race_Registration_Exception::PAYMENT_NOT_COMPLETED_MSG, 
+                        Race_Registration_Exception::PAYMENT_NOT_COMPLETED_ERROR);
             }
         }
 
-        function getResponseBody($response) {
-            return $this->woocommerce->http->getResponse()->getBody();
-        }
-
-        // @function processResponse
-        // @param $result - result from a call to the WooCommerce REST API
-        // @returns : null = failure, associative object = success
-        // ----
-        // Internally, Client calls HttpClient, which sets the parameters as CURL
-        // options, and then calls CURL. The result is processed by json_decode.
-        // json_decode can return true, false, or null. However, the body still
-        // may contain valid data. Try a little harder to get it.
-        static function processResponse($result) {
-            if ((false == $result) || (null == $result)) {
-                $body = getResponseBody($result);
-                if ((false == $body) || (null == $body)) {
-                    return null;
-                } else {
-                    $body = json_decode($body);
-                    if ((false == $body) || (null == $body)) {return null;}
-                    
-                    return $body;
-                }
-            }
-
-            return $result;
-        }
-
-        static function handleHttpClientException(HttpClientException $e) {
-            write_log(__FUNCTION__ . __LINE__ . "Caught. Message:", $e->getMessage() ); // Error message.
-            write_log(" Request:", $e->getRequest() ); // Last request data.
-            write_log(" Response:", $e->getResponse() ); // Last response data.
-        }
     }
 
 ?>

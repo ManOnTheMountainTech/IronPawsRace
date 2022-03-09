@@ -1,5 +1,5 @@
 <?php
-  namespace IronPaws;
+  namespace IronPawsLLC;
 
   defined( 'ABSPATH' ) || exit;
   // Returns a login form if the user is not logged on

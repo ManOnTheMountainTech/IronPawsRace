@@ -1,14 +1,11 @@
 <?php
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
     defined( 'ABSPATH' ) || exit;
 
     require_once 'includes/wp-defs.php';
     require_once 'includes/debug.php';
     //require_once 'includes/autoloader.php';
-
-    use Automattic\WooCommerce\Client;
-    use Automattic\WooCommerce\HttpClient\HttpClientException;
 
     class WC_Checkout_Hooks {
         const KEY_DISTANCE_UNIT = 'distance_unit';

@@ -1,5 +1,5 @@
 <?php
-  namespace IronPaws;
+  namespace IronPawsLLC;
 
   defined( 'ABSPATH' ) || exit;
 
@@ -7,9 +7,6 @@
   require_once 'debug.php';
   require_once 'logon.php';;
   require_once "autoloader.php";
-
-  use Automattic\WooCommerce\Client;
-  use Automattic\WooCommerce\HttpClient\HttpClientException;
 
   abstract class Teams implements Container_HTML_Pattern {
     const NO_SUCH_PERSON_MSG = "Neither an email, nor a first or last name could be processed. Please try again.";

@@ -4,9 +4,6 @@
     require_once 'wp-defs.php';
     require_once 'debug.php';
     require plugin_dir_path(__FILE__) . 'vendor/autoload.php';
-
-    use Automattic\WooCommerce\Client;
-    use Automattic\WooCommerce\HttpClient\HttpClientException;
     
     class WCRaceRegistrationException extends Exception {
         const RACE_CLOSED_MSG = "The race is closed. No changes can be made";
@@ -42,47 +39,4 @@
                     PAYMENT_NOT_COMPLETED_ERROR);
         }
     }
-
-    function create_wc() {
-        return new Client(
-            'http://ironpawsllc.com', 
-            'ck_f79eca540f4d74a63f85845426de32283f80f9d0', 
-            'cs_056dc40407f6219fbd5705594c32460130175aa9',
-            [
-                'wp_api' => true,
-                'version' => 'wc/v3'
-            ]
-        );
-    }
-
-    function getResponseBody($response) {
-        return $woocommerce->http->getResponse()->getBody();
-    }
-
-    // @function processResponse
-    // @param $result - result from a call to the WooCommerce REST API
-    // @returns : null = failure, associative object = success
-    // ----
-    // Internally, Client calls HttpClient, which sets the parameters as CURL
-    // options, and then calls CURL. The result is processed by json_decode.
-    // json_decode can return true, false, or null. However, the body still
-    // may contain valid data. Try a little harder to get it.
-    function processResponse($result) {
-        if ((false == $result) || (null == $result)) {
-            $body = getResponseBody($result);
-            if ((false == $body) || (null == $body)) {
-                return null;
-            } else {
-                $body = json_decode($body);
-                if ((false == $body) || (null == $body)) {return null;}
-                
-                return $body;
-            }
-        }
-
-        return $result;
-    }
-
-    /* Order is done, let's move on */
-
 ?>

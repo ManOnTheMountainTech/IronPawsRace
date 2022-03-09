@@ -1,5 +1,5 @@
 <?php
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
     defined( 'ABSPATH' ) || exit;
 
@@ -8,8 +8,6 @@
     require_once 'util.php';
     require plugin_dir_path(__FILE__) . 'vendor/autoload.php';
 
-    use Automattic\WooCommerce\Client;
-    use Automattic\WooCommerce\HttpClient\HttpClientException;
 
     class WCRaceRegistrationException extends \Exception {
         const RACE_CLOSED_MSG = "The race is closed. No changes can be made";

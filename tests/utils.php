@@ -1,5 +1,5 @@
 <?php
-    namespace IronPaws\Test;
+    namespace IronPawsLLC\Test;
 
     defined( 'ABSPATH' ) || exit;
 

@@ -1,8 +1,9 @@
 <?php
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
     defined( 'ABSPATH' ) || exit;
 
+    require_once plugin_dir_path(__FILE__) . 'settings/db.php';
     require_once plugin_dir_path(__FILE__) . 'includes/container-html-pattern.php';
     require_once plugin_dir_path(__FILE__) . 'includes/autoloader.php';
     require_once plugin_dir_path(__FILE__) . 'includes/scoreable.php';
@@ -12,9 +13,8 @@
     use Algorithms\BinaryTree;
     use Algorithms\BinaryNode;
 
-    use Automattic\WooCommerce\Client;
-    use Automattic\WooCommerce\HttpClient\HttpClientException;
     use stdClass;
+use WP_REST_Response;
 
     class Race_Results implements Container_HTML_Pattern   {
         protected $rank;
@@ -163,7 +163,7 @@
             } 
 
             if (empty($result)) {
-                echo __("No results yet. Please check later.");
+                return __("No results yet. Please check later.");
             }
             write_log($result);
             return $result;
@@ -189,10 +189,10 @@
                 if (is_null($this_customers_info)) {
                     $args->result .= "This musher no longer exists.";
                 }
-            } catch (HttpClientException $e) {
-                $responseBody = json_decode($e->getResponse()->getBody());
+            } catch (REST_API_Exception_Definition $e) {
+                $responseBody = json_decode($e->getJSONResponseData());
 
-                if ("woocommerce_rest_invalid_id" == $responseBody) {
+                if ("woocommerce_rest_invalid_id" == $responseBody[WC_Rest::CODE]) {
                     $args->result .= "Musher id {$row[TRSE::TRSE_WC_CUSTOMER_ID]} no longer exists";
                 }
                 $args->result .= <<<RACE_RESULTS_ROW

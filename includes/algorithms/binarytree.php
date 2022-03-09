@@ -11,8 +11,8 @@ namespace Algorithms {
 
   require_once plugin_dir_path(__FILE__) . '../comparable.php';
 
-    use IronPaws\Comparable;
-    use IronPaws\Race_Details;
+    use IronPawsLLC\Comparable;
+    use IronPawsLLC\Race_Details;
 
 class BinaryTree { 
 

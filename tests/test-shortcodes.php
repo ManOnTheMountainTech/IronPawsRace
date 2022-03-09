@@ -1,6 +1,6 @@
 <?php
     // also refer to <wordpress>_wpip_wc_customer_lookup
-  namespace IronPaws;
+  namespace IronPawsLLC;
 
   defined( 'ABSPATH' ) || exit;
 
@@ -20,13 +20,6 @@
     $result = "";
 
     try {
-      //log_by_name();
-      //$wc_customers->log_by_roll();
-      //$wc_customers->log_by_name();
-      //$wc_customers->log_customer_by_id(4);
-      //$wc_customers->log_order_by_id(54);
-      //$result .= "log_order_by_id(54)";
-      //$result .= $wc_customers->result;
 
       $result .= Users::get(Users::KEY_FIRST_NAME, "Bryan");
       $result .= Users::get(Users::KEY_FIRST_NAME, "Invalid");

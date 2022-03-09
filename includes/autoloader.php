@@ -1,10 +1,10 @@
 <?php
     defined( 'ABSPATH' ) || exit;
 
-    const NAMESPACE_PAIRS = ["IronPaws"=>"", "IronPaws\\Mush"=>"..", "IronPaws\\Mush\Lib"=>""];
+    const NAMESPACE_PAIRS = ["IronPawsLLC"=>"", "IronPawsLLC\\Mush"=>"..", "IronPawsLLC\\Mush\Lib"=>""];
 
     spl_autoload_register(function ($class_name) {
-        ifMatchingNamespaceLoad($class_name, 'IronPaws', '');
+        ifMatchingNamespaceLoad($class_name, 'IronPawsLLC', '');
         ifMatchingNamespaceLoad($class_name, 'Algorithms', 'algorithms/');
     });
 

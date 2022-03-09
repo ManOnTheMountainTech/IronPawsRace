@@ -1,7 +1,7 @@
 <?php
     defined( 'ABSPATH' ) || exit;
 
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
 require_once('setIncPath.php');
 require_once('globals.php');

@@ -1,14 +1,11 @@
 <?php
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
     defined( 'ABSPATH' ) || exit;
 
     require_once 'includes/wp-defs.php';
     require_once 'includes/debug.php';
     //require_once 'includes/autoloader.php';
-
-    use Automattic\WooCommerce\Client;
-    use Automattic\WooCommerce\HttpClient\HttpClientException;
 
     /*
     function ironpaws_woocommerce_order_status_completed( $order_id ) {

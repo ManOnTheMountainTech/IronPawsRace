@@ -1,5 +1,5 @@
 <?php
-     namespace IronPaws;
+     namespace IronPawsLLC;
 
      defined( 'ABSPATH' ) || exit;
 
@@ -17,7 +17,7 @@
      const KEY_ARG = 'key';
      const LANGUAGE = 'language';
      const LAST_NAME = 'last_name';
-     const ORDERS = 'orders';
+
      const PENDING = 'pending';
      const POST = 'POST';
      const PROCESSING = 'processing'; // payment received, but merchandise not

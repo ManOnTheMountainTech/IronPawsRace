@@ -1,6 +1,6 @@
 <?php
 
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
 use PDOException;
 
@@ -54,9 +54,12 @@ defined( 'ABSPATH' ) || exit;
 
         public function connect() {
             $this->conn = new \PDO("mysql:host=" . DB::SERVERNAME . ";dbname=" . DB::DBNAME, 
-                DB::USERNAME, DB::PASSWORD);
-            $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            $this->conn->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+                DB::USERNAME, DB::PASSWORD, [
+                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                    \PDO::ATTR_EMULATE_PREPARES => false,
+                    \PDO::ATTR_PERSISTENT => true
+                ]);
+            
         }
 
         public function execAndReturnRaw(string $statement, 

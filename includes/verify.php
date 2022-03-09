@@ -1,6 +1,6 @@
 <?php
 
-    namespace IronPaws;
+    namespace IronPawsLLC;
 
     defined( 'ABSPATH' ) || exit;
 
